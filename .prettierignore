@@ -1,0 +1,11 @@
+node_modules
+.git
+.next
+out
+build
+dist
+coverage
+.turbo
+.cspellcache
+pnpm-lock.yaml
+apps/*/next-env.d.ts

@@ -1,0 +1,12 @@
+node_modules
+.pnpm-store
+.DS_Store
+.next
+out
+build
+dist
+coverage
+.turbo
+.cspellcache
+.cache
+*.tsbuildinfo

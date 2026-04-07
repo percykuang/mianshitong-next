@@ -1,0 +1,33 @@
+{
+  "name": "mianshitong-next",
+  "packageManager": "pnpm@10.18.2",
+  "private": true,
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "cspell": "^9.2.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.6.2",
+    "stylelint": "^16.24.0",
+    "stylelint-config-standard": "^39.0.1"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @mianshitong/web dev",
+    "dev:admin": "pnpm --filter @mianshitong/admin dev",
+    "build:web": "pnpm --filter @mianshitong/web build",
+    "build:admin": "pnpm --filter @mianshitong/admin build",
+    "typecheck": "pnpm --filter @mianshitong/web typecheck && pnpm --filter @mianshitong/admin typecheck",
+    "check": "pnpm lint && pnpm lint:styles && pnpm format:check && pnpm spellcheck && pnpm typecheck",
+    "lint": "eslint apps/web apps/admin",
+    "lint:styles": "node scripts/stylelint.mjs",
+    "lint:styles:fix": "node scripts/stylelint.mjs --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "spellcheck": "cspell lint . --gitignore --no-progress",
+    "commitlint": "commitlint --edit",
+    "prepare": "husky"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": "0.2",
+  "language": "en-US",
+  "ignorePaths": [
+    ".git/**",
+    ".cspellcache",
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "dist/**",
+    "coverage/**",
+    ".turbo/**",
+    "**/*.tsbuildinfo",
+    "pnpm-lock.yaml"
+  ],
+  "words": [
+    "admin",
+    "apps",
+    "Hiragino",
+    "mianshitong",
+    "monorepo",
+    "PingFang",
+    "turbopack"
+  ]
+}
