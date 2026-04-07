@@ -5,14 +5,19 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@types/react": "^19.2.3",
+    "@types/react-dom": "^19.2.3",
     "cspell": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
     "prettier": "^3.6.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "stylelint": "^16.24.0",
-    "stylelint-config-standard": "^39.0.1"
+    "stylelint-config-standard": "^39.0.1",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "dev:web": "pnpm --filter @mianshitong/web dev",
@@ -29,5 +34,12 @@
     "spellcheck": "cspell lint . --gitignore --no-progress",
     "commitlint": "commitlint --edit",
     "prepare": "husky"
+  },
+  "dependencies": {
+    "@ant-design/cssinjs": "^1.24.0",
+    "@ant-design/nextjs-registry": "^1.0.2",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
+    "@remixicon/react": "^4.9.0",
+    "antd": "^5.27.0"
   }
 }
