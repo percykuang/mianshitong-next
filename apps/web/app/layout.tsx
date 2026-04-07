@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import '@mianshitong/tokens/variables.css'
+import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -13,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body className="mst-app mst-app-web">
+        <AppUiProvider app="web">{children}</AppUiProvider>
+      </body>
     </html>
   )
 }

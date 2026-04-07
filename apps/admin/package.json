@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mianshitong/tokens": "workspace:*",
+    "@mianshitong/ui": "workspace:*",
     "next": "16.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
