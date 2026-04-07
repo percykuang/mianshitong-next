@@ -1,0 +1,14 @@
+{
+  "name": "@mianshitong/tokens",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./variables.css": "./src/css/variables.css"
+  },
+  "dependencies": {
+    "antd": "^5.29.3"
+  }
+}
