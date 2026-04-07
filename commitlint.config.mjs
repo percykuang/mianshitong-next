@@ -14,7 +14,7 @@ const allowedTypes = [
   'test',
 ]
 
-const allowedScopes = ['web', 'admin', 'repo']
+const allowedScopes = ['web', 'admin', 'tokens', 'icons', 'ui', 'repo']
 
 // commitlint 的规则数组格式通常是：
 // [严重级别, 条件, 规则值]
