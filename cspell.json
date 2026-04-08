@@ -20,11 +20,17 @@
     "apps",
     "cssinjs",
     "Hiragino",
+    "linecap",
+    "linejoin",
     "mianshitong",
+    "nextjs",
     "monorepo",
+    "opengraph",
     "PingFang",
     "remixicon",
     "turbopack",
-    "Segoe"
+    "Segoe",
+    "MIAN",
+    "embla"
   ]
 }
