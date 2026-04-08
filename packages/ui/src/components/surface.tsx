@@ -8,7 +8,7 @@ export function Surface({ className, ...props }: SurfaceProps) {
     <div
       {...props}
       className={cn(
-        'rounded-[var(--mst-radius-lg)] border border-[var(--mst-color-border-default)] bg-[var(--mst-color-bg-surface)] shadow-[var(--mst-shadow-sm)]',
+        'rounded-(--mst-radius-lg) border border-(--mst-color-border-default) bg-(--mst-color-bg-surface) shadow-(--mst-shadow-sm)',
         className
       )}
     />

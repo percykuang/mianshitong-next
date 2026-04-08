@@ -26,11 +26,11 @@ export function PageHeader({
       )}
     >
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight text-[var(--mst-color-text-primary)]">
+        <h1 className="text-2xl font-semibold tracking-tight text-(--mst-color-text-primary)">
           {heading}
         </h1>
         {description ? (
-          <p className="text-sm text-[var(--mst-color-text-secondary)]">
+          <p className="text-sm text-(--mst-color-text-secondary)">
             {description}
           </p>
         ) : null}
