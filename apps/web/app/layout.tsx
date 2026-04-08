@@ -3,9 +3,26 @@ import '@mianshitong/tokens/variables.css'
 import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
 
+const themeInitScript = `
+  (function () {
+    try {
+      var storedTheme = window.localStorage.getItem('mst-theme');
+      var theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light';
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.style.colorScheme = theme;
+    } catch (error) {
+      document.documentElement.dataset.theme = 'light';
+      document.documentElement.style.colorScheme = 'light';
+    }
+  })();
+`
+
 export const metadata: Metadata = {
-  title: 'Mianshitong Web',
-  description: '面向用户侧的 Web 应用模板',
+  title: '面试通 | AI 面试官',
+  description: '你的专属 AI Agent 面试官，支持模拟面试、简历优化与题解答疑。',
+  icons: {
+    icon: '/icon.svg',
+  },
 }
 
 export default function RootLayout({
@@ -14,7 +31,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
+    <html data-theme="light" lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="mst-app mst-app-web">
         <AppUiProvider app="web">{children}</AppUiProvider>
       </body>

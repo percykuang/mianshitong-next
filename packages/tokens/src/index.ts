@@ -2,6 +2,7 @@
 export * from './scales'
 export * from './semantic'
 export * from './themes/light'
+export * from './themes/dark'
 export * from './themes/web'
 export * from './themes/admin'
 export * from './antd/create-antd-theme'

@@ -3,8 +3,14 @@
 
 @import 'tailwindcss';
 
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 :root {
   color-scheme: light;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 html,
@@ -25,6 +31,23 @@ body {
     var(--mst-color-bg-page);
   color: var(--mst-color-text-primary);
   font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+}
+
+html[data-theme='dark'] body {
+  background:
+    radial-gradient(
+      circle at top left,
+      rgb(102 168 255 / 22%),
+      transparent 30%
+    ),
+    radial-gradient(circle at 80% 16%, rgb(14 165 233 / 12%), transparent 22%),
+    radial-gradient(
+      circle at bottom right,
+      rgb(56 189 248 / 10%),
+      transparent 26%
+    ),
+    linear-gradient(180deg, rgb(7 13 24 / 86%), rgb(8 17 31 / 100%)),
+    var(--mst-color-bg-page);
 }
 
 * {
