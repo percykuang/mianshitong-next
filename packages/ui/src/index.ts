@@ -40,5 +40,3 @@ export {
   Sun,
   User,
 } from '@mianshitong/icons'
-
-export * from './antd/bridge'
