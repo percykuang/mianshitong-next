@@ -61,13 +61,13 @@ export default async function HomePage() {
     <div className="min-h-screen">
       <header>
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 md:px-6 md:pt-5">
-          <div className="flex items-center justify-between gap-3 rounded-full border border-slate-900/8 bg-white/78 px-3 py-2 shadow-[0_18px_38px_rgb(15_23_42/0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72 md:rounded-none md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none md:backdrop-blur-none">
+          <div className="flex items-center justify-between gap-3 rounded-full px-3 py-2 bg-transparent dark:border-white/10 md:rounded-none md:border-0 md:px-0 md:py-0">
             <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <MianshitongLogoMark
                 aria-hidden="true"
                 className="size-8 rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
               />
-              <span className="hidden text-lg font-semibold text-(--mst-color-primary) sm:inline">
+              <span className="text-lg font-semibold text-(--mst-color-primary)">
                 面试通
               </span>
             </div>
