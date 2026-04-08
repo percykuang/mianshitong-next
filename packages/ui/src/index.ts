@@ -39,4 +39,5 @@ export {
   Sparkles,
   Sun,
   User,
+  X,
 } from '@mianshitong/icons'

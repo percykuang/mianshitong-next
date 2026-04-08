@@ -11,6 +11,7 @@ import {
 } from '@mianshitong/ui'
 import { HomeDemoCarousel } from '@/components/home-demo-carousel'
 import { WebHeaderActions } from '@/components/web-header-actions'
+import { getCurrentUser } from '@/server/auth-session'
 
 const highlights = [
   '专注前端开发领域',
@@ -52,27 +53,30 @@ const demos = [
   },
 ] as const
 
-export default function HomePage() {
-  const currentUserEmail = null
+export default async function HomePage() {
+  const currentUser = await getCurrentUser()
+  const currentUserEmail = currentUser?.email ?? null
 
   return (
     <div className="min-h-screen">
       <header>
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
-          <div className="flex items-center gap-3">
-            <MianshitongLogoMark
-              aria-hidden="true"
-              className="size-9 rounded-xl shadow-(--mst-shadow-sm)"
-            />
-            <span className="text-lg font-semibold text-(--mst-color-primary)">
-              面试通
-            </span>
+        <div className="mx-auto w-full max-w-6xl px-4 pt-4 md:px-6 md:pt-5">
+          <div className="flex items-center justify-between gap-3 rounded-full border border-slate-900/8 bg-white/78 px-3 py-2 shadow-[0_18px_38px_rgb(15_23_42/0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/72 md:rounded-none md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none md:backdrop-blur-none">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+              <MianshitongLogoMark
+                aria-hidden="true"
+                className="size-8 rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
+              />
+              <span className="hidden text-lg font-semibold text-(--mst-color-primary) sm:inline">
+                面试通
+              </span>
+            </div>
+            <WebHeaderActions userEmail={currentUserEmail} />
           </div>
-          <WebHeaderActions userEmail={currentUserEmail} />
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+      <section className="mx-auto w-full max-w-6xl px-4 py-14 md:px-6 md:py-24">
         <div className="mx-auto max-w-4xl space-y-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-(--mst-color-border-default) bg-slate-900/4 px-3 py-1 text-sm text-(--mst-color-text-secondary) dark:bg-white/6">
             <Sparkles className="size-4 text-(--mst-color-primary)" />

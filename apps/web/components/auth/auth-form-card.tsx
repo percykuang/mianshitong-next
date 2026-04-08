@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import {
   Button,
@@ -16,18 +17,21 @@ interface AuthFormCardProps {
   copy: AuthPageCopy
 }
 
-function resolveSubmitHint(mode: AuthFormCardProps['mode']) {
-  if (mode === 'login') {
-    return '当前为前端占位页，服务端登录能力尚未接入。'
-  }
+const featureCardBaseClass =
+  'rounded-(--mst-radius-xl) border border-(--mst-color-border-default) p-5 shadow-[0_18px_38px_rgb(15_23_42/0.05)]'
 
-  return '当前为前端占位页，服务端注册能力尚未接入。'
-}
+const syncFeatureCardClass =
+  'bg-[linear-gradient(145deg,rgb(22_119_255/0.13),rgb(255_255_255/0.94)_34%,rgb(14_165_233/0.1))] dark:bg-[linear-gradient(145deg,rgb(22_119_255/0.2),rgb(17_24_39/0.92)_34%,rgb(14_165_233/0.16))]'
+
+const personalizedFeatureCardClass =
+  'bg-[linear-gradient(145deg,rgb(15_23_42/0.08),rgb(255_255_255/0.93)_36%,rgb(22_119_255/0.09))] dark:bg-[linear-gradient(145deg,rgb(30_41_59/0.92),rgb(17_24_39/0.92)_34%,rgb(22_119_255/0.16))]'
 
 export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [submittedHint, setSubmittedHint] = useState<string | null>(null)
+  const [pending, setPending] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   return (
     <main className="relative overflow-hidden">
@@ -55,12 +59,14 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                 继续你的 AI 面试练习流程
               </h1>
               <p className="max-w-lg text-lg leading-8 text-(--mst-color-text-secondary)">
-                账号体系接通后，你可以同步面试记录、简历分析结果与个性化偏好。当前先提供完整的前端页面与交互骨架。
+                账号体系接通后，你可以同步面试记录、简历分析结果与个性化偏好。
               </p>
             </div>
 
             <div className="grid max-w-xl gap-4 sm:grid-cols-2">
-              <Surface className="rounded-(--mst-radius-xl) p-5">
+              <Surface
+                className={`${featureCardBaseClass} ${syncFeatureCardClass}`}
+              >
                 <p className="text-sm font-semibold text-(--mst-color-text-primary)">
                   记录同步
                 </p>
@@ -68,7 +74,9 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                   让你的模拟面试、题解记录与设置跨设备保持一致。
                 </p>
               </Surface>
-              <Surface className="rounded-(--mst-radius-xl) p-5">
+              <Surface
+                className={`${featureCardBaseClass} ${personalizedFeatureCardClass}`}
+              >
                 <p className="text-sm font-semibold text-(--mst-color-text-primary)">
                   个性体验
                 </p>
@@ -80,21 +88,6 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
           </section>
 
           <Surface className="rounded-(--mst-radius-xl) p-6 md:p-8">
-            <div className="mb-8 flex items-center gap-3 lg:hidden">
-              <MianshitongLogoMark
-                aria-hidden="true"
-                className="size-9 rounded-xl"
-              />
-              <div>
-                <p className="text-sm font-semibold text-(--mst-color-text-primary)">
-                  面试通
-                </p>
-                <p className="text-xs text-(--mst-color-text-muted)">
-                  AI 面试准备助手
-                </p>
-              </div>
-            </div>
-
             <div className="space-y-2">
               <h2 className="text-2xl font-semibold text-(--mst-color-text-primary)">
                 {copy.title}
@@ -108,7 +101,51 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
               className="mt-6 space-y-4"
               onSubmit={(event) => {
                 event.preventDefault()
-                setSubmittedHint(resolveSubmitHint(mode))
+                const endpoint =
+                  mode === 'login' ? '/api/auth/login' : '/api/auth/register'
+
+                setPending(true)
+                setSubmitError(null)
+
+                // 表单层只负责收集与反馈，真正的鉴权结果以后端响应为准。
+                void fetch(endpoint, {
+                  method: 'POST',
+                  headers: {
+                    'content-type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email,
+                    password,
+                  }),
+                })
+                  .then(async (response) => {
+                    if (!response.ok) {
+                      const data = (await response
+                        .json()
+                        .catch(() => ({}))) as { error?: string }
+
+                      throw new Error(
+                        data.error ??
+                          (mode === 'login'
+                            ? '登录失败，请稍后重试'
+                            : '注册失败，请稍后重试')
+                      )
+                    }
+
+                    // 登录/注册成功后刷新首页，让服务端重新读取最新 cookie。
+                    router.push('/')
+                    router.refresh()
+                  })
+                  .catch((error: unknown) => {
+                    setSubmitError(
+                      error instanceof Error
+                        ? error.message
+                        : '提交失败，请稍后重试'
+                    )
+                  })
+                  .finally(() => {
+                    setPending(false)
+                  })
               }}
             >
               <FormField label="邮箱">
@@ -116,7 +153,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                   autoComplete="email"
                   onChange={(event) => {
                     setEmail(event.target.value)
-                    setSubmittedHint(null)
+                    setSubmitError(null)
                   }}
                   placeholder="请输入邮箱地址"
                   size="lg"
@@ -132,7 +169,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                   }
                   onChange={(event) => {
                     setPassword(event.target.value)
-                    setSubmittedHint(null)
+                    setSubmitError(null)
                   }}
                   placeholder={copy.passwordPlaceholder}
                   size="lg"
@@ -141,20 +178,20 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                 />
               </FormField>
 
-              {submittedHint ? (
+              {submitError ? (
                 <div className="rounded-(--mst-radius-lg) border border-(--mst-color-border-default) bg-slate-900/4 px-4 py-3 text-sm text-(--mst-color-text-secondary) dark:bg-white/4">
-                  {submittedHint}
+                  {submitError}
                 </div>
               ) : null}
 
               <Button
                 className="h-11 w-full"
-                disabled={!email || !password}
+                disabled={!email || !password || pending}
                 htmlType="submit"
                 size="lg"
                 variant="primary"
               >
-                {copy.submitLabel}
+                {pending ? '提交中...' : copy.submitLabel}
               </Button>
             </form>
 
