@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mianshitong/db": "workspace:*",
     "@mianshitong/tokens": "workspace:*",
     "@mianshitong/ui": "workspace:*",
     "embla-carousel": "^8.6.0",

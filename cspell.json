@@ -20,17 +20,22 @@
     "apps",
     "cssinjs",
     "Hiragino",
+    "isready",
     "linecap",
     "linejoin",
     "mianshitong",
     "nextjs",
     "monorepo",
     "opengraph",
+    "pkey",
     "PingFang",
     "remixicon",
     "turbopack",
     "Segoe",
     "MIAN",
-    "embla"
+    "embla",
+    "cuid",
+    "fkey",
+    "healthcheck"
   ]
 }

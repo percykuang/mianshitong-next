@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mianshitong-next-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mianshitong_next
+      POSTGRES_USER: mianshitong_next
+      POSTGRES_PASSWORD: mianshitong_next
+    ports:
+      - '5434:5432'
+    volumes:
+      - mianshitong-next-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mianshitong_next -d mianshitong_next']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mianshitong-next-postgres-data:
