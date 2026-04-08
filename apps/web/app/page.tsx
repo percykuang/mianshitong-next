@@ -1,51 +1,205 @@
+import Link from 'next/link'
+import {
+  ChevronRight,
+  CircleCheck,
+  Code,
+  FileText,
+  MianshitongLogoMark,
+  MessageSquare,
+  Sparkles,
+  Surface,
+} from '@mianshitong/ui'
+import { HomeDemoCarousel } from '@/components/home-demo-carousel'
+import { WebHeaderActions } from '@/components/web-header-actions'
+
+const highlights = [
+  '专注前端开发领域',
+  '基于最新技术栈',
+  'AI 智能分析',
+  '即时反馈建议',
+] as const
+
 const features = [
-  'App Router + TypeScript 最小骨架',
-  '适合在 monorepo 中继续拆分共享包',
-  '保留清晰的页面与样式入口，方便后续扩展业务模块',
-]
+  {
+    title: '简历优化',
+    description: '专业的简历分析和优化建议，帮你打造脱颖而出的简历。',
+    icon: FileText,
+  },
+  {
+    title: '模拟面试',
+    description: '真实的面试场景模拟，提供即时反馈和改进建议。',
+    icon: MessageSquare,
+  },
+  {
+    title: '面试题解答',
+    description: '涵盖前端、算法、系统设计等各类编程面试题详解。',
+    icon: Code,
+  },
+] as const
+
+const demos = [
+  {
+    title: '简历智能分析',
+    description: '上传简历，AI 自动分析并提供优化建议。',
+  },
+  {
+    title: '模拟面试场景',
+    description: '真实面试对话，实时反馈和评分。',
+  },
+  {
+    title: '面试题详解',
+    description: '前端经典面试题目，详细解答和思路分析。',
+  },
+] as const
 
 export default function HomePage() {
+  const currentUserEmail = null
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
-      <section className="rounded-[28px] border border-slate-900/10 bg-white/75 p-6 shadow-[0_30px_60px_rgba(19,34,56,0.12)] backdrop-blur-xl md:p-12">
-        <span className="inline-flex items-center rounded-full bg-sky-600/12 px-4 py-2 text-sm font-bold tracking-[0.12em] text-sky-700 uppercase">
-          apps/web
-        </span>
-        <h1 className="mt-5 max-w-4xl text-5xl leading-[0.98] font-bold tracking-[-0.04em] text-slate-900 md:text-7xl">
-          用户侧 Web 应用已经就位
-        </h1>
-        <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
-          这是一个适合作为产品主站、聊天页或业务前台的 Next.js 模板起点。
-          结构保持轻量，方便你下一步接入鉴权、接口层和共享组件。
-        </p>
-        <div className="mt-7 flex flex-wrap items-center gap-4">
-          <a
-            className="inline-flex items-center justify-center rounded-2xl bg-sky-700 px-5 py-3.5 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5 hover:bg-sky-800"
-            href="https://nextjs.org/docs"
-            target="_blank"
-            rel="noreferrer"
-          >
-            查看 Next.js 文档
-          </a>
-          <span className="text-sm text-slate-600 md:text-base">
-            从这里继续搭你的实际业务页面
-          </span>
+    <div className="min-h-screen">
+      <header>
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 md:px-6">
+          <div className="flex items-center gap-3">
+            <MianshitongLogoMark
+              aria-hidden="true"
+              className="size-9 rounded-xl shadow-(--mst-shadow-sm)"
+            />
+            <span className="text-lg font-semibold text-(--mst-color-primary)">
+              面试通
+            </span>
+          </div>
+          <WebHeaderActions userEmail={currentUserEmail} />
+        </div>
+      </header>
+
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+        <div className="mx-auto max-w-4xl space-y-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-(--mst-color-border-default) bg-slate-900/4 px-3 py-1 text-sm text-(--mst-color-text-secondary) dark:bg-white/6">
+            <Sparkles className="size-4 text-(--mst-color-primary)" />
+            <span>由 AI 驱动的智能面试助手</span>
+          </div>
+
+          <h1 className="text-4xl font-bold tracking-tight text-balance text-(--mst-color-text-primary) md:text-6xl">
+            你的专属
+            <span className="text-(--mst-color-primary)"> AI Agent</span> 面试官
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary) md:text-xl">
+            专注编程领域，尤其前端开发。提供简历优化、模拟面试、面试题解答等全方位面试辅导服务。
+          </p>
+
+          <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+            <Link
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-(--mst-color-primary) px-8 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
+              href="/chat"
+            >
+              立即开始
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-8 md:gap-6">
+            {highlights.map((item) => (
+              <div
+                className="flex items-center gap-2 text-sm text-(--mst-color-text-secondary)"
+                key={item}
+              >
+                <CircleCheck className="size-4 text-(--mst-color-primary)" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="mt-7 rounded-[28px] border border-slate-900/10 bg-white/75 p-6 shadow-[0_30px_60px_rgba(19,34,56,0.12)] backdrop-blur-xl md:p-8">
-        <h2 className="text-2xl font-semibold text-slate-900">当前模板包含</h2>
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          {features.map((feature) => (
-            <article
-              className="rounded-3xl border border-slate-900/8 bg-white/70 p-6 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]"
-              key={feature}
-            >
-              <p className="leading-7">{feature}</p>
-            </article>
-          ))}
+      <section
+        className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24"
+        id="features"
+      >
+        <div className="mb-12 space-y-4 text-center">
+          <h2 className="text-3xl font-bold text-balance text-(--mst-color-text-primary) md:text-4xl">
+            核心功能
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary)">
+            全方位的面试准备解决方案
+          </p>
+        </div>
+
+        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
+          {features.map((item) => {
+            const Icon = item.icon
+
+            return (
+              <Surface
+                className="space-y-4 rounded-lg p-6 shadow-(--mst-shadow-sm) transition-colors hover:border-(--mst-color-primary) dark:bg-white/4"
+                key={item.title}
+              >
+                <div className="flex size-12 items-center justify-center rounded-lg bg-(--mst-color-primary)/10 text-(--mst-color-primary)">
+                  <Icon className="size-6" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-(--mst-color-text-primary)">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-(--mst-color-text-secondary)">
+                    {item.description}
+                  </p>
+                </div>
+              </Surface>
+            )
+          })}
         </div>
       </section>
-    </main>
+
+      <section className=" px-4 py-16  md:py-24">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="mb-12 space-y-4 text-center">
+            <h2 className="text-3xl font-bold text-balance text-(--mst-color-text-primary) md:text-4xl">
+              功能演示
+            </h2>
+            <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary)">
+              看看 AI 面试官如何帮助你准备面试
+            </p>
+          </div>
+
+          <HomeDemoCarousel demos={demos} />
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
+        <div className="mx-auto flex max-w-4xl flex-col space-y-6 rounded-lg bg-(--mst-color-primary) p-8 text-center text-white shadow-(--mst-shadow-sm) md:p-12">
+          <h2 className="text-3xl font-bold text-balance md:text-4xl">
+            准备好开始你的面试准备了吗？
+          </h2>
+          <p className="mx-auto max-w-2xl text-lg text-balance text-white/90">
+            立即与 AI 面试官对话，获取专业的面试指导和建议。
+          </p>
+          <div className="flex pt-4">
+            <Link
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-white px-8 text-sm font-semibold text-(--mst-color-primary) transition-colors hover:bg-slate-100"
+              href="/chat"
+            >
+              开始对话
+              <ChevronRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-(--mst-color-border-default)">
+        <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex items-center gap-2">
+              <div className="flex size-6 items-center justify-center rounded bg-(--mst-color-primary)">
+                <Sparkles className="size-4 text-white" />
+              </div>
+              <span className="text-sm text-(--mst-color-text-muted)">
+                © 2026 面试通
+              </span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }

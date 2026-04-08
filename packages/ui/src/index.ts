@@ -1,4 +1,8 @@
-export { AppUiProvider } from './providers/app-ui-provider'
+export {
+  AppUiProvider,
+  useThemeMode,
+  type ThemeMode,
+} from './providers/app-ui-provider'
 
 export { Badge } from './components/badge'
 export { Button } from './components/button'
@@ -19,5 +23,22 @@ export { Tooltip } from './components/tooltip'
 export { FilterBar } from './components/form/filter-bar'
 export { FormActions } from './components/form/form-actions'
 export { FormField } from './components/form/form-field'
+
+export {
+  Github,
+  MianshitongLogoMark,
+  Moon,
+  Code,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  Dashboard,
+  FileText,
+  MessageSquare,
+  Sparkles,
+  Sun,
+  User,
+} from '@mianshitong/icons'
 
 export * from './antd/bridge'
