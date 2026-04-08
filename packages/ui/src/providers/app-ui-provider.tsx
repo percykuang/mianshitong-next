@@ -5,12 +5,9 @@ import { StyleProvider } from '@ant-design/cssinjs'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { App, ConfigProvider } from 'antd'
 import {
-  adminThemeOverrides,
   createAntdTheme,
-  darkTheme,
-  lightTheme,
-  type MianshitongTokens,
-  webThemeOverrides,
+  createThemeTokens,
+  type ThemeMode as MianshitongThemeMode,
 } from '@mianshitong/tokens'
 import {
   createContext,
@@ -23,7 +20,7 @@ import {
 
 const THEME_STORAGE_KEY = 'mst-theme'
 
-export type ThemeMode = 'light' | 'dark'
+export type ThemeMode = MianshitongThemeMode
 
 interface ThemeModeContextValue {
   themeMode: ThemeMode
@@ -80,16 +77,6 @@ function applyThemeMode(themeMode: ThemeMode) {
 export interface AppUiProviderProps {
   app: 'web' | 'admin'
   children: ReactNode
-}
-
-function createThemeTokens(
-  app: AppUiProviderProps['app'],
-  themeMode: ThemeMode
-): MianshitongTokens {
-  return {
-    ...(themeMode === 'dark' ? darkTheme : lightTheme),
-    ...(app === 'web' ? webThemeOverrides : adminThemeOverrides),
-  }
 }
 
 export function AppUiProvider({ app, children }: AppUiProviderProps) {

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import '@mianshitong/tokens/variables.css'
+import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
 
@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
 }
 
+const themeVariablesStyleText = createThemeVariablesStyleText('web')
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,6 +35,7 @@ export default function RootLayout({
   return (
     <html data-theme="light" lang="zh-CN" suppressHydrationWarning>
       <head>
+        <style>{themeVariablesStyleText}</style>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="mst-app mst-app-web">
