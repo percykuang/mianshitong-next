@@ -13,6 +13,11 @@ export { Empty } from './components/empty'
 export { Input } from './components/input'
 export { Modal } from './components/modal'
 export { PageHeader } from './components/page-header'
+export {
+  Popover,
+  type PopoverPlacement,
+  type PopoverProps,
+} from './components/popover'
 export { Select } from './components/select'
 export { Skeleton } from './components/skeleton'
 export { Spinner } from './components/spinner'
@@ -29,6 +34,14 @@ export {
   MianshitongLogoMark,
   Moon,
   Code,
+  Info,
+  Loader,
+  Menu,
+  MoreHorizontal,
+  Pin,
+  Plus,
+  Search,
+  Send,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -38,6 +51,8 @@ export {
   MessageSquare,
   Sparkles,
   Sun,
+  Trash,
   User,
+  Warning,
   X,
 } from '@mianshitong/icons'

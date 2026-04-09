@@ -7,8 +7,9 @@ export {
   RiEditLine as Pencil,
   RiFileCopyLine as Copy,
   RiGithubFill as Github,
-  RiSparklingLine as Sparkles,
   RiMoreLine as MoreHorizontal,
+  RiPushpinLine as Pin,
   RiSearchLine as Search,
   RiSendPlaneLine as Send,
+  RiSparklingLine as Sparkles,
 } from '@remixicon/react'
