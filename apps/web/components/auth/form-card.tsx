@@ -10,7 +10,7 @@ import {
   MianshitongLogoMark,
   Surface,
 } from '@mianshitong/ui'
-import type { AuthPageCopy } from './auth-copy'
+import type { AuthPageCopy } from './copy'
 
 interface AuthFormCardProps {
   mode: 'login' | 'register'

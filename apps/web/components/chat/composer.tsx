@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent, RefObject } from 'react'
 import { Send } from '@mianshitong/ui'
-import { quickPrompts } from './chat-data'
+import { quickPrompts } from './data'
 
 export function ChatComposer({
   draft,

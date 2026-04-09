@@ -4,7 +4,7 @@ import type { ComponentPropsWithoutRef } from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import { type ExtraProps } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChatCodeBlock, renderInlineCode } from './chat-code-block'
+import { ChatCodeBlock, renderInlineCode } from './code-block'
 
 type CodeComponentProps = ComponentPropsWithoutRef<'code'> & ExtraProps
 
@@ -148,7 +148,7 @@ const markdownComponents: Components = {
   hr(props) {
     return (
       <hr
-        className="my-4 border-0 border-t border-(--mst-color-border-default)"
+        className="my-6 border-0 border-t border-(--mst-color-border-default)"
         {...props}
       />
     )

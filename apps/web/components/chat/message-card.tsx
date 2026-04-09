@@ -1,8 +1,8 @@
 'use client'
 
 import { CircleCheck, Sparkles } from '@mianshitong/ui'
-import { type ConversationMessage } from './chat-data'
-import { ChatMarkdown } from './chat-markdown'
+import { type ConversationMessage } from './data'
+import { ChatMarkdown } from './markdown'
 
 export function ChatMessageCard({
   isFirstMessage = false,

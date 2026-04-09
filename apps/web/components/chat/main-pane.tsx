@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, type RefObject } from 'react'
 import { ChevronLeft, Menu } from '@mianshitong/ui'
-import { type ConversationMessage } from './chat-data'
-import { ChatComposer } from './chat-composer'
-import { ChatEmptyState } from './chat-empty-state'
-import { ChatMessageCard } from './chat-message-card'
+import { ChatComposer } from './composer'
+import { type ConversationMessage } from './data'
+import { ChatEmptyState } from './empty-state'
+import { ChatMessageCard } from './message-card'
 
 export function ChatMainPane({
   draft,

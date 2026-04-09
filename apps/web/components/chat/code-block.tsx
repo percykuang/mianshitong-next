@@ -3,7 +3,7 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Check, Copy, Download, useThemeMode } from '@mianshitong/ui'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { highlightCodeBlock } from './chat-shiki'
+import { highlightCodeBlock } from './shiki'
 
 type CodeProps = ComponentPropsWithoutRef<'code'> & {
   inline?: boolean

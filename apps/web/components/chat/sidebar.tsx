@@ -8,9 +8,9 @@ import {
   Tooltip,
   Trash,
 } from '@mianshitong/ui'
-import { type ChatSessionPreview } from './chat-data'
-import { ChatSidebarSessionItem } from './chat-sidebar-session-item'
-import { ChatSidebarUserMenu } from './chat-sidebar-user-menu'
+import { type ChatSessionPreview } from './data'
+import { ChatSidebarSessionItem } from './sidebar-session-item'
+import { ChatSidebarUserMenu } from './sidebar-user-menu'
 
 export function ChatSidebar({
   onCloseSidebar,
