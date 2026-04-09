@@ -2,7 +2,8 @@
   "name": "@mianshitong/admin",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 7071",
+    "dev": "next dev --webpack --port 7071",
+    "dev:turbo": "next dev --turbopack --port 7071",
     "build": "next build",
     "start": "next start --port 7071",
     "lint": "pnpm --dir ../.. exec eslint apps/admin",

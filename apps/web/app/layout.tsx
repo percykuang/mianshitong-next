@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
@@ -36,9 +37,11 @@ export default function RootLayout({
     <html data-theme="light" lang="zh-CN" suppressHydrationWarning>
       <head>
         <style>{themeVariablesStyleText}</style>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="mst-app mst-app-web">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
         <AppUiProvider app="web">{children}</AppUiProvider>
       </body>
     </html>
