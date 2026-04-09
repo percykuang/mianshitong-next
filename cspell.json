@@ -36,6 +36,9 @@
     "embla",
     "cuid",
     "fkey",
-    "healthcheck"
+    "healthcheck",
+    "shiki",
+    "Menlo",
+    "Consolas"
   ]
 }

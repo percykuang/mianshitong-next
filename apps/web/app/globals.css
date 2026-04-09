@@ -53,3 +53,52 @@ html[data-theme='dark'] body {
 * {
   box-sizing: border-box;
 }
+
+.mst-chat-code-block-fallback {
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem;
+  background: rgb(248 250 252);
+  color: rgb(30 41 59);
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.3334;
+}
+
+.mst-chat-code-block-fallback code {
+  display: block;
+  tab-size: 2;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+html[data-theme='dark'] .mst-chat-code-block-fallback {
+  background: #24292e;
+  color: #e1e4e8;
+}
+
+.mst-chat-code-block .shiki {
+  margin: 0;
+  padding: 1rem !important;
+  overflow-x: auto;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.3334;
+}
+
+.mst-chat-code-block .shiki code {
+  display: block;
+  min-width: max-content;
+  tab-size: 2;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.mst-chat-code-block .shiki code span {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}

@@ -1,7 +1,8 @@
 'use client'
 
-import { CircleCheck, MoreHorizontal, Sparkles } from '@mianshitong/ui'
+import { CircleCheck, Sparkles } from '@mianshitong/ui'
 import { type ConversationMessage } from './chat-data'
+import { ChatMarkdown } from './chat-markdown'
 
 export function ChatMessageCard({
   isFirstMessage = false,
@@ -11,6 +12,7 @@ export function ChatMessageCard({
   message: ConversationMessage
 }) {
   const isUser = message.role === 'user'
+  const hasPoints = Boolean(message.points?.length)
 
   return (
     <article className="group/message w-full">
@@ -25,7 +27,7 @@ export function ChatMessageCard({
               isFirstMessage ? '-mt-1' : '-mt-0.5'
             }`}
           >
-            <Sparkles className="size-4" />
+            <Sparkles className="size-3.5" />
           </span>
         ) : null}
 
@@ -39,73 +41,44 @@ export function ChatMessageCard({
           }`}
         >
           <div
-            className={`flex flex-col gap-2 overflow-hidden text-sm ${
+            className={`flex flex-col gap-2 text-sm ${
               isUser
-                ? 'max-w-full self-end rounded-3xl bg-(--mst-color-primary) px-4 py-1.5 text-left text-white shadow-[0_16px_34px_rgb(15_108_189/0.18)]'
-                : 'rounded-(--mst-radius-xl) border border-(--mst-color-border-default) bg-white/74 px-4 py-3 text-left text-(--mst-color-text-primary) shadow-(--mst-shadow-sm) backdrop-blur-md dark:bg-slate-950/58'
+                ? 'max-w-full self-end overflow-hidden rounded-2xl bg-(--mst-color-primary) px-3 py-2 text-left text-white'
+                : 'bg-transparent px-0 py-0 text-left text-(--mst-color-text-primary)'
             }`}
           >
-            {!isUser ? (
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[13px] font-semibold text-(--mst-color-text-primary)">
-                    {message.label}
-                  </p>
-                  <p className="mt-0.5 text-xs text-(--mst-color-text-muted)">
-                    {message.timestamp}
-                  </p>
-                </div>
-                <button
-                  aria-label="更多操作"
-                  className="inline-flex size-7 items-center justify-center rounded-full text-(--mst-color-text-muted) opacity-100 transition-[color,background-color,opacity] hover:bg-slate-900/4 hover:text-(--mst-color-primary) md:opacity-0 md:group-hover/message:opacity-100 dark:hover:bg-white/6"
-                  type="button"
-                >
-                  <MoreHorizontal className="size-4" />
-                </button>
+            {isUser ? (
+              <div className="wrap-break-word whitespace-pre-wrap text-white select-text">
+                {message.content}
               </div>
-            ) : null}
+            ) : (
+              <ChatMarkdown content={message.content} />
+            )}
+          </div>
 
-            <div
-              className={`whitespace-pre-wrap text-sm leading-7 ${
-                isUser
-                  ? 'wrap-break-word text-[15px] text-white select-text'
-                  : 'text-[15px] text-(--mst-color-text-primary) select-text'
-              }`}
-            >
-              {message.content}
-            </div>
-
-            {message.points?.length ? (
-              <div
-                className={`rounded-2xl px-4 py-3 ${
-                  isUser
-                    ? 'bg-white/12'
-                    : 'mt-1 border border-(--mst-color-border-default) bg-slate-900/3 dark:bg-white/4'
-                }`}
-              >
-                <ul
-                  className={`space-y-2.5 text-sm leading-6 ${
-                    isUser
-                      ? 'text-white/88'
-                      : 'text-(--mst-color-text-secondary)'
-                  }`}
-                >
-                  {message.points.map((point) => (
+          {hasPoints ? (
+            isUser ? (
+              <div className="rounded-2xl bg-white/12 px-4 py-3">
+                <ul className="space-y-2.5 text-sm leading-6 text-white/88">
+                  {message.points?.map((point) => (
                     <li className="flex items-start gap-2.5" key={point}>
-                      <CircleCheck
-                        className={`mt-1 size-4 shrink-0 ${
-                          isUser
-                            ? 'text-white/82'
-                            : 'text-(--mst-color-primary)'
-                        }`}
-                      />
+                      <CircleCheck className="mt-1 size-4 shrink-0 text-white/82" />
                       <span>{point}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            ) : null}
-          </div>
+            ) : (
+              <ul className="space-y-2.5 pl-1 text-sm leading-6 text-(--mst-color-text-secondary)">
+                {message.points?.map((point) => (
+                  <li className="flex items-start gap-2.5" key={point}>
+                    <CircleCheck className="mt-1 size-4 shrink-0 text-(--mst-color-primary)" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : null}
         </div>
       </div>
     </article>

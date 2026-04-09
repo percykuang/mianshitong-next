@@ -30,10 +30,13 @@ export { FormActions } from './components/form/form-actions'
 export { FormField } from './components/form/form-field'
 
 export {
+  Check,
+  Copy,
   Github,
   MianshitongLogoMark,
   Moon,
   Code,
+  Download,
   Info,
   Loader,
   Menu,

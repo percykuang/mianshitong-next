@@ -1,4 +1,5 @@
 export {
+  RiCheckLine as Check,
   RiCheckboxCircleLine as CircleCheck,
   RiErrorWarningLine as Warning,
   RiInformationLine as Info,
