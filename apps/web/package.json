@@ -2,7 +2,8 @@
   "name": "@mianshitong/web",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 7070",
+    "dev": "next dev --webpack --port 7070",
+    "dev:turbo": "next dev --turbopack --port 7070",
     "build": "next build",
     "start": "next start --port 7070",
     "lint": "pnpm --dir ../.. exec eslint apps/web",
@@ -10,6 +11,7 @@
   },
   "dependencies": {
     "@mianshitong/db": "workspace:*",
+    "@mianshitong/providers": "workspace:*",
     "@mianshitong/tokens": "workspace:*",
     "@mianshitong/ui": "workspace:*",
     "embla-carousel": "^8.6.0",
