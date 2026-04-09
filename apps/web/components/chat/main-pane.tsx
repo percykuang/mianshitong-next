@@ -3,7 +3,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { ChevronLeft, Menu } from '@mianshitong/ui'
 import { ChatComposer } from './composer'
-import { type ConversationMessage } from './data'
+import { type ChatModelId, type ConversationMessage } from './data'
 import { ChatEmptyState } from './empty-state'
 import { ChatMessageCard } from './message-card'
 
@@ -12,10 +12,12 @@ export function ChatMainPane({
   hasConversationMessages,
   isReplying,
   messages,
+  onModelChange,
   onDraftChange,
   onSelectPrompt,
   onSubmit,
   onToggleSidebar,
+  selectedModelId,
   sidebarOpen,
   textareaRef,
 }: {
@@ -23,10 +25,12 @@ export function ChatMainPane({
   hasConversationMessages: boolean
   isReplying: boolean
   messages: ConversationMessage[]
+  onModelChange: (value: ChatModelId) => void
   onDraftChange: (value: string) => void
   onSelectPrompt: (prompt: string) => void
   onSubmit: () => void
   onToggleSidebar: () => void
+  selectedModelId: ChatModelId
   sidebarOpen: boolean
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
@@ -88,9 +92,11 @@ export function ChatMainPane({
           <ChatComposer
             draft={draft}
             isReplying={isReplying}
+            onModelChange={onModelChange}
             onDraftChange={onDraftChange}
             onSelectPrompt={onSelectPrompt}
             onSubmit={onSubmit}
+            selectedModelId={selectedModelId}
             showQuickPrompts={showEmptyState}
             textareaRef={textareaRef}
           />

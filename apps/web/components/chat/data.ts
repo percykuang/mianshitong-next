@@ -15,6 +15,43 @@ export interface ChatSessionPreview {
   messages: ConversationMessage[]
 }
 
+export interface ChatUsageSummary {
+  used: number
+  max: number
+}
+
+export type ChatModelId = 'deepseek-v3' | 'qwen-max' | 'gpt-4.1-mini'
+
+export interface ChatModelOption {
+  id: ChatModelId
+  label: string
+  description: string
+}
+
+export const chatModelOptions = [
+  {
+    id: 'deepseek-v3',
+    label: 'DeepSeek V3',
+    description: '更适合中文问答和面试表达整理。',
+  },
+  {
+    id: 'qwen-max',
+    label: 'Qwen Max',
+    description: '更均衡，适合多轮追问和结构化输出。',
+  },
+  {
+    id: 'gpt-4.1-mini',
+    label: 'GPT-4.1 Mini',
+    description: '响应更轻快，适合日常练习和快速草拟。',
+  },
+] as const satisfies readonly ChatModelOption[]
+
+export const mockChatUsageByModel: Record<ChatModelId, ChatUsageSummary> = {
+  'deepseek-v3': { used: 12, max: 50 },
+  'qwen-max': { used: 18, max: 50 },
+  'gpt-4.1-mini': { used: 7, max: 50 },
+}
+
 export function formatChatTimestamp(date = new Date()) {
   return new Intl.DateTimeFormat('zh-CN', {
     hour: '2-digit',

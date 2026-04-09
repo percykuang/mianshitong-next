@@ -5,10 +5,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChatMainPane,
   ChatSidebar,
+  chatModelOptions,
   createChatSessionTitle,
   createMockAssistantReply,
   formatChatTimestamp,
   sessionPreviews,
+  type ChatModelId,
   type ChatSessionPreview,
 } from '@/components'
 
@@ -22,6 +24,9 @@ export function ChatShell({ userEmail }: ChatShellProps) {
   const [sessions, setSessions] = useState(sessionPreviews)
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
     null
+  )
+  const [selectedModelId, setSelectedModelId] = useState<ChatModelId>(
+    chatModelOptions[0].id
   )
   const [draft, setDraft] = useState('')
   const [isReplying, setIsReplying] = useState(false)
@@ -207,10 +212,12 @@ export function ChatShell({ userEmail }: ChatShellProps) {
         hasConversationMessages={hasConversationMessages}
         isReplying={isReplying}
         messages={selectedSession?.messages ?? []}
+        onModelChange={setSelectedModelId}
         onDraftChange={setDraft}
         onSelectPrompt={handleSelectPrompt}
         onSubmit={handleSendMessage}
         onToggleSidebar={() => setSidebarOpen((value) => !value)}
+        selectedModelId={selectedModelId}
         sidebarOpen={sidebarOpen}
         textareaRef={composerRef}
       />
