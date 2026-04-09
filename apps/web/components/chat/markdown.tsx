@@ -1,6 +1,6 @@
 'use client'
 
-import type { ComponentPropsWithoutRef } from 'react'
+import { Children, isValidElement, type ComponentPropsWithoutRef } from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import { type ExtraProps } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -12,16 +12,62 @@ function hasClassName(value: string | undefined, expectedClassName: string) {
   return value?.split(/\s+/).includes(expectedClassName) ?? false
 }
 
-function isBlockCode({ children, className, node }: CodeComponentProps) {
-  const content = String(children)
-  const hasLanguageClass = /language-[\w-]+/.test(className ?? '')
-  const hasMultilineContent = content.includes('\n')
-  const spansMultipleSourceLines =
-    typeof node?.position?.start.line === 'number' &&
-    typeof node.position.end.line === 'number' &&
-    node.position.start.line !== node.position.end.line
+function normalizeMarkdownContent(
+  content: string,
+  { completeUnclosedFence = false }: { completeUnclosedFence?: boolean } = {}
+) {
+  const normalized = content
+    .replace(/\r\n?/g, '\n')
+    // AI 有时会把代码块直接接在段落末尾，这里先把围栏推到新行。
+    .replace(/([^\n])((?:```|~~~)[^\n]*)(?=\n)/g, '$1\n\n$2')
 
-  return hasLanguageClass || hasMultilineContent || spansMultipleSourceLines
+  const lines = normalized.split('\n')
+  const nextLines: string[] = []
+  let activeFenceMarker: '`' | '~' | null = null
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]
+    const trimmedLine = line.trim()
+    const fenceMatch = /^(```+|~~~+)/.exec(trimmedLine)
+
+    if (fenceMatch) {
+      const marker = fenceMatch[1][0] as '`' | '~'
+
+      if (!activeFenceMarker) {
+        if (nextLines.length > 0 && nextLines[nextLines.length - 1].trim()) {
+          nextLines.push('')
+        }
+
+        activeFenceMarker = marker
+        nextLines.push(line)
+        continue
+      }
+
+      if (activeFenceMarker === marker) {
+        nextLines.push(line)
+        activeFenceMarker = null
+
+        const nextLine = lines[index + 1]
+        if (typeof nextLine === 'string' && nextLine.trim()) {
+          nextLines.push('')
+        }
+
+        continue
+      }
+    }
+
+    nextLines.push(line)
+  }
+
+  if (completeUnclosedFence && activeFenceMarker) {
+    if (nextLines.length > 0 && nextLines[nextLines.length - 1].trim()) {
+      nextLines.push('')
+    }
+
+    nextLines.push(activeFenceMarker.repeat(3))
+  }
+
+  return nextLines.join('\n')
 }
 
 const markdownComponents: Components = {
@@ -136,14 +182,30 @@ const markdownComponents: Components = {
     )
   },
   pre({ children }) {
-    return <>{children}</>
-  },
-  code(props) {
-    if (!isBlockCode(props)) {
-      return renderInlineCode(props)
+    const childNodes = Children.toArray(children)
+    const firstChild = childNodes[0]
+
+    if (
+      isValidElement<CodeComponentProps>(firstChild) &&
+      firstChild.type === 'code'
+    ) {
+      const {
+        children: codeChildren,
+        className,
+        ...codeProps
+      } = firstChild.props
+
+      return (
+        <ChatCodeBlock className={className} {...codeProps}>
+          {codeChildren}
+        </ChatCodeBlock>
+      )
     }
 
-    return <ChatCodeBlock {...props} />
+    return <pre>{children}</pre>
+  },
+  code(props) {
+    return renderInlineCode(props)
   },
   hr(props) {
     return (
@@ -227,11 +289,21 @@ const markdownComponents: Components = {
   },
 }
 
-export function ChatMarkdown({ content }: { content: string }) {
+export function ChatMarkdown({
+  content,
+  streaming = false,
+}: {
+  content: string
+  streaming?: boolean
+}) {
+  const normalizedContent = normalizeMarkdownContent(content, {
+    completeUnclosedFence: streaming,
+  })
+
   return (
     <div className="min-w-0 text-sm leading-6 text-(--mst-color-text-primary) select-text">
       <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
-        {content}
+        {normalizedContent}
       </Markdown>
     </div>
   )

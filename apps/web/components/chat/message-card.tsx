@@ -6,9 +6,11 @@ import { ChatMarkdown } from './markdown'
 
 export function ChatMessageCard({
   isFirstMessage = false,
+  isStreaming = false,
   message,
 }: {
   isFirstMessage?: boolean
+  isStreaming?: boolean
   message: ConversationMessage
 }) {
   const isUser = message.role === 'user'
@@ -52,7 +54,7 @@ export function ChatMessageCard({
                 {message.content}
               </div>
             ) : (
-              <ChatMarkdown content={message.content} />
+              <ChatMarkdown content={message.content} streaming={isStreaming} />
             )}
           </div>
 
