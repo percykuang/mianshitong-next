@@ -1,46 +1,62 @@
 'use client'
 
-import { useEffect, useRef, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { ChevronLeft, Menu } from '@mianshitong/ui'
 import { ChatComposer } from './composer'
-import { type ChatModelId, type ConversationMessage } from './data'
+import {
+  type ChatModelId,
+  type ChatModelOption,
+  type ChatRuntimeDebugInfo,
+  type ConversationMessage,
+} from './data'
 import { ChatEmptyState } from './empty-state'
 import { ChatMessageCard } from './message-card'
+import { ChatThinkingMessage } from './thinking-message'
 
 export function ChatMainPane({
   draft,
   hasConversationMessages,
   isReplying,
+  modelOptions,
   messages,
   onModelChange,
   onDraftChange,
   onSelectPrompt,
+  onStop,
   onSubmit,
   onToggleSidebar,
+  runtimeDebugInfo,
+  showThinkingIndicator,
   selectedModelId,
   sidebarOpen,
+  streamingMessageId,
   textareaRef,
 }: {
   draft: string
   hasConversationMessages: boolean
   isReplying: boolean
+  modelOptions: readonly ChatModelOption[]
   messages: ConversationMessage[]
   onModelChange: (value: ChatModelId) => void
   onDraftChange: (value: string) => void
   onSelectPrompt: (prompt: string) => void
+  onStop: () => void
   onSubmit: () => void
   onToggleSidebar: () => void
+  runtimeDebugInfo: ChatRuntimeDebugInfo | null
+  showThinkingIndicator: boolean
   selectedModelId: ChatModelId
   sidebarOpen: boolean
+  streamingMessageId: string | null
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const showEmptyState = !hasConversationMessages
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       block: 'end',
-      behavior: 'smooth',
+      behavior: isReplying ? 'auto' : 'smooth',
     })
   }, [isReplying, messages])
 
@@ -64,6 +80,14 @@ export function ChatMainPane({
               <Menu className="size-4" />
             )}
           </button>
+
+          {process.env.NODE_ENV === 'development' && runtimeDebugInfo ? (
+            <div className="inline-flex min-h-10 max-w-[min(56vw,560px)] items-center rounded-full border border-[rgb(22_119_255/0.14)] bg-[rgb(22_119_255/0.06)] px-3 py-2 text-xs leading-5 text-[rgb(9_89_217)] shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-[rgb(102_168_255/0.22)] dark:bg-[rgb(8_47_73/0.32)] dark:text-[rgb(145_213_255)]">
+              <span className="truncate">
+                {`调试中：${runtimeDebugInfo.displayTarget} · ${runtimeDebugInfo.actualModel}`}
+              </span>
+            </div>
+          ) : null}
         </header>
 
         <div className="relative flex min-h-0 flex-1 flex-col">
@@ -74,10 +98,13 @@ export function ChatMainPane({
               {messages.map((message, index) => (
                 <ChatMessageCard
                   isFirstMessage={index === 0}
+                  isStreaming={message.id === streamingMessageId}
                   key={message.id}
                   message={message}
                 />
               ))}
+
+              {showThinkingIndicator ? <ChatThinkingMessage /> : null}
 
               <div
                 aria-hidden="true"
@@ -88,13 +115,15 @@ export function ChatMainPane({
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 mx-auto w-full max-w-4xl px-3 pt-2 pb-4 md:px-6 md:pb-5">
+        <div className="sticky bottom-0 z-10 mx-auto w-full max-w-4xl px-2 pb-3 md:px-4 md:pb-4">
           <ChatComposer
             draft={draft}
             isReplying={isReplying}
+            modelOptions={modelOptions}
             onModelChange={onModelChange}
             onDraftChange={onDraftChange}
             onSelectPrompt={onSelectPrompt}
+            onStop={onStop}
             onSubmit={onSubmit}
             selectedModelId={selectedModelId}
             showQuickPrompts={showEmptyState}

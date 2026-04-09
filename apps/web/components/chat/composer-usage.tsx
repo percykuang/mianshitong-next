@@ -68,7 +68,7 @@ export function ComposerUsage({
     <>
       <button
         aria-label={`查看今日额度使用情况：${usagePercentLabel}`}
-        className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white text-(--mst-color-primary) transition-colors duration-200 hover:bg-sky-500/8 dark:bg-slate-950 dark:hover:bg-sky-500/12"
+        className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md bg-white text-(--mst-color-primary) transition-colors duration-200 hover:bg-white dark:bg-slate-950 dark:hover:bg-slate-950"
         onClick={() => setOpen((current) => !current)}
         ref={triggerRef}
         type="button"

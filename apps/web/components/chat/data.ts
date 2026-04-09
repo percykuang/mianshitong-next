@@ -1,3 +1,9 @@
+import type {
+  ChatModelId,
+  ChatModelOption,
+  ChatModelRuntimeInfo,
+} from '@mianshitong/providers'
+
 export interface ConversationMessage {
   id: string
   role: 'assistant' | 'user'
@@ -20,36 +26,12 @@ export interface ChatUsageSummary {
   max: number
 }
 
-export type ChatModelId = 'deepseek-v3' | 'qwen-max' | 'gpt-4.1-mini'
-
-export interface ChatModelOption {
-  id: ChatModelId
-  label: string
-  description: string
-}
-
-export const chatModelOptions = [
-  {
-    id: 'deepseek-v3',
-    label: 'DeepSeek V3',
-    description: '更适合中文问答和面试表达整理。',
-  },
-  {
-    id: 'qwen-max',
-    label: 'Qwen Max',
-    description: '更均衡，适合多轮追问和结构化输出。',
-  },
-  {
-    id: 'gpt-4.1-mini',
-    label: 'GPT-4.1 Mini',
-    description: '响应更轻快，适合日常练习和快速草拟。',
-  },
-] as const satisfies readonly ChatModelOption[]
+export type { ChatModelId, ChatModelOption }
+export type ChatRuntimeDebugInfo = ChatModelRuntimeInfo
 
 export const mockChatUsageByModel: Record<ChatModelId, ChatUsageSummary> = {
-  'deepseek-v3': { used: 12, max: 50 },
-  'qwen-max': { used: 18, max: 50 },
-  'gpt-4.1-mini': { used: 7, max: 50 },
+  'deepseek-chat': { used: 12, max: 50 },
+  'deepseek-reasoner': { used: 6, max: 20 },
 }
 
 export function formatChatTimestamp(date = new Date()) {
@@ -343,6 +325,56 @@ const REACT_VS_VUE_CONTENT = `## React vs Vue 核心对比
 **下一步建议**：
 这个对比表格可以作为面试时的快速参考。如果你想深入某个具体的技术点（比如虚拟DOM差异、响应式原理实现），或者想针对其中一个框架进行模拟面试，我可以继续为你展开。`
 
+const MARKDOWN_EDGE_CASE_CONTENT = `# Markdown 边界输入示例
+
+这条消息专门用来验证 AI 在输出不那么规范的 Markdown 时，我们的渲染是否还能尽量稳定。
+
+## 1. 段落后直接接代码块
+
+下面这个 fenced code 故意紧跟在中文句号后面，没有手动空一行：\`\`\`ts
+const profile = {
+  name: 'Percy',
+  stack: ['React', 'Next.js', 'TypeScript'],
+}
+
+console.log(profile)
+\`\`\`
+代码块结束后这段说明也故意直接贴着。
+
+## 2. 表格后直接接代码块
+
+| 项目 | 状态 |
+| --- | --- |
+| Markdown 标题 | 正常 |
+| 代码块容错 | 重点观察 |
+\`\`\`json
+{
+  "kind": "edge-case",
+  "expectation": "still-render-as-block"
+}
+\`\`\`
+
+## 3. 列表后直接接代码块
+
+1. 先说背景
+2. 再说判断
+3. 最后给示例
+\`\`\`bash
+pnpm dev:web
+pnpm --filter @mianshitong/web typecheck
+\`\`\`
+
+## 4. 引用和普通文本混排
+
+> 这是一段引用，后面紧接着再来一段代码。
+\`\`\`md
+- [x] 结构稳定
+- [x] 代码块不再错误嵌套到段落里
+- [ ] 继续补更多边界 case
+\`\`\`
+
+最后再补一行普通文本，确认代码块收尾后段落间距仍然正常。`
+
 export const sessionPreviews: ChatSessionPreview[] = [
   {
     id: 'react-vs-vue',
@@ -372,6 +404,22 @@ export const sessionPreviews: ChatSessionPreview[] = [
         label: 'AI 面试官',
         timestamp: '刚刚',
         content: MARKDOWN_SHOWCASE_CONTENT,
+      },
+    ],
+  },
+  {
+    id: 'markdown-edge-cases',
+    title: 'Markdown 边界输入',
+    preview:
+      '验证 AI 输出不规范 Markdown 时，代码块前后空行和块级结构是否仍然稳定。',
+    pinned: true,
+    messages: [
+      {
+        id: 'edge-md-1',
+        role: 'assistant',
+        label: 'AI 面试官',
+        timestamp: '刚刚',
+        content: MARKDOWN_EDGE_CASE_CONTENT,
       },
     ],
   },

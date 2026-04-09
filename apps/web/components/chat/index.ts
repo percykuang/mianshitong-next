@@ -3,7 +3,6 @@ export { ComposerUsage } from './composer-usage'
 export { ChatCodeBlock, renderInlineCode } from './code-block'
 export { ChatComposer } from './composer'
 export {
-  chatModelOptions,
   createChatSessionTitle,
   createMockAssistantReply,
   formatChatTimestamp,
@@ -11,6 +10,7 @@ export {
   quickPrompts,
   type ChatModelId,
   type ChatModelOption,
+  type ChatRuntimeDebugInfo,
   sessionPreviews,
   type ChatSessionPreview,
   type ConversationMessage,
@@ -24,3 +24,4 @@ export { highlightCodeBlock, resolveShikiLanguage } from './shiki'
 export { ChatSidebarSessionItem } from './sidebar-session-item'
 export { ChatSidebarUserMenu } from './sidebar-user-menu'
 export { ChatSidebar } from './sidebar'
+export { ChatThinkingMessage } from './thinking-message'
