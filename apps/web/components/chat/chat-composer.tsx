@@ -44,7 +44,7 @@ export function ChatComposer({
         >
           {quickPrompts.map((prompt) => (
             <button
-              className="flex h-auto w-full cursor-pointer justify-center rounded-full border border-(--mst-color-border-default) bg-white/78 p-3 text-left text-sm font-medium leading-relaxed whitespace-normal text-(--mst-color-text-secondary) shadow-(--mst-shadow-sm) backdrop-blur-sm transition-[background-color,border-color,color,transform,box-shadow] duration-200 hover:-translate-y-px hover:border-(--mst-color-primary) hover:bg-white/92 hover:text-(--mst-color-text-primary) hover:shadow-(--mst-shadow-md) dark:bg-slate-950/60 dark:hover:bg-slate-950/76"
+              className="flex h-auto w-full cursor-pointer justify-center rounded-full border border-(--mst-color-border-default) bg-white/78 p-3 text-left text-sm font-medium leading-relaxed whitespace-normal text-(--mst-color-text-secondary) transition-[background-color,border-color,color] duration-200 hover:border-(--mst-color-primary) hover:bg-white/92 hover:text-(--mst-color-text-primary) dark:bg-slate-950/60 dark:hover:bg-slate-950/76"
               key={prompt}
               onClick={() => onSelectPrompt(prompt)}
               type="button"
@@ -56,7 +56,7 @@ export function ChatComposer({
       ) : null}
 
       <form
-        className="relative w-full overflow-hidden rounded-(--mst-radius-xl) border border-(--mst-color-border-default) bg-white/84 p-3 shadow-(--mst-shadow-md) backdrop-blur-xl transition-all duration-200 hover:border-slate-900/12 focus-within:border-(--mst-color-primary) focus-within:shadow-(--mst-shadow-lg) dark:bg-slate-950/72"
+        className="relative w-full overflow-hidden rounded-xl border border-(--mst-color-border-default) bg-white p-3 shadow-xs transition-[border-color,background-color] duration-200 hover:border-slate-900/12 focus-within:border-(--mst-color-border-default) dark:bg-slate-950"
         onSubmit={(event) => {
           event.preventDefault()
           onSubmit()
@@ -84,7 +84,7 @@ export function ChatComposer({
 
           <button
             aria-label="发送消息"
-            className="cursor-pointer inline-flex size-9 items-center justify-center rounded-full bg-(--mst-color-primary) text-white shadow-(--mst-shadow-sm) transition-all duration-200 hover:-translate-y-px hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+            className="cursor-pointer inline-flex size-9 items-center justify-center rounded-full bg-(--mst-color-primary) text-white transition-colors duration-200 hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
             disabled={!draft.trim() || isReplying}
             type="submit"
           >

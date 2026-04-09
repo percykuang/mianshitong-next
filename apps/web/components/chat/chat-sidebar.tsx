@@ -37,7 +37,7 @@ export function ChatSidebar({
 }) {
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-(--mst-color-border-default) bg-white/84 text-(--mst-color-text-primary) shadow-(--mst-shadow-md) backdrop-blur-xl transition-transform duration-200 ease-linear dark:bg-slate-950/68 ${
+      className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-(--mst-color-border-default) bg-white/84 text-(--mst-color-text-primary) backdrop-blur-xl transition-transform duration-200 ease-linear dark:bg-slate-950/68 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
