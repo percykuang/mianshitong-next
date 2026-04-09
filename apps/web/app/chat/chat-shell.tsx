@@ -2,15 +2,15 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChatMainPane } from '@/components/chat/chat-main-pane'
-import { ChatSidebar } from '@/components/chat/chat-sidebar'
 import {
+  ChatMainPane,
+  ChatSidebar,
   createChatSessionTitle,
   createMockAssistantReply,
   formatChatTimestamp,
   sessionPreviews,
   type ChatSessionPreview,
-} from '@/components/chat/chat-data'
+} from '@/components'
 
 interface ChatShellProps {
   userEmail: string | null

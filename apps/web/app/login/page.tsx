@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { AuthFormCard } from '@/components/auth/auth-form-card'
-import { LOGIN_PAGE_COPY } from '@/components/auth/auth-copy'
+import { AuthFormCard, LOGIN_PAGE_COPY } from '@/components'
 import { getCurrentUser } from '@/server/auth-session'
 
 export default async function LoginPage() {

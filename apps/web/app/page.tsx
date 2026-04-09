@@ -9,8 +9,7 @@ import {
   Sparkles,
   Surface,
 } from '@mianshitong/ui'
-import { HomeDemoCarousel } from '@/components/home-demo-carousel'
-import { WebHeaderActions } from '@/components/web-header-actions'
+import { HomeDemoCarousel, WebHeaderActions } from '@/components'
 import { getCurrentUser } from '@/server/auth-session'
 
 const highlights = [
