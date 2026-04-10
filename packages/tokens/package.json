@@ -7,6 +7,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "lint": "pnpm --dir ../.. exec eslint packages/tokens"
+  },
   "dependencies": {
     "antd": "^5.29.3"
   }

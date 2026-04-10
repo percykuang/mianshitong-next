@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "lint": "pnpm --dir ../.. exec eslint packages/db",
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "studio": "prisma studio"

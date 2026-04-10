@@ -7,6 +7,9 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "scripts": {
+    "lint": "pnpm --dir ../.. exec eslint packages/icons"
+  },
   "dependencies": {
     "@remixicon/react": "^4.9.0"
   }

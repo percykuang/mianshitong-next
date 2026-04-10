@@ -4,7 +4,7 @@ const config = {
     'at-rule-no-unknown': [
       true,
       {
-        ignoreAtRules: ['custom-variant'],
+        ignoreAtRules: ['custom-variant', 'source'],
       },
     ],
     'import-notation': null,
