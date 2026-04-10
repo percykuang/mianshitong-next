@@ -1,10 +1,11 @@
 'use client'
 
 import { useLayoutEffect, useRef, type RefObject } from 'react'
-import { ChevronLeft, Menu } from '@mianshitong/ui'
+import { ChevronLeft, CodeBlockStyles, Menu } from '@mianshitong/ui'
 import { ChatComposer } from './composer'
 import {
   type ChatModelId,
+  type ChatMessageFeedback,
   type ChatModelOption,
   type ChatRuntimeDebugInfo,
   type ConversationMessage,
@@ -17,13 +18,20 @@ export function ChatMainPane({
   draft,
   hasConversationMessages,
   isReplying,
+  editingMessageId,
+  editingValue,
   modelOptions,
   messages,
+  onCancelEditUserMessage,
   onModelChange,
   onDraftChange,
+  onEditingValueChange,
+  onMessageFeedbackChange,
   onSelectPrompt,
+  onStartEditUserMessage,
   onStop,
   onSubmit,
+  onSubmitEditUserMessage,
   onToggleSidebar,
   runtimeDebugInfo,
   showThinkingIndicator,
@@ -35,13 +43,23 @@ export function ChatMainPane({
   draft: string
   hasConversationMessages: boolean
   isReplying: boolean
+  editingMessageId: string | null
+  editingValue: string
   modelOptions: readonly ChatModelOption[]
   messages: ConversationMessage[]
+  onCancelEditUserMessage: () => void
   onModelChange: (value: ChatModelId) => void
   onDraftChange: (value: string) => void
+  onEditingValueChange: (value: string) => void
+  onMessageFeedbackChange: (
+    messageId: string,
+    feedback: ChatMessageFeedback | null
+  ) => void
   onSelectPrompt: (prompt: string) => void
+  onStartEditUserMessage: (messageId: string, content: string) => void
   onStop: () => void
   onSubmit: () => void
+  onSubmitEditUserMessage: () => void
   onToggleSidebar: () => void
   runtimeDebugInfo: ChatRuntimeDebugInfo | null
   showThinkingIndicator: boolean
@@ -66,6 +84,7 @@ export function ChatMainPane({
         sidebarOpen ? 'md:ml-64' : 'md:ml-0'
       }`}
     >
+      <CodeBlockStyles />
       <div className="overscroll-behavior-contain relative flex h-dvh min-w-0 touch-pan-y flex-col bg-white dark:bg-(--mst-color-bg-page)">
         <header className="flex h-14 shrink-0 items-center gap-2 px-2.5 py-1 md:px-4 md:py-1.5">
           <button
@@ -97,10 +116,22 @@ export function ChatMainPane({
 
               {messages.map((message, index) => (
                 <ChatMessageCard
+                  canEditUserMessage={!isReplying}
+                  editingValue={editingValue}
                   isFirstMessage={index === 0}
+                  isEditing={editingMessageId === message.id}
                   isStreaming={message.id === streamingMessageId}
                   key={message.id}
                   message={message}
+                  onCancelEditUserMessage={onCancelEditUserMessage}
+                  onEditingValueChange={onEditingValueChange}
+                  onFeedbackChange={(feedback) =>
+                    onMessageFeedbackChange(message.id, feedback)
+                  }
+                  onStartEditUserMessage={() =>
+                    onStartEditUserMessage(message.id, message.content)
+                  }
+                  onSubmitEditUserMessage={onSubmitEditUserMessage}
                 />
               ))}
 

@@ -1,29 +1,14 @@
 import {
-  createChatSessionTitle,
   formatChatTimestamp,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
   type ConversationMessage,
 } from '@/components'
 
-interface CreateNextSessionOptions {
-  input: string
-  selectedSessionId: string | null
-  sessions: ChatSessionPreview[]
-}
-
 interface AppendAssistantDraftOptions {
   content: string
   messageId: string
   session: ChatSessionPreview
-}
-
-// 将会话提升到列表顶部，保持会话列表的最近使用顺序。
-export function upsertSessionToTop(
-  currentSessions: ChatSessionPreview[],
-  session: ChatSessionPreview
-) {
-  return [session, ...currentSessions.filter((item) => item.id !== session.id)]
 }
 
 // 从响应头中解析当前实际命中的模型运行时信息。
@@ -44,37 +29,6 @@ export function parseRuntimeDebugInfoFromHeaders(
       headers.get('x-mst-chat-requested-model-id') === 'deepseek-reasoner'
         ? 'deepseek-reasoner'
         : 'deepseek-chat',
-  }
-}
-
-// 根据当前输入创建一条新的用户消息。
-export function createUserMessage(input: string): ConversationMessage {
-  return {
-    id: `user-${Date.now()}`,
-    role: 'user',
-    label: '你',
-    timestamp: formatChatTimestamp(),
-    content: input,
-  }
-}
-
-// 基于当前输入和已选会话构造下一次对话所使用的会话快照。
-export function createNextSession({
-  input,
-  selectedSessionId,
-  sessions,
-}: CreateNextSessionOptions): ChatSessionPreview {
-  const nextSessionId = selectedSessionId ?? `session-${Date.now()}`
-  const baseSession =
-    sessions.find((session) => session.id === nextSessionId) ?? null
-  const userMessage = createUserMessage(input)
-
-  return {
-    id: nextSessionId,
-    title: baseSession?.title ?? createChatSessionTitle(input),
-    preview: input,
-    pinned: baseSession?.pinned,
-    messages: [...(baseSession?.messages ?? []), userMessage],
   }
 }
 

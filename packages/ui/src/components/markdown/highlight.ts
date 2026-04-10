@@ -5,7 +5,7 @@ import {
   codeToHtml,
   type BundledLanguage,
 } from 'shiki/bundle/web'
-import type { ThemeMode } from '@mianshitong/ui'
+import type { ThemeMode } from '../../providers/app-ui-provider'
 
 const LIGHT_THEME = 'github-light'
 const DARK_THEME = 'github-dark'

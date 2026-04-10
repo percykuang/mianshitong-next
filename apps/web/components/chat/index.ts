@@ -1,6 +1,5 @@
 export { ComposerModelSelect } from './composer-model-select'
 export { ComposerUsage } from './composer-usage'
-export { ChatCodeBlock, renderInlineCode } from './code-block'
 export { ChatComposer } from './composer'
 export {
   createChatSessionTitle,
@@ -8,6 +7,7 @@ export {
   formatChatTimestamp,
   mockChatUsageByModel,
   quickPrompts,
+  type ChatMessageFeedback,
   type ChatModelId,
   type ChatModelOption,
   type ChatRuntimeDebugInfo,
@@ -17,11 +17,17 @@ export {
   type ChatUsageSummary,
 } from './data'
 export { ChatEmptyState } from './empty-state'
+export { ChatMessageActions } from './message-actions'
 export { ChatMainPane } from './main-pane'
-export { ChatMarkdown } from './markdown'
 export { ChatMessageCard } from './message-card'
-export { highlightCodeBlock, resolveShikiLanguage } from './shiki'
 export { ChatSidebarSessionItem } from './sidebar-session-item'
 export { ChatSidebarUserMenu } from './sidebar-user-menu'
 export { ChatSidebar } from './sidebar'
 export { ChatThinkingMessage } from './thinking-message'
+export {
+  CodeBlock as ChatCodeBlock,
+  MarkdownRenderer as ChatMarkdown,
+  highlightCodeBlock,
+  renderInlineCode,
+  resolveShikiLanguage,
+} from '@mianshitong/ui'

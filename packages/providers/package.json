@@ -8,6 +8,12 @@
     ".": "./index.ts",
     "./model": "./model/index.ts"
   },
+  "scripts": {
+    "lint": "pnpm --dir ../.. exec eslint packages/providers"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39"
+  },
   "dependencies": {
     "@langchain/openai": "^0.6.16",
     "dotenv": "^16.6.1",

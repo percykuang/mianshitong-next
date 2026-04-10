@@ -1,8 +1,13 @@
 /* 声明全局样式层级顺序：让 antd 样式稳定落在 Tailwind base 与 utilities 之间，避免覆盖顺序失控。 */
 @layer theme, base, antd, components, utilities;
 
+/* 注入 Tailwind CSS v4，并以当前样式入口作为本应用的样式生成起点。 */
 @import 'tailwindcss';
 
+/* 显式注册共享 UI 包源码，确保其中的 Tailwind class 也会被扫描并产出样式。 */
+@source "../../../packages/ui/src";
+
+/* 让 `dark:` 变体跟随 data-theme 属性生效，而不是依赖系统媒体查询。 */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
 :root {
@@ -54,55 +59,6 @@ html[data-theme='dark'] body {
   box-sizing: border-box;
 }
 
-.mst-chat-code-block-fallback {
-  margin: 0;
-  overflow-x: auto;
-  padding: 1rem;
-  background: rgb(248 250 252);
-  color: rgb(30 41 59);
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  font-size: 0.75rem;
-  line-height: 1.3334;
-}
-
-.mst-chat-code-block-fallback code {
-  display: block;
-  tab-size: 2;
-  font-size: inherit;
-  line-height: inherit;
-}
-
-html[data-theme='dark'] .mst-chat-code-block-fallback {
-  background: #24292e;
-  color: #e1e4e8;
-}
-
-.mst-chat-code-block .shiki {
-  margin: 0;
-  padding: 1rem !important;
-  overflow-x: auto;
-  font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-    'Courier New', monospace;
-  font-size: 0.75rem;
-  line-height: 1.3334;
-}
-
-.mst-chat-code-block .shiki code {
-  display: block;
-  min-width: max-content;
-  tab-size: 2;
-  font-size: inherit !important;
-  line-height: inherit !important;
-}
-
-.mst-chat-code-block .shiki code span {
-  font-size: inherit !important;
-  line-height: inherit !important;
-}
-
 @keyframes chat-shell-fade-up {
   from {
     opacity: 0;
@@ -145,5 +101,22 @@ html[data-theme='dark'] .mst-chat-code-block-fallback {
     box-shadow:
       0 1px 2px rgb(15 23 42 / 5%),
       0 0 0 6px rgb(22 119 255 / 8%);
+  }
+}
+
+@keyframes chat-message-action-icon-pop {
+  0% {
+    opacity: 0.72;
+    transform: scale(0.78);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }

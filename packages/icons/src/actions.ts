@@ -12,4 +12,8 @@ export {
   RiSearchLine as Search,
   RiSendPlaneLine as Send,
   RiSparklingLine as Sparkles,
+  RiThumbDownFill as ThumbsDownFill,
+  RiThumbDownLine as ThumbsDown,
+  RiThumbUpFill as ThumbsUpFill,
+  RiThumbUpLine as ThumbsUp,
 } from '@remixicon/react'

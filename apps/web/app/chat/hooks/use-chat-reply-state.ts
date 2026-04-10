@@ -1,9 +1,14 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  sessionPreviews,
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react'
+import {
   type ChatModelId,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
@@ -11,34 +16,35 @@ import {
 import {
   appendAssistantDraftToSession,
   createAssistantFallbackMessage,
-  createNextSession,
-  upsertSessionToTop,
-} from './chat-controller.utils'
-import { streamChatReply } from './stream-chat-reply'
+} from '../utils/chat-message.utils'
+import { createNextSession, sortSessions } from '../utils/chat-session.utils'
+import { streamChatReply } from '../utils/stream-chat-reply'
 
-interface UseChatControllerOptions {
+interface UseChatReplyStateOptions {
   initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
   initialSelectedModelId: ChatModelId
+  selectedSessionId: string | null
+  sessions: ChatSessionPreview[]
+  setSelectedSessionId: Dispatch<SetStateAction<string | null>>
+  setSessions: Dispatch<SetStateAction<ChatSessionPreview[]>>
 }
 
-export function useChatController({
+export function useChatReplyState({
   initialRuntimeDebugInfoByModelId,
   initialSelectedModelId,
-}: UseChatControllerOptions) {
-  const router = useRouter()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [sessions, setSessions] = useState(sessionPreviews)
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null
-  )
-  const [selectedModelId, setSelectedModelId] = useState<ChatModelId>(
-    initialSelectedModelId
-  )
+  selectedSessionId,
+  sessions,
+  setSelectedSessionId,
+  setSessions,
+}: UseChatReplyStateOptions) {
   const [draft, setDraft] = useState('')
   const [isReplying, setIsReplying] = useState(false)
   const [isAwaitingFirstChunk, setIsAwaitingFirstChunk] = useState(false)
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null
+  )
+  const [selectedModelId, setSelectedModelId] = useState<ChatModelId>(
+    initialSelectedModelId
   )
   const [runtimeDebugInfoByModelId, setRuntimeDebugInfoByModelId] = useState<
     Record<ChatModelId, ChatRuntimeDebugInfo>
@@ -46,82 +52,11 @@ export function useChatController({
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   const replyAbortControllerRef = useRef<AbortController | null>(null)
 
-  const selectedSession = useMemo(
-    () =>
-      selectedSessionId
-        ? (sessions.find((session) => session.id === selectedSessionId) ?? null)
-        : null,
-    [selectedSessionId, sessions]
-  )
-
-  const hasConversationMessages = Boolean(selectedSession?.messages.length)
-  const runtimeDebugInfo = runtimeDebugInfoByModelId[selectedModelId] ?? null
-
   useEffect(() => {
     return () => {
       replyAbortControllerRef.current?.abort()
     }
   }, [])
-
-  function handleLogout() {
-    void fetch('/api/auth/logout', {
-      method: 'POST',
-    }).finally(() => {
-      router.refresh()
-    })
-  }
-
-  function handleNewSession() {
-    setSelectedSessionId(null)
-    setDraft('')
-  }
-
-  function handleSelectSession(sessionId: string) {
-    setSelectedSessionId(sessionId)
-  }
-
-  async function handleSelectPrompt(prompt: string) {
-    if (isReplying) {
-      return
-    }
-
-    await handleSendMessage(prompt)
-  }
-
-  function handleTogglePinSession(sessionId: string) {
-    setSessions((currentSessions) => {
-      const targetSession = currentSessions.find(
-        (session) => session.id === sessionId
-      )
-
-      if (!targetSession) {
-        return currentSessions
-      }
-
-      const nextSession = {
-        ...targetSession,
-        pinned: !targetSession.pinned,
-      }
-
-      if (nextSession.pinned) {
-        return upsertSessionToTop(currentSessions, nextSession)
-      }
-
-      return currentSessions.map((session) =>
-        session.id === sessionId ? nextSession : session
-      )
-    })
-  }
-
-  function handleDeleteSession(sessionId: string) {
-    setSessions((currentSessions) =>
-      currentSessions.filter((session) => session.id !== sessionId)
-    )
-
-    setSelectedSessionId((currentSelectedSessionId) =>
-      currentSelectedSessionId === sessionId ? null : currentSelectedSessionId
-    )
-  }
 
   function handleStopReply() {
     replyAbortControllerRef.current?.abort()
@@ -144,13 +79,16 @@ export function useChatController({
           currentSessions.find((session) => session.id === sessionId) ??
           fallbackSession
 
-        return upsertSessionToTop(
-          currentSessions,
-          appendAssistantDraftToSession({
-            content,
-            messageId,
-            session: currentSession,
-          })
+        return sortSessions(
+          currentSessions.map((session) =>
+            session.id === sessionId
+              ? appendAssistantDraftToSession({
+                  content,
+                  messageId,
+                  session: currentSession,
+                })
+              : session
+          )
         )
       })
     })
@@ -175,7 +113,13 @@ export function useChatController({
     setIsAwaitingFirstChunk(true)
     setSelectedSessionId(nextSessionId)
     setSessions((currentSessions) =>
-      upsertSessionToTop(currentSessions, nextSession)
+      sortSessions(
+        currentSessions.some((session) => session.id === nextSession.id)
+          ? currentSessions.map((session) =>
+              session.id === nextSession.id ? nextSession : session
+            )
+          : [...currentSessions, nextSession]
+      )
     )
     requestAnimationFrame(() => {
       composerRef.current?.focus()
@@ -232,11 +176,17 @@ export function useChatController({
           currentSessions.find((session) => session.id === nextSessionId) ??
           nextSession
 
-        return upsertSessionToTop(currentSessions, {
-          ...currentSession,
-          preview: fallbackMessage.content,
-          messages: [...currentSession.messages, fallbackMessage],
-        })
+        return sortSessions(
+          currentSessions.map((session) =>
+            session.id === nextSessionId
+              ? {
+                  ...currentSession,
+                  preview: fallbackMessage.content,
+                  messages: [...currentSession.messages, fallbackMessage],
+                }
+              : session
+          )
+        )
       })
     } finally {
       replyAbortControllerRef.current = null
@@ -247,29 +197,26 @@ export function useChatController({
     }
   }
 
+  async function handleSelectPrompt(prompt: string) {
+    if (isReplying) {
+      return
+    }
+
+    await handleSendMessage(prompt)
+  }
+
   return {
     composerRef,
     draft,
-    handleDeleteSession,
-    handleLogout,
-    handleNewSession,
     handleSelectPrompt,
-    handleSelectSession,
     handleSendMessage,
     handleStopReply,
-    handleTogglePinSession,
-    hasConversationMessages,
     isReplying,
-    runtimeDebugInfo,
+    runtimeDebugInfo: runtimeDebugInfoByModelId[selectedModelId] ?? null,
     selectedModelId,
-    selectedSession,
-    selectedSessionId,
-    sessions,
     setDraft,
     setSelectedModelId,
-    setSidebarOpen,
     showThinkingIndicator: isReplying && isAwaitingFirstChunk,
-    sidebarOpen,
     streamingMessageId,
   }
 }

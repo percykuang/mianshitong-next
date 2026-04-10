@@ -3,7 +3,7 @@ import type {
   ChatRuntimeDebugInfo,
   ConversationMessage,
 } from '@/components'
-import { parseRuntimeDebugInfoFromHeaders } from './chat-controller.utils'
+import { parseRuntimeDebugInfoFromHeaders } from './chat-message.utils'
 
 interface StreamChatReplyOptions {
   history: Array<Pick<ConversationMessage, 'content' | 'role'>>

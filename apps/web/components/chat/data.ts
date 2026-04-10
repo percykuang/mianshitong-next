@@ -10,11 +10,16 @@ export interface ConversationMessage {
   label: string
   timestamp: string
   content: string
+  feedback?: ChatMessageFeedback
   points?: string[]
 }
 
+export type ChatMessageFeedback = 'dislike' | 'like'
+
 export interface ChatSessionPreview {
+  createdAt: number
   id: string
+  pinnedAt?: number
   title: string
   preview: string
   pinned?: boolean
@@ -377,7 +382,9 @@ pnpm --filter @mianshitong/web typecheck
 
 export const sessionPreviews: ChatSessionPreview[] = [
   {
+    createdAt: 700,
     id: 'react-vs-vue',
+    pinnedAt: 700,
     title: 'React vs Vue 对比',
     preview:
       '用于验证双表格、分节标题、强调文本和建议区块的 Markdown 渲染效果。',
@@ -393,7 +400,9 @@ export const sessionPreviews: ChatSessionPreview[] = [
     ],
   },
   {
+    createdAt: 650,
     id: 'markdown-showcase',
+    pinnedAt: 650,
     title: 'Markdown 渲染全量示例',
     preview: '集中验证标题、引用、表格、任务列表、代码块和高亮效果。',
     pinned: true,
@@ -408,7 +417,9 @@ export const sessionPreviews: ChatSessionPreview[] = [
     ],
   },
   {
+    createdAt: 600,
     id: 'markdown-edge-cases',
+    pinnedAt: 600,
     title: 'Markdown 边界输入',
     preview:
       '验证 AI 输出不规范 Markdown 时，代码块前后空行和块级结构是否仍然稳定。',
@@ -424,7 +435,9 @@ export const sessionPreviews: ChatSessionPreview[] = [
     ],
   },
   {
+    createdAt: 550,
     id: 'frontend-first-round',
+    pinnedAt: 550,
     title: '前端一面模拟模拟模拟模拟模拟模拟拟模拟模拟模拟模',
     preview: '围绕最近项目经历，追问你如何定位首屏性能瓶颈与拆解优化方案。',
     pinned: true,
@@ -484,6 +497,7 @@ const optimizationChecklist = [
     ],
   },
   {
+    createdAt: 500,
     id: 'resume-review',
     title: '简历项目深挖简历项目深挖简历项目深挖简历项目深挖',
     preview: '把“做了什么”改成“为什么做、如何权衡、结果如何量化”。',
@@ -537,6 +551,7 @@ const optimizationChecklist = [
     ],
   },
   {
+    createdAt: 450,
     id: 'algorithm-warmup',
     title: '算法热身',
     preview: '更偏基础节奏，适合正式面试前快速找回答题状态。',

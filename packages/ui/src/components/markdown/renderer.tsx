@@ -1,15 +1,57 @@
 'use client'
 
-import { Children, isValidElement, type ComponentPropsWithoutRef } from 'react'
+import {
+  Children,
+  isValidElement,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from 'react'
 import Markdown, { type Components } from 'react-markdown'
 import { type ExtraProps } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChatCodeBlock, renderInlineCode } from './code-block'
+import {
+  CodeBlock,
+  CodeBlockStyles,
+  renderInlineCode,
+  type MarkdownCodeProps,
+} from './code-block'
 
-type CodeComponentProps = ComponentPropsWithoutRef<'code'> & ExtraProps
+type CodeComponentProps = ComponentPropsWithoutRef<'code'> &
+  ExtraProps &
+  MarkdownCodeProps
+
+export interface MarkdownRendererProps {
+  content: string
+  includeCodeBlockStyles?: boolean
+  streaming?: boolean
+}
+
+function sanitizeMarkdownElementProps<T extends { node?: unknown }>(props: T) {
+  const nextProps = { ...props }
+  delete nextProps.node
+  return nextProps
+}
 
 function hasClassName(value: string | undefined, expectedClassName: string) {
   return value?.split(/\s+/).includes(expectedClassName) ?? false
+}
+
+function containsBlockChild(children: ReactNode) {
+  return Children.toArray(children).some((child) => {
+    if (!isValidElement(child)) {
+      return false
+    }
+
+    if (child.type === CodeBlock) {
+      return true
+    }
+
+    return typeof child.type === 'string'
+      ? ['blockquote', 'div', 'hr', 'ol', 'pre', 'table', 'ul'].includes(
+          child.type
+        )
+      : false
+  })
 }
 
 function normalizeMarkdownContent(
@@ -18,7 +60,6 @@ function normalizeMarkdownContent(
 ) {
   const normalized = content
     .replace(/\r\n?/g, '\n')
-    // AI 有时会把代码块直接接在段落末尾，这里先把围栏推到新行。
     .replace(/([^\n])((?:```|~~~)[^\n]*)(?=\n)/g, '$1\n\n$2')
 
   const lines = normalized.split('\n')
@@ -72,46 +113,61 @@ function normalizeMarkdownContent(
 
 const markdownComponents: Components = {
   h1({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <h1
         className="text-2xl leading-tight font-semibold tracking-tight text-(--mst-color-text-primary) not-first:mt-5"
-        {...props}
+        {...elementProps}
       >
         {children}
       </h1>
     )
   },
   h2({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <h2
         className="text-xl leading-tight font-semibold tracking-tight text-(--mst-color-text-primary) not-first:mt-4"
-        {...props}
+        {...elementProps}
       >
         {children}
       </h2>
     )
   },
   h3({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <h3
         className="text-lg leading-tight font-semibold text-(--mst-color-text-primary) not-first:mt-4"
-        {...props}
+        {...elementProps}
       >
         {children}
       </h3>
     )
   },
   p({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+    const className = 'leading-6 text-(--mst-color-text-primary) not-first:mt-3'
+
+    if (containsBlockChild(children)) {
+      return (
+        <div className={className} {...elementProps}>
+          {children}
+        </div>
+      )
+    }
+
     return (
-      <p
-        className="leading-6 text-(--mst-color-text-primary) not-first:mt-3"
-        {...props}
-      >
+      <p className={className} {...elementProps}>
         {children}
       </p>
     )
   },
   a({ children, href, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
     const isExternalLink = Boolean(
       href?.match(/^(https?:)?\/\//) || href?.startsWith('mailto:')
     )
@@ -122,13 +178,14 @@ const markdownComponents: Components = {
         href={href}
         rel={isExternalLink ? 'noreferrer noopener' : undefined}
         target={isExternalLink ? '_blank' : undefined}
-        {...props}
+        {...elementProps}
       >
         {children}
       </a>
     )
   },
   ul({ children, className, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
     const isTaskList = hasClassName(className, 'contains-task-list')
 
     return (
@@ -139,23 +196,26 @@ const markdownComponents: Components = {
             : 'list-disc space-y-2 pl-6 leading-6 text-(--mst-color-text-primary) marker:text-(--mst-color-primary) not-first:mt-3'
         }
         data-task-list={isTaskList ? 'true' : undefined}
-        {...props}
+        {...elementProps}
       >
         {children}
       </ul>
     )
   },
   ol({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <ol
         className="list-decimal space-y-2 pl-6 leading-6 text-(--mst-color-text-primary) marker:font-semibold marker:text-(--mst-color-primary) not-first:mt-3"
-        {...props}
+        {...elementProps}
       >
         {children}
       </ol>
     )
   },
   li({ children, className, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
     const isTaskListItem = hasClassName(className, 'task-list-item')
 
     return (
@@ -165,17 +225,19 @@ const markdownComponents: Components = {
             ? 'flex items-center gap-2.5 rounded-xl px-0 py-0.5 text-(--mst-color-text-primary)'
             : 'pl-1 text-(--mst-color-text-primary)'
         }
-        {...props}
+        {...elementProps}
       >
         {children}
       </li>
     )
   },
   blockquote({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <blockquote
         className="border-l-[3px] border-(--mst-color-primary) bg-slate-900/4 py-0.5 pr-4 pl-4 text-(--mst-color-text-secondary) italic not-first:mt-4 dark:bg-white/6"
-        {...props}
+        {...elementProps}
       >
         {children}
       </blockquote>
@@ -185,10 +247,7 @@ const markdownComponents: Components = {
     const childNodes = Children.toArray(children)
     const firstChild = childNodes[0]
 
-    if (
-      isValidElement<CodeComponentProps>(firstChild) &&
-      firstChild.type === 'code'
-    ) {
+    if (isValidElement<CodeComponentProps>(firstChild)) {
       const {
         children: codeChildren,
         className,
@@ -196,35 +255,39 @@ const markdownComponents: Components = {
       } = firstChild.props
 
       return (
-        <ChatCodeBlock className={className} {...codeProps}>
+        <CodeBlock className={className} includeStyles={false} {...codeProps}>
           {codeChildren}
-        </ChatCodeBlock>
+        </CodeBlock>
       )
     }
 
     return <pre>{children}</pre>
   },
   code(props) {
-    return renderInlineCode(props)
+    return renderInlineCode(sanitizeMarkdownElementProps(props))
   },
   hr(props) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <hr
         className="my-6 border-0 border-t border-(--mst-color-border-default)"
-        {...props}
+        {...elementProps}
       />
     )
   },
   table({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <div
         className="my-4 overflow-hidden border border-(--mst-color-border-default)"
-        data-chat-markdown="table-wrapper"
+        data-markdown="table-wrapper"
       >
         <div className="overflow-x-auto">
           <table
             className="w-full table-fixed border-collapse text-left"
-            {...props}
+            {...elementProps}
           >
             {children}
           </table>
@@ -233,75 +296,86 @@ const markdownComponents: Components = {
     )
   },
   thead({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
-      <thead className="bg-slate-900/4 dark:bg-white/6" {...props}>
+      <thead className="bg-slate-900/4 dark:bg-white/6" {...elementProps}>
         {children}
       </thead>
     )
   },
   tbody({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <tbody
         className="divide-y divide-(--mst-color-border-default)"
-        {...props}
+        {...elementProps}
       >
         {children}
       </tbody>
     )
   },
   tr({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
-      <tr className="align-top" {...props}>
+      <tr className="align-top" {...elementProps}>
         {children}
       </tr>
     )
   },
   th({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <th
         className="px-4 py-2 text-left text-sm leading-5 font-semibold whitespace-nowrap first:w-[22%]"
-        {...props}
+        {...elementProps}
       >
         {children}
       </th>
     )
   },
   td({ children, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <td
         className="px-4 py-2 text-sm leading-6 wrap-break-word first:w-[22%]"
-        {...props}
+        {...elementProps}
       >
         {children}
       </td>
     )
   },
   input({ checked, className, ...props }) {
+    const elementProps = sanitizeMarkdownElementProps(props)
+
     return (
       <input
         checked={checked}
         className={`mr-0 size-3.5 shrink-0 rounded-sm border border-(--mst-color-border-default) accent-(--mst-color-primary) ${className ?? ''}`.trim()}
         disabled
         type="checkbox"
-        {...props}
+        {...elementProps}
       />
     )
   },
 }
 
-export function ChatMarkdown({
+export function MarkdownRenderer({
   content,
+  includeCodeBlockStyles = true,
   streaming = false,
-}: {
-  content: string
-  streaming?: boolean
-}) {
+}: MarkdownRendererProps) {
   const normalizedContent = normalizeMarkdownContent(content, {
     completeUnclosedFence: streaming,
   })
 
   return (
     <div className="min-w-0 text-sm leading-6 text-(--mst-color-text-primary) select-text">
+      {includeCodeBlockStyles ? <CodeBlockStyles /> : null}
       <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]}>
         {normalizedContent}
       </Markdown>

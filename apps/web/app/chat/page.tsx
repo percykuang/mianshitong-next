@@ -5,7 +5,7 @@ import {
   type ChatModelId,
 } from '@mianshitong/providers'
 import { getCurrentUser } from '@/server/auth-session'
-import { ChatShell } from './chat-shell'
+import { ChatShell } from './components/chat-shell'
 
 export default async function ChatPage() {
   const currentUser = await getCurrentUser()

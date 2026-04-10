@@ -1,20 +1,43 @@
 'use client'
 
-import { CircleCheck, Sparkles } from '@mianshitong/ui'
-import { type ConversationMessage } from './data'
-import { ChatMarkdown } from './markdown'
+import {
+  Button,
+  CircleCheck,
+  MarkdownRenderer,
+  Sparkles,
+  Textarea,
+} from '@mianshitong/ui'
+import { type ChatMessageFeedback, type ConversationMessage } from './data'
+import { ChatMessageActions } from './message-actions'
 
 export function ChatMessageCard({
+  canEditUserMessage = true,
+  editingValue = '',
   isFirstMessage = false,
+  isEditing = false,
   isStreaming = false,
   message,
+  onCancelEditUserMessage,
+  onEditingValueChange,
+  onFeedbackChange,
+  onStartEditUserMessage,
+  onSubmitEditUserMessage,
 }: {
+  canEditUserMessage?: boolean
+  editingValue?: string
   isFirstMessage?: boolean
+  isEditing?: boolean
   isStreaming?: boolean
   message: ConversationMessage
+  onCancelEditUserMessage?: () => void
+  onEditingValueChange?: (value: string) => void
+  onFeedbackChange?: (feedback: ChatMessageFeedback | null) => void
+  onStartEditUserMessage?: () => void
+  onSubmitEditUserMessage?: () => void
 }) {
   const isUser = message.role === 'user'
   const hasPoints = Boolean(message.points?.length)
+  const shouldShowActions = !isStreaming && !(isUser && isEditing)
 
   return (
     <article className="group/message w-full">
@@ -45,16 +68,51 @@ export function ChatMessageCard({
           <div
             className={`flex flex-col gap-2 text-sm ${
               isUser
-                ? 'max-w-full self-end overflow-hidden rounded-2xl bg-(--mst-color-primary) px-3 py-2 text-left text-white'
+                ? isEditing
+                  ? 'w-full max-w-xl self-end rounded-2xl border border-(--mst-color-border-default) bg-white p-2 text-left text-(--mst-color-text-primary)'
+                  : 'max-w-full self-end overflow-hidden rounded-2xl bg-(--mst-color-primary) px-3 py-2 text-left text-white'
                 : 'bg-transparent px-0 py-0 text-left text-(--mst-color-text-primary)'
             }`}
           >
-            {isUser ? (
+            {isUser && isEditing ? (
+              <div className="flex flex-col gap-2">
+                <Textarea
+                  autoSize={{ minRows: 3, maxRows: 8 }}
+                  className="resize-none border-0! bg-transparent px-2 py-1 text-sm shadow-none ring-0! outline-hidden"
+                  onChange={(event) =>
+                    onEditingValueChange?.(event.target.value)
+                  }
+                  value={editingValue}
+                />
+                <div className="flex items-center justify-end gap-2 px-1 pb-1">
+                  <Button
+                    htmlType="button"
+                    onClick={onCancelEditUserMessage}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    htmlType="button"
+                    onClick={onSubmitEditUserMessage}
+                    size="sm"
+                    variant="primary"
+                  >
+                    保存
+                  </Button>
+                </div>
+              </div>
+            ) : isUser ? (
               <div className="wrap-break-word whitespace-pre-wrap text-white select-text">
                 {message.content}
               </div>
             ) : (
-              <ChatMarkdown content={message.content} streaming={isStreaming} />
+              <MarkdownRenderer
+                content={message.content}
+                includeCodeBlockStyles={false}
+                streaming={isStreaming}
+              />
             )}
           </div>
 
@@ -80,6 +138,23 @@ export function ChatMessageCard({
                 ))}
               </ul>
             )
+          ) : null}
+
+          {shouldShowActions ? (
+            <div
+              className={`flex items-center gap-1 text-(--mst-color-text-muted) ${
+                isUser ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <ChatMessageActions
+                canEditUserMessage={canEditUserMessage && !isEditing}
+                content={message.content}
+                feedback={message.feedback}
+                isUserMessage={isUser}
+                onFeedbackChange={onFeedbackChange}
+                onStartEditUserMessage={onStartEditUserMessage}
+              />
+            </div>
           ) : null}
         </div>
       </div>

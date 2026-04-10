@@ -1,12 +1,13 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { MoreHorizontal, Pin, Popover } from '@mianshitong/ui'
+import { MoreHorizontal, Pencil, Pin, Popover, Trash } from '@mianshitong/ui'
 import { type ChatSessionPreview } from './data'
 
 interface ChatSidebarSessionItemProps {
   active: boolean
   onDelete: () => void
+  onRename: () => void
   onSelect: () => void
   onTogglePin: () => void
   session: ChatSessionPreview
@@ -15,6 +16,7 @@ interface ChatSidebarSessionItemProps {
 export function ChatSidebarSessionItem({
   active,
   onDelete,
+  onRename,
   onSelect,
   onTogglePin,
   session,
@@ -100,24 +102,37 @@ export function ChatSidebarSessionItem({
         placement="bottom-start"
       >
         <button
-          className="flex w-full cursor-pointer items-center rounded-lg px-2.5 py-1.5 text-left text-[13px] text-(--mst-color-text-primary) transition-colors hover:bg-slate-900/4 dark:hover:bg-white/6"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-(--mst-color-text-primary) transition-colors hover:bg-slate-900/4 dark:hover:bg-white/6"
           onClick={(event) => {
             event.stopPropagation()
             closeMenuThenRun(onTogglePin)
           }}
           type="button"
         >
-          {session.pinned ? '取消置顶' : '置顶会话'}
+          <Pin className="size-3.5 shrink-0" />
+          {session.pinned ? '取消置顶' : '置顶'}
         </button>
         <button
-          className="flex w-full cursor-pointer items-center rounded-lg px-2.5 py-1.5 text-left text-[13px] text-red-500 transition-colors hover:bg-red-500/8"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-(--mst-color-text-primary) transition-colors hover:bg-slate-900/4 dark:hover:bg-white/6"
+          onClick={(event) => {
+            event.stopPropagation()
+            closeMenuThenRun(onRename)
+          }}
+          type="button"
+        >
+          <Pencil className="size-3.5 shrink-0" />
+          重命名
+        </button>
+        <button
+          className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px] text-red-500 transition-colors hover:bg-red-500/8"
           onClick={(event) => {
             event.stopPropagation()
             closeMenuThenRun(onDelete)
           }}
           type="button"
         >
-          删除会话
+          <Trash className="size-3.5 shrink-0" />
+          删除
         </button>
       </Popover>
     </div>

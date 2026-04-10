@@ -17,6 +17,7 @@ export function ChatSidebar({
   onDeleteSession,
   onLogout,
   onNewSession,
+  onRenameSession,
   onSelectSession,
   onTogglePinSession,
   sessions,
@@ -28,6 +29,7 @@ export function ChatSidebar({
   onDeleteSession: (sessionId: string) => void
   onLogout: () => void
   onNewSession: () => void
+  onRenameSession: (sessionId: string) => void
   onSelectSession: (sessionId: string) => void
   onTogglePinSession: (sessionId: string) => void
   sessions: ChatSessionPreview[]
@@ -108,6 +110,7 @@ export function ChatSidebar({
               active={session.id === selectedSessionId}
               key={session.id}
               onDelete={() => onDeleteSession(session.id)}
+              onRename={() => onRenameSession(session.id)}
               onSelect={() => onSelectSession(session.id)}
               onTogglePin={() => onTogglePinSession(session.id)}
               session={session}

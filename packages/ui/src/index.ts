@@ -24,6 +24,17 @@ export { Spinner } from './components/spinner'
 export { Surface } from './components/surface'
 export { Textarea } from './components/textarea'
 export { Tooltip } from './components/tooltip'
+export {
+  CodeBlock,
+  CodeBlockStyles,
+  highlightCodeBlock,
+  MarkdownRenderer,
+  renderInlineCode,
+  resolveShikiLanguage,
+  type CodeBlockProps,
+  type MarkdownCodeProps,
+  type MarkdownRendererProps,
+} from './components/markdown'
 
 export { FilterBar } from './components/form/filter-bar'
 export { FormActions } from './components/form/form-actions'
@@ -41,10 +52,15 @@ export {
   Loader,
   Menu,
   MoreHorizontal,
+  Pencil,
   Pin,
   Plus,
   Search,
   Send,
+  ThumbsDown,
+  ThumbsDownFill,
+  ThumbsUp,
+  ThumbsUpFill,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
