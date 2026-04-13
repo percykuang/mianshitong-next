@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { MoreHorizontal, Pencil, Pin, Popover, Trash } from '@mianshitong/ui'
-import { type ChatSessionPreview } from './data'
+import { type ChatSessionPreview } from '../types'
 
 interface ChatSidebarSessionItemProps {
   active: boolean

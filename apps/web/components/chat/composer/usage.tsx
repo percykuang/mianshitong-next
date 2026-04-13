@@ -2,7 +2,7 @@
 
 import { Popover, type PopoverPlacement } from '@mianshitong/ui'
 import { useRef, useState } from 'react'
-import type { ChatUsageSummary } from './data'
+import type { ChatUsageSummary } from '../types'
 
 function UsageTriggerIcon({ percent }: { percent: number }) {
   const normalizedPercent = Number.isFinite(percent)

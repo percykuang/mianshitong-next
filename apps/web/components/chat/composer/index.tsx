@@ -2,14 +2,10 @@
 
 import type { KeyboardEvent, MouseEvent, RefObject } from 'react'
 import { Send } from '@mianshitong/ui'
-import { ComposerModelSelect } from './composer-model-select'
-import { ComposerUsage } from './composer-usage'
-import {
-  mockChatUsageByModel,
-  quickPrompts,
-  type ChatModelId,
-  type ChatModelOption,
-} from './data'
+import { mockChatUsageByModel, quickPrompts } from '../constants'
+import { type ChatModelId, type ChatModelOption } from '../types'
+import { ComposerModelSelect } from './model-select'
+import { ComposerUsage } from './usage'
 
 export function ChatComposer({
   draft,

@@ -8,7 +8,7 @@ import {
   type PopoverPlacement,
 } from '@mianshitong/ui'
 import { useRef, useState } from 'react'
-import type { ChatModelId, ChatModelOption } from './data'
+import type { ChatModelId, ChatModelOption } from '../types'
 
 interface ComposerModelSelectProps {
   disabled?: boolean

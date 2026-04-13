@@ -6,29 +6,35 @@ import {
   type ChatModelId,
   type ChatModelOption,
   type ChatRuntimeDebugInfo,
+  type ChatSessionPreview,
 } from '@/components'
-import {
-  DeleteSessionDialog,
-  RenameSessionDialog,
-} from './chat-session-dialogs'
-import { useChatController } from '../hooks/use-chat-controller'
+import { useChatController } from './hooks'
 
-interface ChatShellProps {
+interface ChatPageClientProps {
+  initialSessions: ChatSessionPreview[]
   initialModelOptions: readonly ChatModelOption[]
+  initialSelectedSessionId: string | null
   initialSelectedModelId: ChatModelId
   initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
+  persistenceEnabled: boolean
   userEmail: string | null
 }
 
-export function ChatShell({
+export function ChatPageClient({
+  initialSessions,
   initialModelOptions,
+  initialSelectedSessionId,
   initialSelectedModelId,
   initialRuntimeDebugInfoByModelId,
+  persistenceEnabled,
   userEmail,
-}: ChatShellProps) {
-  const { composer, dialogs, messages, sidebar } = useChatController({
+}: ChatPageClientProps) {
+  const { composer, messages, sidebar } = useChatController({
+    initialSessions,
+    initialSelectedSessionId,
     initialRuntimeDebugInfoByModelId,
     initialSelectedModelId,
+    persistenceEnabled,
   })
   const { sidebarOpen, setSidebarOpen } = sidebar
   const { draft, isReplying, runtimeDebugInfo, selectedModelId } = composer
@@ -53,16 +59,6 @@ export function ChatShell({
     selectedSession,
     setEditingValue,
   } = messages
-  const {
-    deletingSession,
-    handleCloseDeleteDialog,
-    handleCloseRenameDialog,
-    handleConfirmDeleteSession,
-    handleConfirmRenameSession,
-    renameDraft,
-    renamingSession,
-    setRenameDraft,
-  } = dialogs
   const conversationMessages = selectedSession?.messages ?? []
 
   return (
@@ -78,6 +74,7 @@ export function ChatShell({
 
       <ChatSidebar
         onCloseSidebar={() => setSidebarOpen(false)}
+        onDeleteAllSessions={sidebar.handleDeleteAllSessions}
         onDeleteSession={sidebar.handleDeleteSession}
         onLogout={sidebar.handleLogout}
         onNewSession={sidebar.handleNewSession}
@@ -91,6 +88,7 @@ export function ChatShell({
       />
 
       <ChatMainPane
+        activeSessionId={selectedSession?.id ?? null}
         draft={draft}
         hasConversationMessages={hasConversationMessages}
         isReplying={isReplying}
@@ -115,20 +113,6 @@ export function ChatShell({
         sidebarOpen={sidebarOpen}
         streamingMessageId={streamingMessageId}
         textareaRef={composerRef}
-      />
-
-      <DeleteSessionDialog
-        onCancel={handleCloseDeleteDialog}
-        onConfirm={handleConfirmDeleteSession}
-        session={deletingSession}
-      />
-
-      <RenameSessionDialog
-        draft={renameDraft}
-        onCancel={handleCloseRenameDialog}
-        onConfirm={handleConfirmRenameSession}
-        onDraftChange={setRenameDraft}
-        session={renamingSession}
       />
     </div>
   )

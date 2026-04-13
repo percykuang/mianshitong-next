@@ -7,8 +7,8 @@ import {
   Sparkles,
   Textarea,
 } from '@mianshitong/ui'
-import { type ChatMessageFeedback, type ConversationMessage } from './data'
-import { ChatMessageActions } from './message-actions'
+import { type ChatMessageFeedback, type ConversationMessage } from '../types'
+import { ChatMessageActions } from './actions'
 
 export function ChatMessageCard({
   canEditUserMessage = true,

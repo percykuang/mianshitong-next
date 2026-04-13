@@ -18,7 +18,7 @@ import {
   ThumbsUp,
   ThumbsUpFill,
 } from '@mianshitong/ui'
-import type { ChatMessageFeedback } from './data'
+import type { ChatMessageFeedback } from '../types'
 
 interface CopyButtonProps {
   content: string

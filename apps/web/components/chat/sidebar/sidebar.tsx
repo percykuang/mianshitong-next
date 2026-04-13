@@ -8,12 +8,13 @@ import {
   Tooltip,
   Trash,
 } from '@mianshitong/ui'
-import { type ChatSessionPreview } from './data'
-import { ChatSidebarSessionItem } from './sidebar-session-item'
-import { ChatSidebarUserMenu } from './sidebar-user-menu'
+import { type ChatSessionPreview } from '../types'
+import { ChatSidebarSessionItem } from './session-item'
+import { ChatSidebarUserMenu } from './user-menu'
 
 export function ChatSidebar({
   onCloseSidebar,
+  onDeleteAllSessions,
   onDeleteSession,
   onLogout,
   onNewSession,
@@ -26,6 +27,7 @@ export function ChatSidebar({
   userEmail,
 }: {
   onCloseSidebar: () => void
+  onDeleteAllSessions: () => void
   onDeleteSession: (sessionId: string) => void
   onLogout: () => void
   onNewSession: () => void
@@ -68,6 +70,7 @@ export function ChatSidebar({
               <button
                 aria-label="删除所有会话记录"
                 className="cursor-pointer inline-flex items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-red-500 dark:hover:bg-white/6"
+                onClick={onDeleteAllSessions}
                 type="button"
               >
                 <Trash className="size-4" />

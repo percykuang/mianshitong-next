@@ -1,37 +1,31 @@
 'use client'
 
-import {
-  startTransition,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import {
   type ChatModelId,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
 } from '@/components'
+import { createAssistantFallbackMessage, streamChatReply } from '../../utils'
 import {
-  appendAssistantDraftToSession,
-  createAssistantFallbackMessage,
-} from '../utils/chat-message.utils'
-import { createNextSession, sortSessions } from '../utils/chat-session.utils'
-import { streamChatReply } from '../utils/stream-chat-reply'
+  appendFallbackMessageToSessions,
+  updateAssistantDraftInSessions,
+} from './session-updates'
+import { hydrateReplySession, prepareReplySession } from './session-persistence'
+import { type UseChatReplyStateOptions } from './types'
 
-interface UseChatReplyStateOptions {
-  initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
-  initialSelectedModelId: ChatModelId
-  selectedSessionId: string | null
-  sessions: ChatSessionPreview[]
-  setSelectedSessionId: Dispatch<SetStateAction<string | null>>
-  setSessions: Dispatch<SetStateAction<ChatSessionPreview[]>>
+function isFetchTypeError(error: unknown) {
+  return (
+    error instanceof TypeError &&
+    typeof error.message === 'string' &&
+    /fetch/i.test(error.message)
+  )
 }
 
 export function useChatReplyState({
   initialRuntimeDebugInfoByModelId,
   initialSelectedModelId,
+  persistenceEnabled,
   selectedSessionId,
   sessions,
   setSelectedSessionId,
@@ -74,23 +68,14 @@ export function useChatReplyState({
     content: string
   ) {
     startTransition(() => {
-      setSessions((currentSessions) => {
-        const currentSession =
-          currentSessions.find((session) => session.id === sessionId) ??
-          fallbackSession
-
-        return sortSessions(
-          currentSessions.map((session) =>
-            session.id === sessionId
-              ? appendAssistantDraftToSession({
-                  content,
-                  messageId,
-                  session: currentSession,
-                })
-              : session
-          )
-        )
-      })
+      setSessions((currentSessions) =>
+        updateAssistantDraftInSessions(currentSessions, {
+          content,
+          fallbackSession,
+          messageId,
+          sessionId,
+        })
+      )
     })
   }
 
@@ -101,52 +86,69 @@ export function useChatReplyState({
       return
     }
 
-    const nextSession = createNextSession({
-      input,
-      selectedSessionId,
-      sessions,
-    })
-    const nextSessionId = nextSession.id
-
     setDraft('')
     setIsReplying(true)
     setIsAwaitingFirstChunk(true)
-    setSelectedSessionId(nextSessionId)
-    setSessions((currentSessions) =>
-      sortSessions(
-        currentSessions.some((session) => session.id === nextSession.id)
-          ? currentSessions.map((session) =>
-              session.id === nextSession.id ? nextSession : session
-            )
-          : [...currentSessions, nextSession]
-      )
-    )
+
     requestAnimationFrame(() => {
       composerRef.current?.focus()
     })
 
     let assistantContent = ''
+    let optimisticSession: ChatSessionPreview | null = null
+    let optimisticSessionId: string | null = null
+    let nextSessionId: string | null = null
+    let nextSession: ChatSessionPreview | null = null
 
     try {
+      const preparedSession = await prepareReplySession({
+        input,
+        persistenceEnabled,
+        selectedModelId,
+        selectedSessionId,
+        sessions,
+        setSelectedSessionId,
+        setSessions,
+      })
+
+      optimisticSession = preparedSession.optimisticSession
+      optimisticSessionId = preparedSession.optimisticSessionId
+      nextSessionId = preparedSession.activeSessionId
+      nextSession = preparedSession.activeSession
+
       const controller = new AbortController()
       replyAbortControllerRef.current = controller
       const assistantMessageId = `assistant-${Date.now()}`
       setStreamingMessageId(assistantMessageId)
 
-      const { content, runtimeDebugInfo } = await streamChatReply({
+      const {
+        content,
+        runtimeDebugInfo,
+        sessionId: persistedSessionId,
+      } = await streamChatReply({
         modelId: selectedModelId,
         message: input,
+        sessionId: persistenceEnabled
+          ? (nextSessionId ?? undefined)
+          : undefined,
         signal: controller.signal,
-        history: nextSession.messages.map((message) => ({
+        history: (nextSession?.messages ?? []).map((message) => ({
           role: message.role,
           content: message.content,
         })),
         onChunk(nextContent) {
           assistantContent = nextContent
           setIsAwaitingFirstChunk(false)
+
+          const draftSession = nextSession ?? optimisticSession
+
+          if (!nextSessionId || !draftSession) {
+            return
+          }
+
           updateAssistantDraft(
             nextSessionId,
-            nextSession,
+            draftSession,
             assistantMessageId,
             nextContent
           )
@@ -158,6 +160,18 @@ export function useChatReplyState({
         [selectedModelId]: runtimeDebugInfo,
       }))
       assistantContent = content
+
+      if (!optimisticSessionId) {
+        return
+      }
+
+      await hydrateReplySession({
+        optimisticSessionId,
+        persistenceEnabled,
+        sessionId: persistedSessionId ?? nextSessionId,
+        setSelectedSessionId,
+        setSessions,
+      })
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return
@@ -167,27 +181,30 @@ export function useChatReplyState({
         return
       }
 
-      console.error('[chat-shell] send message failed', error)
+      if (isFetchTypeError(error)) {
+        console.warn(
+          '[chat-shell] send message fetch failed, fallback message rendered'
+        )
+      } else {
+        console.error('[chat-shell] send message failed', error)
+      }
 
       const fallbackMessage = createAssistantFallbackMessage()
 
-      setSessions((currentSessions) => {
-        const currentSession =
-          currentSessions.find((session) => session.id === nextSessionId) ??
-          nextSession
+      if (!nextSessionId || !nextSession) {
+        return
+      }
 
-        return sortSessions(
-          currentSessions.map((session) =>
-            session.id === nextSessionId
-              ? {
-                  ...currentSession,
-                  preview: fallbackMessage.content,
-                  messages: [...currentSession.messages, fallbackMessage],
-                }
-              : session
-          )
-        )
-      })
+      const fallbackSession = nextSession
+      const fallbackSessionId = nextSessionId
+
+      setSessions((currentSessions) =>
+        appendFallbackMessageToSessions(currentSessions, {
+          fallbackMessage,
+          fallbackSession,
+          sessionId: fallbackSessionId,
+        })
+      )
     } finally {
       replyAbortControllerRef.current = null
       setIsAwaitingFirstChunk(false)
