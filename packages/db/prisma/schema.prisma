@@ -10,7 +10,9 @@ model AuthUser {
   id           String        @id @default(cuid())
   email        String        @unique
   passwordHash String
+  actor        UserActor?
   sessions     AuthSession[]
+  chatSessions ChatSession[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -26,4 +28,67 @@ model AuthSession {
 
   @@index([userId, expiresAt(sort: Desc)])
   @@index([expiresAt(sort: Desc)])
+}
+
+enum ChatMessageRole {
+  user
+  assistant
+}
+
+enum ChatMessageFeedback {
+  like
+  dislike
+}
+
+enum UserActorType {
+  guest
+  registered
+}
+
+model UserActor {
+  id             String        @id @default(cuid())
+  type           UserActorType
+  displayName    String
+  authUserId     String?       @unique
+  guestTokenHash String?       @unique
+  chatSessions   ChatSession[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  lastSeenAt     DateTime      @default(now())
+  authUser       AuthUser?     @relation(fields: [authUserId], references: [id], onDelete: SetNull)
+
+  @@index([type, lastSeenAt(sort: Desc)])
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  actorId   String
+  userId    String?
+  title     String
+  preview   String        @default("")
+  modelId   String
+  pinned    Boolean       @default(false)
+  pinnedAt  DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  actor     UserActor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  user      AuthUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages  ChatMessage[]
+
+  @@index([actorId, pinned, pinnedAt(sort: Desc), updatedAt(sort: Desc)])
+  @@index([actorId, updatedAt(sort: Desc)])
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model ChatMessage {
+  id        String               @id @default(cuid())
+  sessionId String
+  role      ChatMessageRole
+  content   String
+  feedback  ChatMessageFeedback?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  session   ChatSession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt(sort: Asc)])
 }
