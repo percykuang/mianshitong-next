@@ -20,8 +20,6 @@ export function createAntdTheme(tokens: MianshitongTokens): ThemeConfig {
       colorTextSecondary: tokens.colorTextSecondary,
       colorTextTertiary: tokens.colorTextMuted,
       colorBorder: tokens.colorBorderDefault,
-      borderRadius: tokens.radiusMd,
-      borderRadiusLG: tokens.radiusLg,
       boxShadow: tokens.shadowMd,
     },
   }
