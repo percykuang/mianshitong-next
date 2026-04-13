@@ -17,6 +17,7 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { CodeBlockStyles } from '../components/markdown/code-block/styles'
 import { ModalAppBridge } from '../components/modal/index'
 
 const THEME_STORAGE_KEY = 'mst-theme'
@@ -130,6 +131,7 @@ export function AppUiProvider({ app, children }: AppUiProviderProps) {
         <StyleProvider layer>
           <ConfigProvider theme={createAntdTheme(themeTokens)}>
             <App>
+              <CodeBlockStyles />
               <ModalAppBridge />
               {children}
             </App>

@@ -1,7 +1,14 @@
 'use client'
 
-import { useLayoutEffect, useRef, type RefObject } from 'react'
-import { ChevronLeft, CodeBlockStyles, Menu } from '@mianshitong/ui'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react'
+import { ChevronDown, ChevronLeft, Menu } from '@mianshitong/ui'
 import { ChatComposer } from './composer'
 import {
   type ChatModelId,
@@ -14,7 +21,17 @@ import { ChatEmptyState } from './empty-state'
 import { ChatMessageCard } from './message-card'
 import { ChatThinkingMessage } from './thinking-message'
 
+const BOTTOM_THRESHOLD_PX = 96
+
+function isNearBottom(element: HTMLElement) {
+  return (
+    element.scrollHeight - element.clientHeight - element.scrollTop <=
+    BOTTOM_THRESHOLD_PX
+  )
+}
+
 export function ChatMainPane({
+  activeSessionId,
   draft,
   hasConversationMessages,
   isReplying,
@@ -40,6 +57,7 @@ export function ChatMainPane({
   streamingMessageId,
   textareaRef,
 }: {
+  activeSessionId: string | null
   draft: string
   hasConversationMessages: boolean
   isReplying: boolean
@@ -68,15 +86,122 @@ export function ChatMainPane({
   streamingMessageId: string | null
   textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
-  const messagesEndRef = useRef<HTMLDivElement | null>(null)
-  const showEmptyState = !hasConversationMessages
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const pendingAutoScrollFrameRef = useRef<number | null>(null)
+  const previousScrollTopRef = useRef(0)
+  const followPausedRef = useRef(false)
+  const hasMountedRef = useRef(false)
+  const previousSessionIdRef = useRef<string | null>(activeSessionId)
+  const previousMessageCountRef = useRef(messages.length)
+  const [isPinnedToBottom, setIsPinnedToBottom] = useState(true)
+  const showEmptyState = !hasConversationMessages && !isReplying
+  const showScrollToBottomButton = hasConversationMessages && !isPinnedToBottom
+
+  const syncPinnedState = useCallback((nextValue: boolean) => {
+    setIsPinnedToBottom((previousValue) =>
+      previousValue === nextValue ? previousValue : nextValue
+    )
+  }, [])
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    const element = scrollContainerRef.current
+
+    if (!element) {
+      return
+    }
+
+    element.scrollTo({
+      top: element.scrollHeight,
+      behavior,
+    })
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (pendingAutoScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(pendingAutoScrollFrameRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const element = scrollContainerRef.current
+
+    if (!element) {
+      return
+    }
+
+    previousScrollTopRef.current = element.scrollTop
+
+    const handleScroll = () => {
+      const currentScrollTop = element.scrollTop
+      const isUserScrollingUp =
+        currentScrollTop < previousScrollTopRef.current - 1
+      previousScrollTopRef.current = currentScrollTop
+
+      const nearBottom = isNearBottom(element)
+
+      if (followPausedRef.current) {
+        if (nearBottom) {
+          followPausedRef.current = false
+          syncPinnedState(true)
+        } else {
+          syncPinnedState(false)
+        }
+        return
+      }
+
+      if (isReplying && isUserScrollingUp) {
+        followPausedRef.current = true
+        syncPinnedState(false)
+        return
+      }
+
+      syncPinnedState(nearBottom)
+    }
+
+    handleScroll()
+    element.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      element.removeEventListener('scroll', handleScroll)
+    }
+  }, [activeSessionId, isReplying, syncPinnedState])
 
   useLayoutEffect(() => {
-    messagesEndRef.current?.scrollIntoView({
-      block: 'end',
-      behavior: isReplying ? 'auto' : 'smooth',
-    })
-  }, [isReplying, messages])
+    const isFirstRender = !hasMountedRef.current
+    const isSessionChanged = previousSessionIdRef.current !== activeSessionId
+    const messageDelta = Math.abs(
+      messages.length - previousMessageCountRef.current
+    )
+    const shouldForceAutoScroll =
+      isFirstRender || isSessionChanged || messageDelta > 1
+    const shouldFollow =
+      shouldForceAutoScroll || (isPinnedToBottom && !followPausedRef.current)
+
+    if (pendingAutoScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(pendingAutoScrollFrameRef.current)
+      pendingAutoScrollFrameRef.current = null
+    }
+
+    if (shouldFollow) {
+      scrollToBottom(shouldForceAutoScroll || isReplying ? 'auto' : 'smooth')
+
+      if (shouldForceAutoScroll) {
+        pendingAutoScrollFrameRef.current = window.requestAnimationFrame(() => {
+          pendingAutoScrollFrameRef.current = null
+          scrollToBottom('auto')
+        })
+      }
+    }
+
+    hasMountedRef.current = true
+    if (isSessionChanged) {
+      followPausedRef.current = false
+    }
+    previousSessionIdRef.current = activeSessionId
+    previousMessageCountRef.current = messages.length
+  }, [activeSessionId, isPinnedToBottom, isReplying, messages, scrollToBottom])
 
   return (
     <main
@@ -84,7 +209,6 @@ export function ChatMainPane({
         sidebarOpen ? 'md:ml-64' : 'md:ml-0'
       }`}
     >
-      <CodeBlockStyles />
       <div className="overscroll-behavior-contain relative flex h-dvh min-w-0 touch-pan-y flex-col bg-white dark:bg-(--mst-color-bg-page)">
         <header className="flex h-14 shrink-0 items-center gap-2 px-2.5 py-1 md:px-4 md:py-1.5">
           <button
@@ -110,7 +234,10 @@ export function ChatMainPane({
         </header>
 
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div className="absolute inset-0 touch-pan-y overflow-y-auto">
+          <div
+            className="absolute inset-0 touch-pan-y overflow-y-auto"
+            ref={scrollContainerRef}
+          >
             <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6 px-3 py-4 md:px-6 md:pt-6 md:pb-4">
               {showEmptyState ? <ChatEmptyState /> : null}
 
@@ -137,13 +264,26 @@ export function ChatMainPane({
 
               {showThinkingIndicator ? <ChatThinkingMessage /> : null}
 
-              <div
-                aria-hidden="true"
-                className="min-h-6 min-w-6 shrink-0"
-                ref={messagesEndRef}
-              />
+              <div aria-hidden="true" className="min-h-6 min-w-6 shrink-0" />
             </div>
           </div>
+
+          {showScrollToBottomButton ? (
+            <div className="pointer-events-none absolute inset-x-0 bottom-2 z-20 flex justify-center pb-3 md:pb-4">
+              <button
+                aria-label="回到底部"
+                className="pointer-events-auto inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-(--mst-color-border-default) bg-white/90 text-(--mst-color-text-secondary) shadow-[0_8px_18px_rgb(15_23_42/0.16)] backdrop-blur-sm transition-colors duration-200 hover:bg-white dark:bg-slate-900/88 dark:text-zinc-300 dark:hover:bg-slate-900"
+                onClick={() => {
+                  followPausedRef.current = false
+                  scrollToBottom('auto')
+                  syncPinnedState(true)
+                }}
+                type="button"
+              >
+                <ChevronDown className="size-4" />
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <div className="sticky bottom-0 z-10 mx-auto w-full max-w-4xl px-2 pb-3 md:px-4 md:pb-4">

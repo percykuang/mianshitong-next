@@ -24,10 +24,3 @@ export { ChatSidebarSessionItem } from './sidebar-session-item'
 export { ChatSidebarUserMenu } from './sidebar-user-menu'
 export { ChatSidebar } from './sidebar'
 export { ChatThinkingMessage } from './thinking-message'
-export {
-  CodeBlock as ChatCodeBlock,
-  MarkdownRenderer as ChatMarkdown,
-  highlightCodeBlock,
-  renderInlineCode,
-  resolveShikiLanguage,
-} from '@mianshitong/ui'

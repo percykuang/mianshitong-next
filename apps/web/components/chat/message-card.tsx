@@ -110,7 +110,6 @@ export function ChatMessageCard({
             ) : (
               <MarkdownRenderer
                 content={message.content}
-                includeCodeBlockStyles={false}
                 streaming={isStreaming}
               />
             )}

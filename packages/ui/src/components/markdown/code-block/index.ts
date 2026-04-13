@@ -1,8 +1,7 @@
 export {
   CodeBlock,
   renderInlineCode,
-  highlightCodeBlock,
   type CodeBlockProps,
   type MarkdownCodeProps,
 } from './code-block'
-export { MarkdownRenderer, type MarkdownRendererProps } from './renderer'
+export { highlightCodeBlock } from './highlight'

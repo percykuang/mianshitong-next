@@ -31,11 +31,9 @@ export { Textarea } from './components/textarea'
 export { Tooltip } from './components/tooltip'
 export {
   CodeBlock,
-  CodeBlockStyles,
   highlightCodeBlock,
   MarkdownRenderer,
   renderInlineCode,
-  resolveShikiLanguage,
   type CodeBlockProps,
   type MarkdownCodeProps,
   type MarkdownRendererProps,
