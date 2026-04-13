@@ -14,3 +14,4 @@ coverage
 .cspellcache
 .cache
 *.tsbuildinfo
+.playwright-mcp/
