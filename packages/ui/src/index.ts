@@ -11,7 +11,12 @@ export { Drawer } from './components/drawer'
 export { Dropdown } from './components/dropdown'
 export { Empty } from './components/empty'
 export { Input } from './components/input'
-export { Modal } from './components/modal'
+export {
+  Modal,
+  type ModalFuncProps,
+  type ModalPromptProps,
+  type ModalProps,
+} from './components/modal/index'
 export { PageHeader } from './components/page-header'
 export {
   Popover,

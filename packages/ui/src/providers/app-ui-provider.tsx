@@ -17,8 +17,10 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { ModalAppBridge } from '../components/modal/index'
 
 const THEME_STORAGE_KEY = 'mst-theme'
+const THEME_COOKIE_KEY = 'mst-theme'
 
 export type ThemeMode = MianshitongThemeMode
 
@@ -34,26 +36,46 @@ function isThemeMode(value: string | undefined): value is ThemeMode {
   return value === 'light' || value === 'dark'
 }
 
+function readThemeCookieValue(): string | undefined {
+  if (typeof document === 'undefined') {
+    return undefined
+  }
+
+  const prefix = `${THEME_COOKIE_KEY}=`
+  const cookieItem = document.cookie
+    .split(';')
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(prefix))
+
+  return cookieItem?.slice(prefix.length)
+}
+
 function readInitialThemeMode(): ThemeMode {
   if (typeof document === 'undefined') {
     return 'light'
+  }
+
+  let storedTheme: string | undefined
+  try {
+    storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY) ?? undefined
+  } catch {
+    storedTheme = undefined
+  }
+
+  if (isThemeMode(storedTheme)) {
+    return storedTheme
+  }
+
+  const cookieTheme = readThemeCookieValue()
+
+  if (isThemeMode(cookieTheme)) {
+    return cookieTheme
   }
 
   const documentTheme = document.documentElement.dataset.theme
 
   if (isThemeMode(documentTheme)) {
     return documentTheme
-  }
-
-  try {
-    const storedTheme =
-      window.localStorage.getItem(THEME_STORAGE_KEY) ?? undefined
-
-    if (isThemeMode(storedTheme)) {
-      return storedTheme
-    }
-  } catch {
-    return 'light'
   }
 
   return 'light'
@@ -72,6 +94,8 @@ function applyThemeMode(themeMode: ThemeMode) {
   } catch {
     // 忽略浏览器禁用存储的场景，主题仍可在当前会话内工作。
   }
+
+  document.cookie = `${THEME_COOKIE_KEY}=${themeMode}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
 export interface AppUiProviderProps {
@@ -105,7 +129,10 @@ export function AppUiProvider({ app, children }: AppUiProviderProps) {
       <AntdRegistry>
         <StyleProvider layer>
           <ConfigProvider theme={createAntdTheme(themeTokens)}>
-            <App>{children}</App>
+            <App>
+              <ModalAppBridge />
+              {children}
+            </App>
           </ConfigProvider>
         </StyleProvider>
       </AntdRegistry>
