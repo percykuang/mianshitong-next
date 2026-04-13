@@ -1,22 +1,14 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
+import { cookies } from 'next/headers'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
 
-const themeInitScript = `
-  (function () {
-    try {
-      var storedTheme = window.localStorage.getItem('mst-theme');
-      var theme = storedTheme === 'dark' || storedTheme === 'light' ? storedTheme : 'light';
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.style.colorScheme = theme;
-    } catch (error) {
-      document.documentElement.dataset.theme = 'light';
-      document.documentElement.style.colorScheme = 'light';
-    }
-  })();
-`
+const THEME_COOKIE_KEY = 'mst-theme'
+
+function parseThemeCookie(value: string | undefined) {
+  return value === 'dark' || value === 'light' ? value : 'light'
+}
 
 export const metadata: Metadata = {
   title: '面试通 | AI 面试官',
@@ -28,20 +20,20 @@ export const metadata: Metadata = {
 
 const themeVariablesStyleText = createThemeVariablesStyleText('web')
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const theme = parseThemeCookie(cookieStore.get(THEME_COOKIE_KEY)?.value)
+
   return (
-    <html data-theme="light" lang="zh-CN" suppressHydrationWarning>
+    <html data-theme={theme} lang="zh-CN" suppressHydrationWarning>
       <head>
         <style>{themeVariablesStyleText}</style>
       </head>
       <body className="mst-app mst-app-web">
-        <Script id="theme-init" strategy="beforeInteractive">
-          {themeInitScript}
-        </Script>
         <AppUiProvider app="web">{children}</AppUiProvider>
       </body>
     </html>

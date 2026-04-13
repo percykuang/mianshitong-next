@@ -7,19 +7,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Surface } from '@mianshitong/ui'
 import mockInterviewGif from '@/assets/2-mock-interview.gif'
 
-export interface HomeDemoItem {
+export interface HomePageDemoItem {
   title: string
   description: string
 }
 
-export interface HomeDemoCarouselProps {
-  demos: readonly HomeDemoItem[]
+export interface HomePageDemoCarouselProps {
+  demos: readonly HomePageDemoItem[]
 }
 
 const arrowButtonClass =
   'absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/70 bg-white/88 text-(--mst-color-text-primary) shadow-(--mst-shadow-md) backdrop-blur-sm transition-colors duration-200 hover:border-(--mst-color-primary) hover:text-(--mst-color-primary) md:inline-flex dark:border-white/12 dark:bg-slate-950/72'
 
-export function HomeDemoCarousel({ demos }: HomeDemoCarouselProps) {
+export function HomePageDemoCarousel({ demos }: HomePageDemoCarouselProps) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
     align: 'start',

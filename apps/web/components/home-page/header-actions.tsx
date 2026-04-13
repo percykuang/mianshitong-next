@@ -13,7 +13,7 @@ import {
   useThemeMode,
 } from '@mianshitong/ui'
 
-export interface WebHeaderActionsProps {
+export interface HomePageHeaderActionsProps {
   userEmail?: string | null
   onLogout?: () => void
 }
@@ -39,10 +39,10 @@ const panelSectionClass =
 const primaryActionClass =
   'inline-flex h-11 w-full items-center justify-center rounded-(--mst-radius-lg) bg-(--mst-color-primary) px-4 text-sm font-semibold text-white transition-colors duration-200 hover:brightness-95'
 
-export function WebHeaderActions({
+export function HomePageHeaderActions({
   userEmail = null,
   onLogout,
-}: WebHeaderActionsProps) {
+}: HomePageHeaderActionsProps) {
   const router = useRouter()
   const { toggleThemeMode } = useThemeMode()
   const [menuOpen, setMenuOpen] = useState(false)

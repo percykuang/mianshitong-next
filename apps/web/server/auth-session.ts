@@ -6,6 +6,7 @@ import {
 } from './auth-user-repository'
 
 export const AUTH_SESSION_COOKIE_NAME = 'mst_session'
+const AUTH_SESSION_COOKIE_PATH = '/'
 
 function createCookieOptions(maxAge?: number) {
   return {
@@ -13,9 +14,14 @@ function createCookieOptions(maxAge?: number) {
     httpOnly: true,
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
-    path: '/',
+    path: AUTH_SESSION_COOKIE_PATH,
     ...(typeof maxAge === 'number' ? { maxAge } : {}),
   }
+}
+
+async function getAuthSessionToken() {
+  const cookieStore = await cookies()
+  return cookieStore.get(AUTH_SESSION_COOKIE_NAME)?.value
 }
 
 export function setAuthSessionCookie(
@@ -36,8 +42,7 @@ export function clearAuthSessionCookie(response: NextResponse) {
 }
 
 export async function getCurrentUser() {
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get(AUTH_SESSION_COOKIE_NAME)?.value
+  const sessionToken = await getAuthSessionToken()
 
   if (!sessionToken) {
     return null
@@ -47,8 +52,7 @@ export async function getCurrentUser() {
 }
 
 export async function deleteCurrentSession() {
-  const cookieStore = await cookies()
-  const sessionToken = cookieStore.get(AUTH_SESSION_COOKIE_NAME)?.value
+  const sessionToken = await getAuthSessionToken()
 
   if (!sessionToken) {
     return

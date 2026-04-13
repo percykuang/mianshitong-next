@@ -9,7 +9,7 @@ import {
   Sparkles,
   Surface,
 } from '@mianshitong/ui'
-import { HomeDemoCarousel, WebHeaderActions } from '@/components'
+import { HomePageDemoCarousel, HomePageHeaderActions } from '@/components'
 import { getCurrentUser } from '@/server/auth-session'
 
 const highlights = [
@@ -70,7 +70,7 @@ export default async function HomePage() {
                 面试通
               </span>
             </div>
-            <WebHeaderActions userEmail={currentUserEmail} />
+            <HomePageHeaderActions userEmail={currentUserEmail} />
           </div>
         </div>
       </header>
@@ -165,7 +165,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <HomeDemoCarousel demos={demos} />
+          <HomePageDemoCarousel demos={demos} />
         </div>
       </section>
 
