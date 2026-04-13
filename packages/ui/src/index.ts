@@ -5,6 +5,8 @@ export {
 } from './providers/app-ui-provider'
 
 export { Badge } from './components/badge'
+export { AppBrand, type AppBrandProps } from './components/app-brand'
+export { AuthEntry, type AuthEntryProps } from './components/auth-entry'
 export { Button } from './components/button'
 export { Card } from './components/card'
 export { Drawer } from './components/drawer'
@@ -27,6 +29,10 @@ export { Select } from './components/select'
 export { Skeleton } from './components/skeleton'
 export { Spinner } from './components/spinner'
 export { Surface } from './components/surface'
+export {
+  ThemeToggler,
+  type ThemeTogglerProps,
+} from './components/theme-toggler'
 export { Textarea } from './components/textarea'
 export { Tooltip } from './components/tooltip'
 export {
@@ -53,6 +59,7 @@ export {
   Download,
   Info,
   Loader,
+  Logout,
   Menu,
   MoreHorizontal,
   Pencil,

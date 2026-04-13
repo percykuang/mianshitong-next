@@ -1,0 +1,38 @@
+import Link from 'next/link'
+import { MianshitongLogoMark } from '@mianshitong/icons'
+import { cn } from '../utils/cn'
+
+export interface AppBrandProps {
+  className?: string
+  href?: string
+  labelClassName?: string
+  logoClassName?: string
+  showLabel?: boolean
+}
+
+export function AppBrand({
+  className,
+  href = '/',
+  labelClassName,
+  logoClassName,
+  showLabel = true,
+}: AppBrandProps) {
+  return (
+    <Link className={cn('inline-flex items-center', className)} href={href}>
+      <MianshitongLogoMark
+        aria-hidden="true"
+        className={cn('size-8 rounded-lg', logoClassName)}
+      />
+      {showLabel ? (
+        <span
+          className={cn(
+            'font-semibold text-(--mst-color-primary)',
+            labelClassName
+          )}
+        >
+          面试通
+        </span>
+      ) : null}
+    </Link>
+  )
+}

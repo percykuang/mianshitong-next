@@ -7,6 +7,7 @@ export {
   RiEditLine as Pencil,
   RiFileCopyLine as Copy,
   RiGithubFill as Github,
+  RiLogoutBoxRLine as Logout,
   RiMoreLine as MoreHorizontal,
   RiPushpinLine as Pin,
   RiSearchLine as Search,
