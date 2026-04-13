@@ -1,22 +1,14 @@
 'use client'
 
-import Link from 'next/link'
-import {
-  ChevronLeft,
-  MianshitongLogoMark,
-  Plus,
-  Tooltip,
-  Trash,
-} from '@mianshitong/ui'
+import { AppBrand, ChevronLeft, Plus, Tooltip, Trash } from '@mianshitong/ui'
+import { AuthEntry } from '../../auth'
 import { type ChatSessionPreview } from '../types'
 import { ChatSidebarSessionItem } from './session-item'
-import { ChatSidebarUserMenu } from './user-menu'
 
 export function ChatSidebar({
   onCloseSidebar,
   onDeleteAllSessions,
   onDeleteSession,
-  onLogout,
   onNewSession,
   onRenameSession,
   onSelectSession,
@@ -29,7 +21,6 @@ export function ChatSidebar({
   onCloseSidebar: () => void
   onDeleteAllSessions: () => void
   onDeleteSession: (sessionId: string) => void
-  onLogout: () => void
   onNewSession: () => void
   onRenameSession: (sessionId: string) => void
   onSelectSession: (sessionId: string) => void
@@ -47,15 +38,11 @@ export function ChatSidebar({
     >
       <div className="flex flex-col gap-3 border-b border-(--mst-color-border-default) p-3">
         <div className="flex items-center justify-between gap-2">
-          <Link className="flex min-w-0 flex-row items-center gap-2.5" href="/">
-            <MianshitongLogoMark
-              aria-hidden="true"
-              className="size-8 rounded-xl shadow-(--mst-shadow-sm)"
-            />
-            <span className="block truncate text-base font-semibold text-(--mst-color-primary)">
-              面试通
-            </span>
-          </Link>
+          <AppBrand
+            className="min-w-0 gap-2.5"
+            labelClassName="block truncate text-base"
+            logoClassName="rounded-xl shadow-(--mst-shadow-sm)"
+          />
 
           <div className="flex flex-row gap-1">
             <Tooltip
@@ -123,7 +110,7 @@ export function ChatSidebar({
       </div>
 
       <div className="mt-auto border-t border-(--mst-color-border-default) p-2">
-        <ChatSidebarUserMenu onLogout={onLogout} userEmail={userEmail} />
+        <AuthEntry userEmail={userEmail} variant="sidebar" />
       </div>
     </aside>
   )

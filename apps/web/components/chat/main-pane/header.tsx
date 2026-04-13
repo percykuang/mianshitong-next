@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, Menu } from '@mianshitong/ui'
+import { ChevronLeft, Menu, ThemeToggler } from '@mianshitong/ui'
 import { type ChatRuntimeDebugInfo } from '../types'
 
 interface ChatMainPaneHeaderProps {
@@ -36,6 +36,8 @@ export function ChatMainPaneHeader({
           </span>
         </div>
       ) : null}
+
+      <ThemeToggler bordered className="ml-auto" />
     </header>
   )
 }

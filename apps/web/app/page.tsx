@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import {
+  AppBrand,
   ChevronRight,
   CircleCheck,
   Code,
   FileText,
-  MianshitongLogoMark,
   MessageSquare,
   Sparkles,
   Surface,
@@ -61,15 +61,11 @@ export default async function HomePage() {
       <header>
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 md:px-6 md:pt-5">
           <div className="flex items-center justify-between gap-3 rounded-full px-3 py-2 bg-transparent dark:border-white/10 md:rounded-none md:border-0 md:px-0 md:py-0">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-              <MianshitongLogoMark
-                aria-hidden="true"
-                className="size-8 rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
-              />
-              <span className="text-lg font-semibold text-(--mst-color-primary)">
-                面试通
-              </span>
-            </div>
+            <AppBrand
+              className="min-w-0 gap-2.5 sm:gap-3"
+              labelClassName="text-lg"
+              logoClassName="rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
+            />
             <HomePageHeaderActions userEmail={currentUserEmail} />
           </div>
         </div>

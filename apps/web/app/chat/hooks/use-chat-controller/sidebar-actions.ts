@@ -1,7 +1,6 @@
 'use client'
 
 import { App } from 'antd'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Modal } from '@mianshitong/ui'
 import {
@@ -29,18 +28,9 @@ export function useChatControllerSidebarActions({
   replyState,
   sessionState,
 }: UseChatControllerSidebarActionsOptions): ChatControllerSidebarGroup {
-  const router = useRouter()
   const { message } = App.useApp()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const sessions = sessionState.sessions
-
-  function handleLogout() {
-    void fetch('/api/auth/logout', {
-      method: 'POST',
-    }).finally(() => {
-      router.refresh()
-    })
-  }
 
   function handleNewSession() {
     sessionState.handleNewSession()
@@ -133,7 +123,6 @@ export function useChatControllerSidebarActions({
   return {
     handleDeleteAllSessions,
     handleDeleteSession,
-    handleLogout,
     handleNewSession,
     handleRenameSession,
     handleSelectSession: sessionState.handleSelectSession,

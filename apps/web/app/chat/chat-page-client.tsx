@@ -76,7 +76,6 @@ export function ChatPageClient({
         onCloseSidebar={() => setSidebarOpen(false)}
         onDeleteAllSessions={sidebar.handleDeleteAllSessions}
         onDeleteSession={sidebar.handleDeleteSession}
-        onLogout={sidebar.handleLogout}
         onNewSession={sidebar.handleNewSession}
         onRenameSession={sidebar.handleRenameSession}
         onSelectSession={sidebar.handleSelectSession}

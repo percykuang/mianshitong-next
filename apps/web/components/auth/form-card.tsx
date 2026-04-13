@@ -3,13 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import {
-  Button,
-  FormField,
-  Input,
-  MianshitongLogoMark,
-  Surface,
-} from '@mianshitong/ui'
+import { AppBrand, Button, FormField, Input, Surface } from '@mianshitong/ui'
 import type { AuthPageCopy } from './copy'
 
 interface AuthFormCardProps {
@@ -40,16 +34,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10 md:px-6">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_440px] lg:items-center">
           <section className="hidden space-y-6 lg:block">
-            <Link
-              className="inline-flex items-center gap-3 rounded-full bg-transparent px-4 py-2 text-sm font-medium text-(--mst-color-text-primary) backdrop-blur-sm"
-              href="/"
-            >
-              <MianshitongLogoMark
-                aria-hidden="true"
-                className="size-8 rounded-lg"
-              />
-              <span className="text-(--mst-color-primary)">面试通</span>
-            </Link>
+            <AppBrand className="gap-3 rounded-full bg-transparent px-4 py-2 text-sm font-medium text-(--mst-color-text-primary) backdrop-blur-sm" />
 
             <div className="max-w-xl space-y-4">
               <p className="text-sm font-semibold tracking-[0.2em] text-(--mst-color-primary) uppercase">

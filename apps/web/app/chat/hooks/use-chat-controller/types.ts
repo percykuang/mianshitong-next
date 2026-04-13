@@ -49,7 +49,6 @@ export interface ChatControllerMessagesGroup {
 export interface ChatControllerSidebarGroup {
   handleDeleteAllSessions: () => void
   handleDeleteSession: (sessionId: string) => void
-  handleLogout: () => void
   handleNewSession: () => void
   handleRenameSession: (sessionId: string) => void
   handleSelectSession: (sessionId: string) => void
