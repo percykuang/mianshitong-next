@@ -1,5 +1,5 @@
+import { cn } from '@mianshitong/shared'
 import type { HTMLAttributes, ReactNode } from 'react'
-import { cn } from '../../utils/cn'
 
 export interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
   label?: ReactNode

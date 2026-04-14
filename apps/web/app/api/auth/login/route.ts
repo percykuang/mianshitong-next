@@ -1,3 +1,4 @@
+import { parseJsonSafely } from '@mianshitong/shared'
 import { NextResponse } from 'next/server'
 import {
   createAuthSession,
@@ -11,7 +12,7 @@ import { validateCredentials } from '@/server/auth-validation'
 import { verifyPassword } from '@/server/password'
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null)
+  const body = await parseJsonSafely(request)
   const parsed = validateCredentials(body)
 
   if (!parsed.data) {

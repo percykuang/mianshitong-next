@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { DEFAULT_THEME_MODE, THEME_COOKIE_KEY } from '@mianshitong/shared'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider } from '@mianshitong/ui'
 import './globals.css'
 
-const THEME_COOKIE_KEY = 'mst-theme'
-
 function parseThemeCookie(value: string | undefined) {
-  return value === 'dark' || value === 'light' ? value : 'light'
+  return value === 'dark' || value === 'light' ? value : DEFAULT_THEME_MODE
 }
 
 export const metadata: Metadata = {

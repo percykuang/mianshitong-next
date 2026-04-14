@@ -1,6 +1,7 @@
 'use client'
 
 import { startTransition, useEffect, useRef, useState } from 'react'
+import { isFetchTypeError } from '@mianshitong/shared'
 import {
   type ChatModelId,
   type ChatRuntimeDebugInfo,
@@ -13,14 +14,6 @@ import {
 } from './session-updates'
 import { hydrateReplySession, prepareReplySession } from './session-persistence'
 import { type UseChatReplyStateOptions } from './types'
-
-function isFetchTypeError(error: unknown) {
-  return (
-    error instanceof TypeError &&
-    typeof error.message === 'string' &&
-    /fetch/i.test(error.message)
-  )
-}
 
 export function useChatReplyState({
   initialRuntimeDebugInfoByModelId,

@@ -1,11 +1,11 @@
+import { parseJsonSafely } from '@mianshitong/shared'
+
 interface LogoutErrorPayload {
   error?: string
 }
 
 async function parseLogoutError(response: Response) {
-  const payload = (await response
-    .json()
-    .catch(() => null)) as LogoutErrorPayload | null
+  const payload = await parseJsonSafely<LogoutErrorPayload>(response)
 
   return payload?.error ?? '退出失败，请稍后重试'
 }

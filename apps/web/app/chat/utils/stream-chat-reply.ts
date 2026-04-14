@@ -1,3 +1,4 @@
+import { isFetchTypeError, parseJsonSafely } from '@mianshitong/shared'
 import type {
   ChatModelId,
   ChatRuntimeDebugInfo,
@@ -24,14 +25,6 @@ const FETCH_RETRY_DELAY_MS = 120
 
 function createAbortError() {
   return new DOMException('The operation was aborted.', 'AbortError')
-}
-
-function isFetchTypeError(error: unknown) {
-  return (
-    error instanceof TypeError &&
-    typeof error.message === 'string' &&
-    /fetch/i.test(error.message)
-  )
 }
 
 function normalizePersistedSessionId(sessionId: string | null) {
@@ -98,9 +91,9 @@ export async function streamChatReply({
   }
 
   if (!response.ok || !response.body) {
-    const data = (await response.json().catch(() => null)) as {
+    const data = await parseJsonSafely<{
       error?: string
-    } | null
+    }>(response)
 
     throw new Error(data?.error || '请求失败')
   }

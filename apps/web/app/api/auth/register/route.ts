@@ -1,3 +1,4 @@
+import { parseJsonSafely } from '@mianshitong/shared'
 import { NextResponse } from 'next/server'
 import {
   createAuthSession,
@@ -37,7 +38,7 @@ function isUniqueEmailConstraintError(error: unknown) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null)
+  const body = await parseJsonSafely(request)
   const parsed = validateCredentials(body)
 
   if (!parsed.data) {

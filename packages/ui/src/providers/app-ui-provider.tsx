@@ -5,6 +5,11 @@ import { StyleProvider } from '@ant-design/cssinjs'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { App, ConfigProvider } from 'antd'
 import {
+  DEFAULT_THEME_MODE,
+  THEME_COOKIE_KEY,
+  THEME_STORAGE_KEY,
+} from '@mianshitong/shared'
+import {
   createAntdTheme,
   createThemeTokens,
   type ThemeMode as MianshitongThemeMode,
@@ -19,9 +24,6 @@ import {
 } from 'react'
 import { CodeBlockStyles } from '../components/markdown/code-block/styles'
 import { ModalAppBridge } from '../components/modal/index'
-
-const THEME_STORAGE_KEY = 'mst-theme'
-const THEME_COOKIE_KEY = 'mst-theme'
 
 export type ThemeMode = MianshitongThemeMode
 
@@ -53,7 +55,7 @@ function readThemeCookieValue(): string | undefined {
 
 function readInitialThemeMode(): ThemeMode {
   if (typeof document === 'undefined') {
-    return 'light'
+    return DEFAULT_THEME_MODE
   }
 
   let storedTheme: string | undefined
@@ -79,7 +81,7 @@ function readInitialThemeMode(): ThemeMode {
     return documentTheme
   }
 
-  return 'light'
+  return DEFAULT_THEME_MODE
 }
 
 function applyThemeMode(themeMode: ThemeMode) {

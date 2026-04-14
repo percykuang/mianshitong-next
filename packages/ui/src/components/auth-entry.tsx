@@ -1,7 +1,7 @@
 import Link from 'next/link'
+import { cn } from '@mianshitong/shared'
 import { Loader, Logout, User } from '@mianshitong/icons'
 import { Tooltip } from './tooltip'
-import { cn } from '../utils/cn'
 
 export interface AuthEntryProps {
   loginHref?: string

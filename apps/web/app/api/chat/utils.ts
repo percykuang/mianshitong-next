@@ -1,3 +1,4 @@
+import { parseJsonSafely } from '@mianshitong/shared'
 import { NextResponse } from 'next/server'
 import { getCurrentChatActor, type ChatActor } from '@/server/chat-actor'
 
@@ -20,7 +21,7 @@ export function jsonError(message: string, status: number) {
 }
 
 export async function parseJsonBody<T>(request: Request) {
-  return (await request.json().catch(() => null)) as T | null
+  return parseJsonSafely<T>(request)
 }
 
 export async function resolveChatActor(): Promise<ChatActorResult> {

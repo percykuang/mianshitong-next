@@ -1,8 +1,8 @@
 'use client'
 
+import { cn } from '@mianshitong/shared'
 import { Moon, Sun } from '@mianshitong/icons'
 import { useThemeMode } from '../providers/app-ui-provider'
-import { cn } from '../utils/cn'
 
 export interface ThemeTogglerProps {
   bordered?: boolean
