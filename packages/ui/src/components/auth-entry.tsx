@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { Logout, User } from '@mianshitong/icons'
+import { Loader, Logout, User } from '@mianshitong/icons'
 import { Tooltip } from './tooltip'
+import { cn } from '../utils/cn'
 
 export interface AuthEntryProps {
   loginHref?: string
@@ -23,7 +24,7 @@ const AUTH_ENTRY_STYLES = {
     guestTextClass: 'text-center',
     userIconClass: 'size-4',
     logoutButtonClass:
-      'inline-flex size-7 items-center justify-center rounded-full text-(--mst-color-text-muted) transition-colors duration-200 hover:bg-slate-900/5 hover:text-(--mst-color-primary) disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-white/6 sm:size-8',
+      'cursor-pointer inline-flex size-7 items-center justify-center rounded-full text-(--mst-color-text-muted) transition-colors duration-200 hover:bg-slate-900/5 hover:text-(--mst-color-primary) disabled:opacity-60 dark:hover:bg-white/6 sm:size-8',
     logoutPlacement: 'bottom' as const,
   },
   sidebar: {
@@ -37,7 +38,7 @@ const AUTH_ENTRY_STYLES = {
     guestTextClass: 'font-semibold',
     userIconClass: 'size-3.5',
     logoutButtonClass:
-      'inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-(--mst-color-primary) disabled:cursor-not-allowed disabled:opacity-60 dark:hover:bg-white/6',
+      'inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-(--mst-color-primary) disabled:opacity-60 dark:hover:bg-white/6',
     logoutPlacement: 'top' as const,
   },
 } as const
@@ -52,6 +53,26 @@ export function AuthEntry({
 }: AuthEntryProps) {
   const isAuthenticated = Boolean(userLabel)
   const styles = AUTH_ENTRY_STYLES[variant]
+  const logoutLabel = logoutPending ? '退出中...' : '退出登录'
+  const logoutButton = (
+    <button
+      aria-label={logoutLabel}
+      className={cn(
+        styles.logoutButtonClass,
+        logoutPending &&
+          'bg-transparent! text-(--mst-color-text-muted)! hover:bg-transparent! hover:text-(--mst-color-text-muted)! dark:hover:bg-transparent!'
+      )}
+      disabled={logoutPending || !onLogout}
+      onClick={onLogout}
+      type="button"
+    >
+      {logoutPending ? (
+        <Loader className="size-4 animate-spin" />
+      ) : (
+        <Logout className="size-4" />
+      )}
+    </button>
+  )
 
   if (!isAuthenticated) {
     return (
@@ -74,25 +95,21 @@ export function AuthEntry({
         <User className={styles.userIconClass} />
       </span>
       <span className={styles.emailClass}>{userLabel}</span>
-      <Tooltip
-        align={{ offset: [0, 6] }}
-        autoAdjustOverflow={false}
-        arrow={false}
-        placement={styles.logoutPlacement}
-        title="退出登录"
-        variant="surface"
-        zIndex={1200}
-      >
-        <button
-          aria-label="退出登录"
-          className={styles.logoutButtonClass}
-          disabled={logoutPending || !onLogout}
-          onClick={onLogout}
-          type="button"
+      {logoutPending ? (
+        logoutButton
+      ) : (
+        <Tooltip
+          align={{ offset: [0, 6] }}
+          autoAdjustOverflow={false}
+          arrow={false}
+          placement={styles.logoutPlacement}
+          title={logoutLabel}
+          variant="surface"
+          zIndex={1200}
         >
-          <Logout className="size-4" />
-        </button>
-      </Tooltip>
+          {logoutButton}
+        </Tooltip>
+      )}
     </div>
   )
 }

@@ -1,12 +1,13 @@
 'use client'
 
 import { App } from 'antd'
-import { useRouter } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import {
   AuthEntry as AuthEntryView,
   type AuthEntryProps as AuthEntryViewProps,
 } from '@mianshitong/ui'
+import { createAuthPageHref } from '@/utils/auth-redirect'
 import { logoutCurrentUser } from '@/utils/logout'
 
 export interface AuthEntryProps {
@@ -15,9 +16,15 @@ export interface AuthEntryProps {
 }
 
 export function AuthEntry({ userEmail = null, variant }: AuthEntryProps) {
-  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { message } = App.useApp()
   const [logoutPending, setLogoutPending] = useState(false)
+
+  const queryString = searchParams.toString()
+  const currentPath = pathname
+    ? `${pathname}${queryString ? `?${queryString}` : ''}`
+    : null
 
   function handleLogout() {
     if (logoutPending) {
@@ -26,22 +33,22 @@ export function AuthEntry({ userEmail = null, variant }: AuthEntryProps) {
 
     setLogoutPending(true)
 
-    void logoutCurrentUser()
-      .then(() => {
-        router.refresh()
-      })
-      .catch((error: unknown) => {
+    void (async function runLogout() {
+      try {
+        await logoutCurrentUser()
+        window.location.reload()
+      } catch (error: unknown) {
         message.error(
           error instanceof Error ? error.message : '退出失败，请稍后重试'
         )
-      })
-      .finally(() => {
+      } finally {
         setLogoutPending(false)
-      })
+      }
+    })()
   }
 
   const viewProps: AuthEntryViewProps = {
-    loginHref: '/login',
+    loginHref: createAuthPageHref('/login', currentPath),
     logoutPending,
     onLogout: handleLogout,
     userLabel: userEmail,
