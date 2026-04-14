@@ -12,6 +12,7 @@
   "dependencies": {
     "@mianshitong/db": "workspace:*",
     "@mianshitong/providers": "workspace:*",
+    "@mianshitong/shared": "workspace:*",
     "@mianshitong/tokens": "workspace:*",
     "@mianshitong/ui": "workspace:*",
     "embla-carousel": "^8.6.0",

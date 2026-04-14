@@ -124,6 +124,9 @@ importers:
       '@mianshitong/providers':
         specifier: workspace:*
         version: link:../../packages/providers
+      '@mianshitong/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@mianshitong/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
@@ -224,6 +227,8 @@ importers:
         specifier: ^20.19.39
         version: 20.19.39
 
+  packages/shared: {}
+
   packages/tokens:
     dependencies:
       antd:
@@ -244,6 +249,9 @@ importers:
       '@mianshitong/icons':
         specifier: workspace:*
         version: link:../icons
+      '@mianshitong/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@mianshitong/tokens':
         specifier: workspace:*
         version: link:../tokens
