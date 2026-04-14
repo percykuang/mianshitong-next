@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { AppBrand, Button, FormField, Input, Surface } from '@mianshitong/ui'
 import type { AuthPageCopy } from './copy'
+import { createAuthPageHref, resolveAuthRedirect } from '@/utils/auth-redirect'
 
 interface AuthFormCardProps {
   mode: 'login' | 'register'
@@ -22,10 +23,19 @@ const personalizedFeatureCardClass =
 
 export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const redirectTarget = resolveAuthRedirect(searchParams.get('redirect'))
+  const alternateAuthHref = createAuthPageHref(
+    copy.footerLinkHref,
+    redirectTarget
+  )
+  const submitButtonClassName = pending
+    ? 'h-11 w-full cursor-not-allowed! bg-(--mst-color-primary)! text-white! hover:bg-(--mst-color-primary)!'
+    : 'h-11 w-full'
 
   return (
     <main className="relative overflow-hidden">
@@ -117,9 +127,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                       )
                     }
 
-                    // 登录/注册成功后刷新首页，让服务端重新读取最新 cookie。
-                    router.push('/')
-                    router.refresh()
+                    router.replace(redirectTarget)
                   })
                   .catch((error: unknown) => {
                     setSubmitError(
@@ -127,8 +135,6 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
                         ? error.message
                         : '提交失败，请稍后重试'
                     )
-                  })
-                  .finally(() => {
                     setPending(false)
                   })
               }}
@@ -170,13 +176,17 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
               ) : null}
 
               <Button
-                className="h-11 w-full"
+                className={submitButtonClassName}
                 disabled={!email || !password || pending}
                 htmlType="submit"
                 size="lg"
                 variant="primary"
               >
-                {pending ? '提交中...' : copy.submitLabel}
+                {pending
+                  ? mode === 'login'
+                    ? '登录中...'
+                    : '注册中...'
+                  : copy.submitLabel}
               </Button>
             </form>
 
@@ -184,7 +194,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
               {copy.footerText}{' '}
               <Link
                 className="font-medium text-(--mst-color-primary) transition-colors hover:opacity-80"
-                href={copy.footerLinkHref}
+                href={alternateAuthHref}
               >
                 {copy.footerLinkText}
               </Link>

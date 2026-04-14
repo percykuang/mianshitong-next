@@ -5,7 +5,7 @@ export interface AuthPageCopy {
   passwordPlaceholder: string
   footerText: string
   footerLinkText: string
-  footerLinkHref: string
+  footerLinkHref: '/login' | '/register'
 }
 
 export const LOGIN_PAGE_COPY: AuthPageCopy = {
