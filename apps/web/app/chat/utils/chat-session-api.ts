@@ -152,3 +152,32 @@ export async function updatePersistedChatMessageFeedback(
   const payload = (await response.json()) as SessionResponse
   return payload.session
 }
+
+interface PersistInterruptedReplyInput {
+  content: string
+  expectedMessageCount: number
+  sessionId: string
+}
+
+export async function persistInterruptedChatReply(
+  input: PersistInterruptedReplyInput
+) {
+  const response = await fetch(
+    `/api/chat/sessions/${input.sessionId}/messages/interrupted`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: input.content,
+        expectedMessageCount: input.expectedMessageCount,
+      }),
+    }
+  )
+
+  await ensureSuccessResponse(response)
+
+  const payload = (await response.json()) as SessionResponse
+  return payload.session
+}

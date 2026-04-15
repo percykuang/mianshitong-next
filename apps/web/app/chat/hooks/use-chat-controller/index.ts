@@ -1,20 +1,23 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { useThemeMode } from '@mianshitong/ui'
+import { useMemo, useRef } from 'react'
 import {
   useChatPathSyncEffect,
   useChatSessionSelectionRouteSyncEffect,
-  useCodeHighlightWarmupEffect,
 } from './effects'
 import { useChatControllerSidebarActions } from './sidebar-actions'
-import {
-  type UseChatControllerOptions,
-  type UseChatControllerResult,
-} from './types'
-import { useChatReplyState } from '../use-chat-reply-state'
-import { useChatSessionState } from '../use-chat-session-state'
+import { type UseChatControllerResult } from './types'
 import { getRouteSessionIdFromPathname } from '../../utils'
+import {
+  getIsReplying,
+  getRuntimeDebugInfo,
+  getSessionById,
+  getStreamingMessageId,
+  getShowThinkingIndicator,
+  projectReplyOntoSession,
+  useChatStore,
+} from '../../store'
 
 export type {
   ChatControllerComposerGroup,
@@ -23,56 +26,108 @@ export type {
   UseChatControllerResult,
 } from './types'
 
-export function useChatController({
-  initialSessions,
-  initialSelectedSessionId,
-  initialRuntimeDebugInfoByModelId,
-  initialSelectedModelId,
-  persistenceEnabled,
-}: UseChatControllerOptions): UseChatControllerResult {
-  const { themeMode } = useThemeMode()
+export function useChatController(): UseChatControllerResult {
+  const composerRef = useRef<HTMLTextAreaElement | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const routeSessionId = getRouteSessionIdFromPathname(pathname)
-  const sessionState = useChatSessionState({
-    initialSessions,
-    initialSelectedSessionId,
-    persistenceEnabled,
-  })
-  const replyState = useChatReplyState({
-    initialRuntimeDebugInfoByModelId,
-    initialSelectedModelId,
-    persistenceEnabled,
-    selectedSessionId: sessionState.selectedSessionId,
-    sessions: sessionState.sessions,
-    setSelectedSessionId: sessionState.setSelectedSessionId,
-    setSessions: sessionState.setSessions,
-  })
+  const draft = useChatStore((state) => state.draft)
+  const editingMessageId = useChatStore((state) => state.editingMessageId)
+  const editingValue = useChatStore((state) => state.editingValue)
+  const pendingEditedMessageAnchorId = useChatStore(
+    (state) => state.pendingEditedMessageAnchorId
+  )
+  const activeReply = useChatStore((state) => state.activeReply)
+  const pendingSidebarSessionId = useChatStore(
+    (state) => state.pendingSidebarSessionId
+  )
+  const selectedModelId = useChatStore((state) => state.selectedModelId)
+  const selectedSessionId = useChatStore((state) => state.selectedSessionId)
+  const sessions = useChatStore((state) => state.sessions)
+  const isReplying = useChatStore(getIsReplying)
+  const runtimeDebugInfo = useChatStore(getRuntimeDebugInfo)
+  const showThinkingIndicator = useChatStore(getShowThinkingIndicator)
+  const streamingMessageId = useChatStore(getStreamingMessageId)
+  const selectedSession = useMemo(() => {
+    const currentSelectedSession = getSessionById(sessions, selectedSessionId)
+
+    return currentSelectedSession
+      ? projectReplyOntoSession(currentSelectedSession, activeReply)
+      : null
+  }, [activeReply, selectedSessionId, sessions])
+  const sidebarSessions = useMemo(
+    () =>
+      pendingSidebarSessionId
+        ? sessions.filter((session) => session.id !== pendingSidebarSessionId)
+        : sessions,
+    [pendingSidebarSessionId, sessions]
+  )
+  const setDraft = useChatStore((state) => state.setDraft)
+  const setSelectedModelId = useChatStore((state) => state.setSelectedModelId)
+  const handleSelectPrompt = useChatStore((state) => state.selectPrompt)
+  const handleSendMessage = useChatStore((state) => state.sendMessage)
+  const handleStopReply = useChatStore((state) => state.stopReply)
+  const handleStartEditUserMessage = useChatStore(
+    (state) => state.startEditUserMessage
+  )
+  const handleSubmitEditUserMessage = useChatStore(
+    (state) => state.submitEditedMessage
+  )
+  const handleCancelEditUserMessage = useChatStore(
+    (state) => state.cancelEditUserMessage
+  )
+  const handleSetMessageFeedback = useChatStore(
+    (state) => state.setMessageFeedback
+  )
+  const setEditingValue = useChatStore((state) => state.setEditingValue)
+  const consumePendingEditedMessageAnchor = useChatStore(
+    (state) => state.consumePendingEditedMessageAnchor
+  )
+  const sessionState = {
+    consumePendingEditedMessageAnchor,
+    handleCancelEditUserMessage,
+    handleDeleteAllSessions: useChatStore((state) => state.deleteAllSessions),
+    handleDeleteSession: useChatStore((state) => state.deleteSession),
+    handleInterruptAndNewSession: useChatStore(
+      (state) => state.interruptAndNewSession
+    ),
+    handleInterruptAndSelectSession: useChatStore(
+      (state) => state.interruptAndSelectSession
+    ),
+    handleNewSession: useChatStore((state) => state.newSession),
+    handleRenameSession: useChatStore((state) => state.renameSession),
+    handleSelectSession: useChatStore((state) => state.selectSession),
+    handleSetMessageFeedback,
+    handleStartEditUserMessage,
+    handleTogglePinSession: useChatStore((state) => state.togglePinSession),
+    hasConversationMessages: Boolean(selectedSession?.messages.length),
+    pendingEditedMessageAnchorId,
+    selectedSession,
+    selectedSessionId,
+    sessions: sidebarSessions,
+    setEditingValue,
+  }
+  const replyState = {
+    setDraft,
+  }
   const sidebar = useChatControllerSidebarActions({
     replyState,
     sessionState,
   })
 
-  useCodeHighlightWarmupEffect({
-    isReplying: replyState.isReplying,
-    sessions: sessionState.sessions,
-    themeMode,
-  })
   useChatSessionSelectionRouteSyncEffect({
-    isReplying: replyState.isReplying,
+    isReplying,
     pathname,
-    persistenceEnabled,
     routeSessionId,
-    selectedSessionId: sessionState.selectedSessionId,
-    sessions: sessionState.sessions,
+    selectedSessionId,
+    sessions,
     onSelectRouteNewSession: sessionState.handleNewSession,
     onSelectRouteSession: sessionState.handleSelectSession,
   })
   useChatPathSyncEffect({
-    isReplying: replyState.isReplying,
+    isReplying,
     pathname,
-    persistenceEnabled,
-    selectedSessionId: sessionState.selectedSessionId,
+    selectedSessionId,
     replacePath(targetPath) {
       router.replace(targetPath, {
         scroll: false,
@@ -80,39 +135,33 @@ export function useChatController({
     },
   })
 
-  function handleStartEditUserMessage(messageId: string, content: string) {
-    if (replyState.isReplying) {
-      return
-    }
-
-    sessionState.handleStartEditUserMessage(messageId, content)
-  }
-
   return {
     composer: {
-      composerRef: replyState.composerRef,
-      draft: replyState.draft,
-      handleSelectPrompt: replyState.handleSelectPrompt,
-      handleSendMessage: replyState.handleSendMessage,
-      handleStopReply: replyState.handleStopReply,
-      isReplying: replyState.isReplying,
-      runtimeDebugInfo: replyState.runtimeDebugInfo,
-      selectedModelId: replyState.selectedModelId,
-      setDraft: replyState.setDraft,
-      setSelectedModelId: replyState.setSelectedModelId,
-      showThinkingIndicator: replyState.showThinkingIndicator,
-      streamingMessageId: replyState.streamingMessageId,
+      composerRef,
+      draft,
+      handleSelectPrompt,
+      handleSendMessage,
+      handleStopReply,
+      isReplying,
+      runtimeDebugInfo,
+      selectedModelId,
+      setDraft,
+      setSelectedModelId,
+      showThinkingIndicator,
+      streamingMessageId,
     },
     messages: {
-      editingMessageId: sessionState.editingMessageId,
-      editingValue: sessionState.editingValue,
-      handleCancelEditUserMessage: sessionState.handleCancelEditUserMessage,
-      handleSetMessageFeedback: sessionState.handleSetMessageFeedback,
+      consumePendingEditedMessageAnchor,
+      editingMessageId,
+      editingValue,
+      handleCancelEditUserMessage,
+      handleSetMessageFeedback,
       handleStartEditUserMessage,
-      handleSubmitEditUserMessage: sessionState.handleSubmitEditUserMessage,
-      hasConversationMessages: sessionState.hasConversationMessages,
-      selectedSession: sessionState.selectedSession,
-      setEditingValue: sessionState.setEditingValue,
+      handleSubmitEditUserMessage,
+      hasConversationMessages: Boolean(selectedSession?.messages.length),
+      pendingEditedMessageAnchorId,
+      selectedSession,
+      setEditingValue,
     },
     sidebar,
   }

@@ -12,9 +12,11 @@ export interface UseChatSessionStateOptions {
 export interface ChatSessionEditingState {
   editingMessageId: string | null
   editingValue: string
+  pendingEditedMessageAnchorId: string | null
+  consumePendingEditedMessageAnchor: () => void
   handleCancelEditUserMessage: () => void
   handleStartEditUserMessage: (messageId: string, content: string) => void
-  handleSubmitEditUserMessage: () => void
+  queuePendingEditedMessageAnchor: (messageId: string) => void
   resetEditingState: () => void
   setEditingValue: Dispatch<SetStateAction<string>>
 }

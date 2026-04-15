@@ -3,6 +3,7 @@ import { formatChatTimestamp } from '@/components'
 
 export interface PersistedChatMessage {
   content: string
+  completionStatus: 'completed' | 'interrupted' | null
   createdAt: Date
   feedback: 'dislike' | 'like' | null
   id: string
@@ -17,6 +18,7 @@ export interface PersistedChatSessionWithMessages {
   pinnedAt: Date | null
   preview: string
   title: string
+  updatedAt: Date
 }
 
 const MESSAGE_LABEL_BY_ROLE: Record<PersistedChatMessage['role'], string> = {
@@ -33,6 +35,7 @@ export function toConversationMessage(
     label: MESSAGE_LABEL_BY_ROLE[message.role],
     timestamp: formatChatTimestamp(message.createdAt),
     content: message.content,
+    completionStatus: message.completionStatus ?? undefined,
     feedback: message.feedback ?? undefined,
   }
 }
@@ -47,6 +50,7 @@ export function toChatSessionPreview(
     pinned: session.pinned,
     pinnedAt: session.pinnedAt?.getTime(),
     createdAt: session.createdAt.getTime(),
+    updatedAt: session.updatedAt.getTime(),
     messages: session.messages.map(toConversationMessage),
   }
 }

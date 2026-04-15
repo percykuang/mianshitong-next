@@ -58,6 +58,7 @@ export async function prepareReplySession({
     pinned: createdSession.pinned,
     pinnedAt: createdSession.pinnedAt,
     title: createdSession.title,
+    updatedAt: createdSession.updatedAt,
   }
 
   setSelectedSessionId(persistedSession.id)

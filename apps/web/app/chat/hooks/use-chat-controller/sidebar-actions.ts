@@ -15,6 +15,8 @@ interface UseChatControllerSidebarActionsOptions {
     ChatSessionStateLike,
     | 'handleDeleteAllSessions'
     | 'handleDeleteSession'
+    | 'handleInterruptAndNewSession'
+    | 'handleInterruptAndSelectSession'
     | 'handleNewSession'
     | 'handleRenameSession'
     | 'handleSelectSession'
@@ -33,8 +35,7 @@ export function useChatControllerSidebarActions({
   const sessions = sessionState.sessions
 
   function handleNewSession() {
-    sessionState.handleNewSession()
-    replyState.setDraft('')
+    void sessionState.handleInterruptAndNewSession()
   }
 
   function handleDeleteAllSessions() {
@@ -125,7 +126,9 @@ export function useChatControllerSidebarActions({
     handleDeleteSession,
     handleNewSession,
     handleRenameSession,
-    handleSelectSession: sessionState.handleSelectSession,
+    handleSelectSession(sessionId) {
+      void sessionState.handleInterruptAndSelectSession(sessionId)
+    },
     handleTogglePinSession: sessionState.handleTogglePinSession,
     selectedSessionId: sessionState.selectedSessionId,
     sessions,

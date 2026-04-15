@@ -1,11 +1,19 @@
 import {
+  createChatSessionTitle,
   formatChatTimestamp,
+  type ChatMessageCompletionStatus,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
   type ConversationMessage,
 } from '@/components'
 
 interface AppendAssistantDraftOptions {
+  content: string
+  messageId: string
+  session: ChatSessionPreview
+}
+
+interface BuildOptimisticEditedSessionOptions {
   content: string
   messageId: string
   session: ChatSessionPreview
@@ -38,6 +46,7 @@ export function appendAssistantDraftToSession({
   messageId,
   session,
 }: AppendAssistantDraftOptions): ChatSessionPreview {
+  const now = Date.now()
   const existingMessageIndex = session.messages.findIndex(
     (message) => message.id === messageId
   )
@@ -53,14 +62,101 @@ export function appendAssistantDraftToSession({
   const nextMessages =
     existingMessageIndex >= 0
       ? session.messages.map((message) =>
-          message.id === messageId ? { ...message, content } : message
+          message.id === messageId
+            ? {
+                ...message,
+                content,
+                completionStatus: undefined,
+              }
+            : message
         )
       : [...session.messages, assistantDraftMessage]
 
   return {
     ...session,
     preview: content || session.preview,
+    updatedAt: now,
     messages: nextMessages,
+  }
+}
+
+export function finalizeAssistantMessageInSession(input: {
+  completionStatus: ChatMessageCompletionStatus
+  messageId: string
+  session: ChatSessionPreview
+}) {
+  const now = Date.now()
+  const nextMessages = input.session.messages
+    .filter((message) => {
+      if (message.id !== input.messageId) {
+        return true
+      }
+
+      return message.content.trim().length > 0
+    })
+    .map((message) =>
+      message.id === input.messageId
+        ? {
+            ...message,
+            completionStatus: input.completionStatus,
+          }
+        : message
+    )
+
+  return {
+    ...input.session,
+    updatedAt: now,
+    messages: nextMessages,
+  }
+}
+
+export function buildOptimisticEditedSession({
+  content,
+  messageId,
+  session,
+}: BuildOptimisticEditedSessionOptions): ChatSessionPreview | null {
+  const normalizedContent = content.trim()
+
+  if (!normalizedContent) {
+    return null
+  }
+
+  const targetIndex = session.messages.findIndex(
+    (message) => message.id === messageId && message.role === 'user'
+  )
+  const lastEditableUserMessageId =
+    [...session.messages].reverse().find((message) => message.role === 'user')
+      ?.id ?? null
+
+  if (targetIndex < 0 || lastEditableUserMessageId !== messageId) {
+    return null
+  }
+
+  const targetMessage = session.messages[targetIndex]
+
+  if (!targetMessage) {
+    return null
+  }
+
+  const firstUserMessageIndex = session.messages.findIndex(
+    (message) => message.role === 'user'
+  )
+
+  return {
+    ...session,
+    title:
+      targetIndex === firstUserMessageIndex
+        ? createChatSessionTitle(normalizedContent)
+        : session.title,
+    preview: normalizedContent,
+    updatedAt: Date.now(),
+    messages: [
+      ...session.messages.slice(0, targetIndex),
+      {
+        ...targetMessage,
+        content: normalizedContent,
+      },
+    ],
   }
 }
 

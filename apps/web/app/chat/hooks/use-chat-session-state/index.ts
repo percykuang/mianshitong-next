@@ -30,10 +30,7 @@ export function useChatSessionState({
     [selectedSessionId, sessions]
   )
 
-  const editingState = useChatMessageEditing({
-    selectedSessionId,
-    setSessions,
-  })
+  const editingState = useChatMessageEditing()
   const sessionActions = createChatSessionActions({
     persistenceEnabled,
     resetEditingState: editingState.resetEditingState,
@@ -49,6 +46,8 @@ export function useChatSessionState({
   })
 
   return {
+    consumePendingEditedMessageAnchor:
+      editingState.consumePendingEditedMessageAnchor,
     editingMessageId: editingState.editingMessageId,
     editingValue: editingState.editingValue,
     handleCancelEditUserMessage: editingState.handleCancelEditUserMessage,
@@ -59,9 +58,12 @@ export function useChatSessionState({
     handleSelectSession: sessionActions.handleSelectSession,
     handleSetMessageFeedback: feedbackState.handleSetMessageFeedback,
     handleStartEditUserMessage: editingState.handleStartEditUserMessage,
-    handleSubmitEditUserMessage: editingState.handleSubmitEditUserMessage,
     handleTogglePinSession: sessionActions.handleTogglePinSession,
     hasConversationMessages: Boolean(selectedSession?.messages.length),
+    pendingEditedMessageAnchorId: editingState.pendingEditedMessageAnchorId,
+    queuePendingEditedMessageAnchor:
+      editingState.queuePendingEditedMessageAnchor,
+    resetEditingState: editingState.resetEditingState,
     selectedSession,
     selectedSessionId,
     sessions,

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useState } from 'react'
 import {
   ChatMainPane,
   ChatSidebar,
@@ -9,6 +10,7 @@ import {
   type ChatSessionPreview,
 } from '@/components'
 import { useChatController } from './hooks'
+import { ChatStoreProvider } from './store/provider'
 
 interface ChatPageClientProps {
   initialSessions: ChatSessionPreview[]
@@ -29,13 +31,28 @@ export function ChatPageClient({
   persistenceEnabled,
   userEmail,
 }: ChatPageClientProps) {
-  const { composer, messages, sidebar } = useChatController({
-    initialSessions,
-    initialSelectedSessionId,
-    initialRuntimeDebugInfoByModelId,
-    initialSelectedModelId,
-    persistenceEnabled,
-  })
+  return (
+    <ChatStoreProvider
+      initialRuntimeDebugInfoByModelId={initialRuntimeDebugInfoByModelId}
+      initialSelectedModelId={initialSelectedModelId}
+      initialSelectedSessionId={initialSelectedSessionId}
+      initialSessions={initialSessions}
+      persistenceEnabled={persistenceEnabled}
+    >
+      <ChatPageClientShell
+        initialModelOptions={initialModelOptions}
+        userEmail={userEmail}
+      />
+    </ChatStoreProvider>
+  )
+}
+
+function ChatPageClientShell({
+  initialModelOptions,
+  userEmail,
+}: Pick<ChatPageClientProps, 'initialModelOptions' | 'userEmail'>) {
+  const [followRequestKey, setFollowRequestKey] = useState(0)
+  const { composer, messages, sidebar } = useChatController()
   const { sidebarOpen, setSidebarOpen } = sidebar
   const { draft, isReplying, runtimeDebugInfo, selectedModelId } = composer
   const {
@@ -49,6 +66,7 @@ export function ChatPageClient({
     streamingMessageId,
   } = composer
   const {
+    consumePendingEditedMessageAnchor,
     editingMessageId,
     editingValue,
     handleCancelEditUserMessage,
@@ -56,10 +74,49 @@ export function ChatPageClient({
     handleStartEditUserMessage,
     handleSubmitEditUserMessage,
     hasConversationMessages,
+    pendingEditedMessageAnchorId,
     selectedSession,
     setEditingValue,
   } = messages
   const conversationMessages = selectedSession?.messages ?? []
+
+  const requestFollow = useCallback(() => {
+    setFollowRequestKey((value) => value + 1)
+  }, [])
+
+  const handleSubmitMessage = useCallback(
+    async (inputOverride?: string) => {
+      const input = (inputOverride ?? draft).trim()
+
+      if (!isReplying && input) {
+        requestFollow()
+      }
+
+      await handleSendMessage(inputOverride)
+    },
+    [draft, handleSendMessage, isReplying, requestFollow]
+  )
+
+  const handleSubmitPrompt = useCallback(
+    async (prompt: string) => {
+      requestFollow()
+      await handleSelectPrompt(prompt)
+    },
+    [handleSelectPrompt, requestFollow]
+  )
+
+  const handleSubmitEditedMessage = useCallback(async () => {
+    const didSubmit = await handleSubmitEditUserMessage()
+
+    if (!didSubmit) {
+      return
+    }
+
+    requestFollow()
+    window.requestAnimationFrame(() => {
+      composerRef.current?.focus()
+    })
+  }, [composerRef, handleSubmitEditUserMessage, requestFollow])
 
   return (
     <div className="group/sidebar-wrapper relative flex h-dvh w-full overflow-hidden bg-white text-(--mst-color-text-primary) antialiased dark:bg-(--mst-color-bg-page)">
@@ -89,23 +146,26 @@ export function ChatPageClient({
       <ChatMainPane
         activeSessionId={selectedSession?.id ?? null}
         draft={draft}
+        followRequestKey={followRequestKey}
         hasConversationMessages={hasConversationMessages}
         isReplying={isReplying}
+        onEditedMessageAnchorApplied={consumePendingEditedMessageAnchor}
         editingMessageId={editingMessageId}
         editingValue={editingValue}
         modelOptions={initialModelOptions}
         messages={conversationMessages}
+        pendingEditedMessageAnchorId={pendingEditedMessageAnchorId}
         onCancelEditUserMessage={handleCancelEditUserMessage}
         onModelChange={setSelectedModelId}
         onDraftChange={setDraft}
         onEditingValueChange={setEditingValue}
         onMessageFeedbackChange={handleSetMessageFeedback}
-        onSelectPrompt={handleSelectPrompt}
+        onSelectPrompt={handleSubmitPrompt}
         onStartEditUserMessage={handleStartEditUserMessage}
         onStop={handleStopReply}
-        onSubmit={handleSendMessage}
-        onSubmitEditUserMessage={handleSubmitEditUserMessage}
-        onToggleSidebar={() => setSidebarOpen((value) => !value)}
+        onSubmit={handleSubmitMessage}
+        onSubmitEditUserMessage={handleSubmitEditedMessage}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         runtimeDebugInfo={runtimeDebugInfo}
         showThinkingIndicator={showThinkingIndicator}
         selectedModelId={selectedModelId}

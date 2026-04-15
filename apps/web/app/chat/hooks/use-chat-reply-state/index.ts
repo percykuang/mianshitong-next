@@ -7,13 +7,30 @@ import {
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
 } from '@/components'
-import { createAssistantFallbackMessage, streamChatReply } from '../../utils'
+import {
+  appendAssistantDraftToSession,
+  createAssistantFallbackMessage,
+  persistInterruptedChatReply,
+  streamChatReply,
+  streamEditedChatReply,
+} from '../../utils'
 import {
   appendFallbackMessageToSessions,
+  finalizeAssistantMessageInSessions,
+  hydratePersistedSession,
+  replaceSession,
   updateAssistantDraftInSessions,
 } from './session-updates'
 import { hydrateReplySession, prepareReplySession } from './session-persistence'
 import { type UseChatReplyStateOptions } from './types'
+
+interface ActiveReplySnapshot {
+  assistantContent: string
+  assistantMessageId: string | null
+  fallbackSession: ChatSessionPreview | null
+  optimisticSessionId: string | null
+  sessionId: string | null
+}
 
 export function useChatReplyState({
   initialRuntimeDebugInfoByModelId,
@@ -38,6 +55,13 @@ export function useChatReplyState({
   >(initialRuntimeDebugInfoByModelId)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
   const replyAbortControllerRef = useRef<AbortController | null>(null)
+  const activeReplySnapshotRef = useRef<ActiveReplySnapshot>({
+    assistantContent: '',
+    assistantMessageId: null,
+    fallbackSession: null,
+    optimisticSessionId: null,
+    sessionId: null,
+  })
 
   useEffect(() => {
     return () => {
@@ -45,9 +69,35 @@ export function useChatReplyState({
     }
   }, [])
 
+  function resetActiveReplySnapshot() {
+    activeReplySnapshotRef.current = {
+      assistantContent: '',
+      assistantMessageId: null,
+      fallbackSession: null,
+      optimisticSessionId: null,
+      sessionId: null,
+    }
+  }
+
   function handleStopReply() {
+    const activeReplySnapshot = activeReplySnapshotRef.current
+
     replyAbortControllerRef.current?.abort()
     replyAbortControllerRef.current = null
+
+    if (
+      activeReplySnapshot.assistantMessageId &&
+      activeReplySnapshot.assistantContent.trim() &&
+      activeReplySnapshot.sessionId &&
+      activeReplySnapshot.fallbackSession
+    ) {
+      finalizeInterruptedAssistantLocally({
+        assistantMessageId: activeReplySnapshot.assistantMessageId,
+        fallbackSession: activeReplySnapshot.fallbackSession,
+        sessionId: activeReplySnapshot.sessionId,
+      })
+    }
+
     setIsAwaitingFirstChunk(false)
     setIsReplying(false)
     setStreamingMessageId(null)
@@ -72,6 +122,49 @@ export function useChatReplyState({
     })
   }
 
+  async function hydrateEditedSession(sessionId: string) {
+    await hydrateReplySession({
+      optimisticSessionId: sessionId,
+      persistenceEnabled,
+      sessionId,
+      setSelectedSessionId,
+      setSessions,
+    })
+  }
+
+  function syncPersistedSession(
+    optimisticSessionId: string,
+    persistedSession: ChatSessionPreview
+  ) {
+    startTransition(() => {
+      setSelectedSessionId(persistedSession.id)
+      setSessions((currentSessions) =>
+        hydratePersistedSession(
+          currentSessions,
+          optimisticSessionId,
+          persistedSession
+        )
+      )
+    })
+  }
+
+  function finalizeInterruptedAssistantLocally(input: {
+    assistantMessageId: string
+    fallbackSession: ChatSessionPreview
+    sessionId: string
+  }) {
+    startTransition(() => {
+      setSessions((currentSessions) =>
+        finalizeAssistantMessageInSessions(currentSessions, {
+          completionStatus: 'interrupted',
+          fallbackSession: input.fallbackSession,
+          messageId: input.assistantMessageId,
+          sessionId: input.sessionId,
+        })
+      )
+    })
+  }
+
   async function handleSendMessage(inputOverride?: string) {
     const input = (inputOverride ?? draft).trim()
 
@@ -88,12 +181,15 @@ export function useChatReplyState({
     })
 
     let assistantContent = ''
+    let assistantMessageId: string | null = null
     let optimisticSession: ChatSessionPreview | null = null
     let optimisticSessionId: string | null = null
     let nextSessionId: string | null = null
     let nextSession: ChatSessionPreview | null = null
 
     try {
+      resetActiveReplySnapshot()
+
       const preparedSession = await prepareReplySession({
         input,
         persistenceEnabled,
@@ -108,11 +204,19 @@ export function useChatReplyState({
       optimisticSessionId = preparedSession.optimisticSessionId
       nextSessionId = preparedSession.activeSessionId
       nextSession = preparedSession.activeSession
+      activeReplySnapshotRef.current = {
+        assistantContent: '',
+        assistantMessageId: null,
+        fallbackSession: nextSession ?? optimisticSession,
+        optimisticSessionId,
+        sessionId: nextSessionId,
+      }
 
       const controller = new AbortController()
       replyAbortControllerRef.current = controller
-      const assistantMessageId = `assistant-${Date.now()}`
-      setStreamingMessageId(assistantMessageId)
+      const nextAssistantMessageId = `assistant-${Date.now()}`
+      assistantMessageId = nextAssistantMessageId
+      setStreamingMessageId(nextAssistantMessageId)
 
       const {
         content,
@@ -139,10 +243,22 @@ export function useChatReplyState({
             return
           }
 
+          activeReplySnapshotRef.current = {
+            assistantContent: nextContent,
+            assistantMessageId: nextAssistantMessageId,
+            fallbackSession: appendAssistantDraftToSession({
+              content: nextContent,
+              messageId: nextAssistantMessageId,
+              session: draftSession,
+            }),
+            optimisticSessionId,
+            sessionId: nextSessionId,
+          }
+
           updateAssistantDraft(
             nextSessionId,
             draftSession,
-            assistantMessageId,
+            nextAssistantMessageId,
             nextContent
           )
         },
@@ -150,9 +266,13 @@ export function useChatReplyState({
 
       setRuntimeDebugInfoByModelId((current) => ({
         ...current,
-        [selectedModelId]: runtimeDebugInfo,
+        [runtimeDebugInfo.requestedModelId]: runtimeDebugInfo,
       }))
       assistantContent = content
+      activeReplySnapshotRef.current = {
+        ...activeReplySnapshotRef.current,
+        assistantContent: content,
+      }
 
       if (!optimisticSessionId) {
         return
@@ -167,6 +287,55 @@ export function useChatReplyState({
       })
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
+        const activeReplySnapshot = activeReplySnapshotRef.current
+        const interruptedContent =
+          activeReplySnapshot.assistantContent.trim() || assistantContent.trim()
+        const draftSession =
+          activeReplySnapshot.fallbackSession ??
+          nextSession ??
+          optimisticSession
+        const interruptedSessionId =
+          activeReplySnapshot.sessionId ?? nextSessionId
+        const interruptedAssistantMessageId =
+          activeReplySnapshot.assistantMessageId ?? assistantMessageId
+
+        if (
+          !interruptedAssistantMessageId ||
+          !interruptedContent ||
+          !interruptedSessionId ||
+          !draftSession
+        ) {
+          return
+        }
+
+        finalizeInterruptedAssistantLocally({
+          assistantMessageId: interruptedAssistantMessageId,
+          fallbackSession: draftSession,
+          sessionId: interruptedSessionId,
+        })
+
+        if (persistenceEnabled) {
+          try {
+            const persistedSession = await persistInterruptedChatReply({
+              content: interruptedContent,
+              expectedMessageCount: draftSession.messages.length,
+              sessionId: interruptedSessionId,
+            })
+
+            syncPersistedSession(
+              activeReplySnapshot.optimisticSessionId ??
+                optimisticSessionId ??
+                persistedSession.id,
+              persistedSession
+            )
+          } catch (persistError) {
+            console.warn(
+              '[chat-shell] persist interrupted reply failed',
+              persistError
+            )
+          }
+        }
+
         return
       }
 
@@ -200,6 +369,7 @@ export function useChatReplyState({
       )
     } finally {
       replyAbortControllerRef.current = null
+      resetActiveReplySnapshot()
       setIsAwaitingFirstChunk(false)
       setIsReplying(false)
       setStreamingMessageId(null)
@@ -215,9 +385,185 @@ export function useChatReplyState({
     await handleSendMessage(prompt)
   }
 
+  async function handleEditMessage(input: {
+    assistantMessageId: string
+    messageId: string
+    nextContent: string
+    onOptimisticSessionApplied: () => void
+    optimisticSession: ChatSessionPreview
+    originalSession: ChatSessionPreview
+    sessionId: string
+  }) {
+    if (isReplying) {
+      return false
+    }
+
+    setIsReplying(true)
+    setIsAwaitingFirstChunk(true)
+
+    let assistantContent = ''
+
+    try {
+      resetActiveReplySnapshot()
+
+      startTransition(() => {
+        setSessions((currentSessions) =>
+          replaceSession(
+            currentSessions,
+            input.sessionId,
+            input.optimisticSession
+          )
+        )
+        input.onOptimisticSessionApplied()
+      })
+      activeReplySnapshotRef.current = {
+        assistantContent: '',
+        assistantMessageId: input.assistantMessageId,
+        fallbackSession: input.optimisticSession,
+        optimisticSessionId: input.sessionId,
+        sessionId: input.sessionId,
+      }
+
+      const controller = new AbortController()
+      replyAbortControllerRef.current = controller
+      setStreamingMessageId(input.assistantMessageId)
+
+      const {
+        content,
+        runtimeDebugInfo,
+        sessionId: persistedSessionId,
+      } = await streamEditedChatReply({
+        content: input.nextContent,
+        messageId: input.messageId,
+        sessionId: input.sessionId,
+        signal: controller.signal,
+        onChunk(nextContent) {
+          assistantContent = nextContent
+          setIsAwaitingFirstChunk(false)
+
+          activeReplySnapshotRef.current = {
+            assistantContent: nextContent,
+            assistantMessageId: input.assistantMessageId,
+            fallbackSession: appendAssistantDraftToSession({
+              content: nextContent,
+              messageId: input.assistantMessageId,
+              session: input.optimisticSession,
+            }),
+            optimisticSessionId: input.sessionId,
+            sessionId: input.sessionId,
+          }
+
+          updateAssistantDraft(
+            input.sessionId,
+            input.optimisticSession,
+            input.assistantMessageId,
+            nextContent
+          )
+        },
+      })
+
+      setRuntimeDebugInfoByModelId((current) => ({
+        ...current,
+        [runtimeDebugInfo.requestedModelId]: runtimeDebugInfo,
+      }))
+      assistantContent = content
+      activeReplySnapshotRef.current = {
+        ...activeReplySnapshotRef.current,
+        assistantContent: content,
+      }
+
+      await hydrateReplySession({
+        optimisticSessionId: input.sessionId,
+        persistenceEnabled,
+        sessionId: persistedSessionId ?? input.sessionId,
+        setSelectedSessionId,
+        setSessions,
+      })
+
+      return true
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        console.error('[chat-shell] edit message failed', error)
+      }
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        const activeReplySnapshot = activeReplySnapshotRef.current
+        const interruptedContent =
+          activeReplySnapshot.assistantContent.trim() || assistantContent.trim()
+
+        if (!interruptedContent) {
+          try {
+            await hydrateEditedSession(input.sessionId)
+          } catch (hydrateError) {
+            console.warn(
+              '[chat-shell] hydrate edited session failed after abort',
+              hydrateError
+            )
+          }
+
+          return false
+        }
+
+        finalizeInterruptedAssistantLocally({
+          assistantMessageId:
+            activeReplySnapshot.assistantMessageId ?? input.assistantMessageId,
+          fallbackSession:
+            activeReplySnapshot.fallbackSession ?? input.optimisticSession,
+          sessionId: activeReplySnapshot.sessionId ?? input.sessionId,
+        })
+
+        if (persistenceEnabled) {
+          try {
+            const persistedSession = await persistInterruptedChatReply({
+              content: interruptedContent,
+              expectedMessageCount: (
+                activeReplySnapshot.fallbackSession ?? input.optimisticSession
+              ).messages.length,
+              sessionId: activeReplySnapshot.sessionId ?? input.sessionId,
+            })
+
+            syncPersistedSession(input.sessionId, persistedSession)
+          } catch (persistError) {
+            console.warn(
+              '[chat-shell] persist interrupted edited reply failed',
+              persistError
+            )
+          }
+        }
+
+        return false
+      }
+
+      try {
+        await hydrateEditedSession(input.sessionId)
+      } catch (hydrateError) {
+        console.warn('[chat-shell] hydrate edited session failed', hydrateError)
+
+        startTransition(() => {
+          setSessions((currentSessions) =>
+            replaceSession(
+              currentSessions,
+              input.sessionId,
+              input.originalSession
+            )
+          )
+        })
+      }
+
+      return false
+    } finally {
+      replyAbortControllerRef.current = null
+      resetActiveReplySnapshot()
+      setIsAwaitingFirstChunk(false)
+      setIsReplying(false)
+      setStreamingMessageId(null)
+    }
+  }
+
   return {
     composerRef,
     draft,
+    handleEditMessage,
     handleSelectPrompt,
     handleSendMessage,
     handleStopReply,

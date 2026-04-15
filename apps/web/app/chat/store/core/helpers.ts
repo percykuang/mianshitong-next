@@ -7,12 +7,9 @@ import {
 import {
   appendAssistantDraftToSession,
   finalizeAssistantMessageInSession,
-  sortSessions,
 } from '../../utils'
-import {
-  type AppendFallbackMessageOptions,
-  type UpdateAssistantDraftOptions,
-} from './types'
+import { sortSessions } from '../../utils'
+import { type ActiveReply } from './types'
 
 function dedupeSessionsById(sessions: ChatSessionPreview[]) {
   return sessions.filter(
@@ -79,63 +76,56 @@ export function hydratePersistedSession(
   )
 }
 
-export function updateAssistantDraftInSessions(
+export function getSessionById(
   sessions: ChatSessionPreview[],
-  {
-    content,
-    fallbackSession,
-    messageId,
-    sessionId,
-  }: UpdateAssistantDraftOptions
+  sessionId: string | null
 ) {
-  const currentSession =
-    sessions.find((session) => session.id === sessionId) ?? fallbackSession
+  return sessionId
+    ? (sessions.find((session) => session.id === sessionId) ?? null)
+    : null
+}
 
-  return replaceSession(
-    sessions,
-    sessionId,
-    appendAssistantDraftToSession({
-      content,
-      messageId,
-      session: currentSession,
-    })
+export function getLastEditableUserMessageId(
+  session: ChatSessionPreview | null
+) {
+  return (
+    [...(session?.messages ?? [])]
+      .reverse()
+      .find((message) => message.role === 'user')?.id ?? null
   )
 }
 
-export function appendFallbackMessageToSessions(
-  sessions: ChatSessionPreview[],
-  { fallbackMessage, fallbackSession, sessionId }: AppendFallbackMessageOptions
+export function projectReplyOntoSession(
+  session: ChatSessionPreview,
+  activeReply: ActiveReply | null
 ) {
-  const currentSession =
-    sessions.find((session) => session.id === sessionId) ?? fallbackSession
+  if (
+    !activeReply ||
+    activeReply.sessionId !== session.id ||
+    !activeReply.latestContent.trim()
+  ) {
+    return session
+  }
 
-  return replaceSession(sessions, sessionId, {
-    ...currentSession,
-    preview: fallbackMessage.content,
-    messages: [...currentSession.messages, fallbackMessage],
+  return appendAssistantDraftToSession({
+    content: activeReply.latestContent,
+    messageId: activeReply.assistantMessageId,
+    session,
   })
 }
 
-export function finalizeAssistantMessageInSessions(
-  sessions: ChatSessionPreview[],
-  input: {
-    completionStatus: ChatMessageCompletionStatus
-    fallbackSession: ChatSessionPreview
-    messageId: string
-    sessionId: string
+export function commitActiveReplyToSession(input: {
+  activeReply: ActiveReply
+  completionStatus: ChatMessageCompletionStatus
+  session: ChatSessionPreview
+}) {
+  if (!input.activeReply.latestContent.trim()) {
+    return input.session
   }
-) {
-  const currentSession =
-    sessions.find((session) => session.id === input.sessionId) ??
-    input.fallbackSession
 
-  return replaceSession(
-    sessions,
-    input.sessionId,
-    finalizeAssistantMessageInSession({
-      completionStatus: input.completionStatus,
-      messageId: input.messageId,
-      session: currentSession,
-    })
-  )
+  return finalizeAssistantMessageInSession({
+    completionStatus: input.completionStatus,
+    messageId: input.activeReply.assistantMessageId,
+    session: projectReplyOntoSession(input.session, input.activeReply),
+  })
 }

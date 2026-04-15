@@ -21,6 +21,14 @@ interface StreamChatReplyResult {
   sessionId: string | null
 }
 
+interface StreamEditedChatReplyOptions {
+  content: string
+  messageId: string
+  onChunk?: (content: string) => void
+  sessionId: string
+  signal: AbortSignal
+}
+
 const FETCH_RETRY_DELAY_MS = 120
 
 function createAbortError() {
@@ -39,57 +47,11 @@ function waitForRetryDelay() {
   })
 }
 
-// 调用聊天接口并按流式内容持续返回当前累计文本。
-export async function streamChatReply({
-  history,
-  message,
-  modelId,
-  sessionId,
-  onChunk,
-  signal,
-}: StreamChatReplyOptions): Promise<StreamChatReplyResult> {
-  if (signal.aborted) {
-    throw createAbortError()
-  }
-
-  let response: Response | null = null
-  let lastFetchError: unknown = null
-
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    try {
-      response = await fetch('/api/chat', {
-        method: 'POST',
-        signal,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          modelId,
-          message,
-          sessionId,
-          history,
-        }),
-      })
-      break
-    } catch (error) {
-      if (signal.aborted) {
-        throw createAbortError()
-      }
-
-      lastFetchError = error
-
-      if (!isFetchTypeError(error) || attempt === 1) {
-        throw error
-      }
-
-      await waitForRetryDelay()
-    }
-  }
-
-  if (!response) {
-    throw lastFetchError ?? new Error('请求失败')
-  }
-
+async function readStreamedChatReply(
+  response: Response,
+  signal: AbortSignal,
+  onChunk?: (content: string) => void
+): Promise<StreamChatReplyResult> {
   if (!response.ok || !response.body) {
     const data = await parseJsonSafely<{
       error?: string
@@ -135,4 +97,98 @@ export async function streamChatReply({
     runtimeDebugInfo,
     sessionId: persistedSessionId,
   }
+}
+
+// 调用聊天接口并按流式内容持续返回当前累计文本。
+export async function streamChatReply({
+  history,
+  message,
+  modelId,
+  sessionId,
+  onChunk,
+  signal,
+}: StreamChatReplyOptions): Promise<StreamChatReplyResult> {
+  if (signal.aborted) {
+    throw createAbortError()
+  }
+
+  let response: Response | null = null
+  let lastFetchError: unknown = null
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      response = await fetch(
+        sessionId
+          ? `/api/chat/sessions/${sessionId}/messages/stream`
+          : '/api/chat',
+        {
+          method: 'POST',
+          signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(
+            sessionId
+              ? {
+                  content: message,
+                  modelId,
+                }
+              : {
+                  modelId,
+                  message,
+                  sessionId,
+                  history,
+                }
+          ),
+        }
+      )
+      break
+    } catch (error) {
+      if (signal.aborted) {
+        throw createAbortError()
+      }
+
+      lastFetchError = error
+
+      if (!isFetchTypeError(error) || attempt === 1) {
+        throw error
+      }
+
+      await waitForRetryDelay()
+    }
+  }
+
+  if (!response) {
+    throw lastFetchError ?? new Error('请求失败')
+  }
+
+  return readStreamedChatReply(response, signal, onChunk)
+}
+
+export async function streamEditedChatReply({
+  content,
+  messageId,
+  onChunk,
+  sessionId,
+  signal,
+}: StreamEditedChatReplyOptions): Promise<StreamChatReplyResult> {
+  if (signal.aborted) {
+    throw createAbortError()
+  }
+
+  const response = await fetch(
+    `/api/chat/sessions/${sessionId}/messages/${messageId}/edit/stream`,
+    {
+      method: 'POST',
+      signal,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content,
+      }),
+    }
+  )
+
+  return readStreamedChatReply(response, signal, onChunk)
 }

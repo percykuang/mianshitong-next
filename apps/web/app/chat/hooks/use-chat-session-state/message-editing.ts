@@ -1,81 +1,46 @@
 'use client'
 
-import { useState } from 'react'
-import { type Dispatch, type SetStateAction } from 'react'
-import { type ChatSessionPreview } from '@/components'
+import { useCallback, useState } from 'react'
 import { type ChatSessionEditingState } from './types'
 
-interface UseChatMessageEditingOptions {
-  selectedSessionId: string | null
-  setSessions: Dispatch<SetStateAction<ChatSessionPreview[]>>
-}
-
-export function useChatMessageEditing({
-  selectedSessionId,
-  setSessions,
-}: UseChatMessageEditingOptions): ChatSessionEditingState {
+export function useChatMessageEditing(): ChatSessionEditingState {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState('')
+  const [pendingEditedMessageAnchorId, setPendingEditedMessageAnchorId] =
+    useState<string | null>(null)
 
   function resetEditingState() {
     setEditingMessageId(null)
     setEditingValue('')
   }
 
+  const consumePendingEditedMessageAnchor = useCallback(() => {
+    setPendingEditedMessageAnchorId(null)
+  }, [])
+
   function handleStartEditUserMessage(messageId: string, content: string) {
+    setPendingEditedMessageAnchorId(null)
     setEditingMessageId(messageId)
     setEditingValue(content)
   }
 
   function handleCancelEditUserMessage() {
+    setPendingEditedMessageAnchorId(null)
     resetEditingState()
   }
 
-  function handleSubmitEditUserMessage() {
-    const nextContent = editingValue.trim()
-
-    if (!selectedSessionId || !editingMessageId || !nextContent) {
-      return
-    }
-
-    setSessions((currentSessions) =>
-      currentSessions.map((session) => {
-        if (session.id !== selectedSessionId) {
-          return session
-        }
-
-        const targetMessage = session.messages.find(
-          (message) => message.id === editingMessageId
-        )
-
-        if (!targetMessage) {
-          return session
-        }
-
-        return {
-          ...session,
-          preview:
-            session.preview === targetMessage.content
-              ? nextContent
-              : session.preview,
-          messages: session.messages.map((message) =>
-            message.id === editingMessageId
-              ? { ...message, content: nextContent }
-              : message
-          ),
-        }
-      })
-    )
-
-    resetEditingState()
+  function queuePendingEditedMessageAnchor(messageId: string) {
+    setPendingEditedMessageAnchorId(messageId)
   }
 
   return {
+    consumePendingEditedMessageAnchor,
     editingMessageId,
     editingValue,
     handleCancelEditUserMessage,
     handleStartEditUserMessage,
-    handleSubmitEditUserMessage,
+    pendingEditedMessageAnchorId,
+    queuePendingEditedMessageAnchor,
     resetEditingState,
     setEditingValue,
   }

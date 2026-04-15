@@ -1,5 +1,3 @@
-'use client'
-
 import { type Dispatch, type RefObject, type SetStateAction } from 'react'
 import {
   type ChatMessageFeedback,
@@ -7,14 +5,6 @@ import {
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
 } from '@/components'
-
-export interface UseChatControllerOptions {
-  initialSessions: ChatSessionPreview[]
-  initialSelectedSessionId: string | null
-  initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
-  initialSelectedModelId: ChatModelId
-  persistenceEnabled: boolean
-}
 
 export interface ChatControllerComposerGroup {
   composerRef: RefObject<HTMLTextAreaElement | null>
@@ -25,13 +15,14 @@ export interface ChatControllerComposerGroup {
   isReplying: boolean
   runtimeDebugInfo: ChatRuntimeDebugInfo | null
   selectedModelId: ChatModelId
-  setDraft: Dispatch<SetStateAction<string>>
-  setSelectedModelId: Dispatch<SetStateAction<ChatModelId>>
+  setDraft: (value: string) => void
+  setSelectedModelId: (value: ChatModelId) => void
   showThinkingIndicator: boolean
   streamingMessageId: string | null
 }
 
 export interface ChatControllerMessagesGroup {
+  consumePendingEditedMessageAnchor: () => void
   editingMessageId: string | null
   editingValue: string
   handleCancelEditUserMessage: () => void
@@ -40,10 +31,11 @@ export interface ChatControllerMessagesGroup {
     feedback: ChatMessageFeedback | null
   ) => void
   handleStartEditUserMessage: (messageId: string, content: string) => void
-  handleSubmitEditUserMessage: () => void
+  handleSubmitEditUserMessage: () => Promise<boolean>
   hasConversationMessages: boolean
+  pendingEditedMessageAnchorId: string | null
   selectedSession: ChatSessionPreview | null
-  setEditingValue: Dispatch<SetStateAction<string>>
+  setEditingValue: (value: string) => void
 }
 
 export interface ChatControllerSidebarGroup {
@@ -66,11 +58,12 @@ export interface UseChatControllerResult {
 }
 
 export interface ChatSessionStateLike {
-  editingMessageId: string | null
-  editingValue: string
+  consumePendingEditedMessageAnchor: () => void
   handleCancelEditUserMessage: () => void
   handleDeleteAllSessions: () => Promise<number | null>
   handleDeleteSession: (sessionId: string) => Promise<boolean>
+  handleInterruptAndNewSession: () => Promise<void>
+  handleInterruptAndSelectSession: (sessionId: string) => Promise<void>
   handleNewSession: () => void
   handleRenameSession: (sessionId: string, title: string) => Promise<boolean>
   handleSelectSession: (sessionId: string) => void
@@ -79,28 +72,15 @@ export interface ChatSessionStateLike {
     feedback: ChatMessageFeedback | null
   ) => void
   handleStartEditUserMessage: (messageId: string, content: string) => void
-  handleSubmitEditUserMessage: () => void
   handleTogglePinSession: (sessionId: string) => Promise<void>
   hasConversationMessages: boolean
+  pendingEditedMessageAnchorId: string | null
   selectedSession: ChatSessionPreview | null
   selectedSessionId: string | null
   sessions: ChatSessionPreview[]
-  setEditingValue: Dispatch<SetStateAction<string>>
-  setSelectedSessionId: Dispatch<SetStateAction<string | null>>
-  setSessions: Dispatch<SetStateAction<ChatSessionPreview[]>>
+  setEditingValue: (value: string) => void
 }
 
 export interface ChatReplyStateLike {
-  composerRef: RefObject<HTMLTextAreaElement | null>
-  draft: string
-  handleSelectPrompt: (prompt: string) => Promise<void>
-  handleSendMessage: (inputOverride?: string) => Promise<void>
-  handleStopReply: () => void
-  isReplying: boolean
-  runtimeDebugInfo: ChatRuntimeDebugInfo | null
-  selectedModelId: ChatModelId
-  setDraft: Dispatch<SetStateAction<string>>
-  setSelectedModelId: Dispatch<SetStateAction<ChatModelId>>
-  showThinkingIndicator: boolean
-  streamingMessageId: string | null
+  setDraft: (value: string) => void
 }

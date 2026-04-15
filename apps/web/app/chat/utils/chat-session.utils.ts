@@ -11,6 +11,28 @@ interface CreateNextSessionOptions {
   sessions: ChatSessionPreview[]
 }
 
+const CHAT_SESSION_ID_FALLBACK_RANDOM_LENGTH = 20
+
+function createRandomIdSegment(length: number) {
+  return Math.random()
+    .toString(36)
+    .slice(2, 2 + length)
+    .padEnd(length, '0')
+}
+
+export function createChatSessionId() {
+  if (
+    typeof globalThis.crypto !== 'undefined' &&
+    typeof globalThis.crypto.randomUUID === 'function'
+  ) {
+    return globalThis.crypto.randomUUID().replace(/-/g, '')
+  }
+
+  return `${Date.now().toString(36)}-${createRandomIdSegment(
+    CHAT_SESSION_ID_FALLBACK_RANDOM_LENGTH
+  )}`
+}
+
 function createUserMessage(input: string): ConversationMessage {
   return {
     id: `user-${Date.now()}`,
@@ -21,7 +43,7 @@ function createUserMessage(input: string): ConversationMessage {
   }
 }
 
-// 按置顶时间和创建时间统一排序会话列表。
+// 按置顶时间和最近更新时间统一排序会话列表，保持与服务端列表一致。
 export function sortSessions(sessions: ChatSessionPreview[]) {
   return [...sessions].sort((left, right) => {
     const leftPinned = Boolean(left.pinned)
@@ -35,7 +57,7 @@ export function sortSessions(sessions: ChatSessionPreview[]) {
       return (right.pinnedAt ?? 0) - (left.pinnedAt ?? 0)
     }
 
-    return right.createdAt - left.createdAt
+    return right.updatedAt - left.updatedAt
   })
 }
 
@@ -46,7 +68,7 @@ export function createNextSession({
   sessions,
 }: CreateNextSessionOptions): ChatSessionPreview {
   const now = Date.now()
-  const nextSessionId = selectedSessionId ?? `session-${now}`
+  const nextSessionId = selectedSessionId ?? createChatSessionId()
   const baseSession =
     sessions.find((session) => session.id === nextSessionId) ?? null
   const userMessage = createUserMessage(input)
@@ -58,6 +80,7 @@ export function createNextSession({
     title: baseSession?.title ?? createChatSessionTitle(input),
     preview: input,
     pinned: baseSession?.pinned,
+    updatedAt: now,
     messages: [...(baseSession?.messages ?? []), userMessage],
   }
 }
