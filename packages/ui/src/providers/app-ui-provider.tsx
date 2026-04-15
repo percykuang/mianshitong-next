@@ -131,7 +131,7 @@ export function AppUiProvider({ app, children }: AppUiProviderProps) {
     <ThemeModeContext.Provider value={contextValue}>
       <AntdRegistry>
         <StyleProvider layer>
-          <ConfigProvider theme={createAntdTheme(themeTokens)}>
+          <ConfigProvider theme={createAntdTheme(themeTokens, themeMode)}>
             <App>
               <CodeBlockStyles />
               <ModalAppBridge />

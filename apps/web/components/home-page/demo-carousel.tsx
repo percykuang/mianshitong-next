@@ -103,8 +103,8 @@ export function HomePageDemoCarousel({ demos }: HomePageDemoCarouselProps) {
                     alt={`${item.title} 演示预览`}
                     className="pointer-events-none h-full w-full select-none object-cover object-top"
                     draggable={false}
+                    loading={index === 0 ? 'eager' : 'lazy'}
                     placeholder="empty"
-                    priority={index === activeIndex}
                     src={mockInterviewGif}
                     unoptimized
                   />
