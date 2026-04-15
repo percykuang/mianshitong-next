@@ -64,6 +64,21 @@ function normalizeChunkText(
   return typeof chunk?.text === 'string' ? chunk.text : ''
 }
 
+function closeReadableStreamController(
+  controller: ReadableStreamDefaultController
+) {
+  try {
+    controller.close()
+  } catch (error) {
+    if (
+      !(error instanceof TypeError) ||
+      !error.message.includes('Controller is already closed')
+    ) {
+      throw error
+    }
+  }
+}
+
 export function createChatStreamHeaders(input: {
   persistedSessionId: string
   runtime: ReturnType<typeof getChatModelRuntimeInfo>
@@ -104,7 +119,6 @@ export function createChatResponseStream(input: {
 
         for await (const chunk of outputStream) {
           if (input.requestSignal.aborted) {
-            controller.close()
             return
           }
 
@@ -118,10 +132,18 @@ export function createChatResponseStream(input: {
           controller.enqueue(encoder.encode(text))
         }
 
-        await persistAssistantReply(input.persistedSessionId, assistantContent)
+        await persistAssistantReply(
+          input.persistedSessionId,
+          assistantContent,
+          'completed'
+        )
 
-        controller.close()
+        closeReadableStreamController(controller)
       } catch (error) {
+        if (input.requestSignal.aborted) {
+          return
+        }
+
         console.error('[api/chat] model stream failed', error)
         controller.error(error)
       }

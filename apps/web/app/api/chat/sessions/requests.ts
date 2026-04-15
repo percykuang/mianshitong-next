@@ -50,9 +50,59 @@ export interface UpdateMessageFeedbackBody {
   feedback?: 'dislike' | 'like' | null
 }
 
+export interface EditMessageBody {
+  content?: string
+}
+
+export interface InterruptMessageBody {
+  content?: string
+  expectedMessageCount?: number
+}
+
+export interface StreamMessageBody {
+  content?: string
+  modelId?: string
+}
+
 type ParseUpdateMessageFeedbackBodyResult =
   | {
       data: 'dislike' | 'like' | null
+      errorResponse: null
+    }
+  | {
+      data: null
+      errorResponse: Response
+    }
+
+type ParseEditMessageBodyResult =
+  | {
+      data: string
+      errorResponse: null
+    }
+  | {
+      data: null
+      errorResponse: Response
+    }
+
+type ParseInterruptMessageBodyResult =
+  | {
+      data: {
+        content: string
+        expectedMessageCount: number
+      }
+      errorResponse: null
+    }
+  | {
+      data: null
+      errorResponse: Response
+    }
+
+type ParseStreamMessageBodyResult =
+  | {
+      data: {
+        content: string
+        normalizedModelId: ChatModelId
+      }
       errorResponse: null
     }
   | {
@@ -142,6 +192,88 @@ export function parseUpdateMessageFeedbackBody(
 
   return {
     data: body.feedback,
+    errorResponse: null,
+  }
+}
+
+export function parseEditMessageBody(
+  body: EditMessageBody | null
+): ParseEditMessageBodyResult {
+  const content = typeof body?.content === 'string' ? body.content.trim() : ''
+
+  if (!content) {
+    return {
+      data: null,
+      errorResponse: jsonError('消息内容不能为空', 400),
+    }
+  }
+
+  return {
+    data: content,
+    errorResponse: null,
+  }
+}
+
+export function parseInterruptMessageBody(
+  body: InterruptMessageBody | null
+): ParseInterruptMessageBodyResult {
+  const content = typeof body?.content === 'string' ? body.content.trim() : ''
+  const expectedMessageCount =
+    typeof body?.expectedMessageCount === 'number'
+      ? Math.floor(body.expectedMessageCount)
+      : NaN
+
+  if (!content) {
+    return {
+      data: null,
+      errorResponse: jsonError('中断消息内容不能为空', 400),
+    }
+  }
+
+  if (!Number.isFinite(expectedMessageCount) || expectedMessageCount < 0) {
+    return {
+      data: null,
+      errorResponse: jsonError('expectedMessageCount 非法', 400),
+    }
+  }
+
+  return {
+    data: {
+      content,
+      expectedMessageCount,
+    },
+    errorResponse: null,
+  }
+}
+
+export function parseStreamMessageBody(
+  body: StreamMessageBody | null
+): ParseStreamMessageBodyResult {
+  const content = typeof body?.content === 'string' ? body.content.trim() : ''
+  const modelId =
+    typeof body?.modelId === 'string' && body.modelId.trim().length > 0
+      ? body.modelId.trim()
+      : getDefaultChatModelId()
+
+  if (!content) {
+    return {
+      data: null,
+      errorResponse: jsonError('消息内容不能为空', 400),
+    }
+  }
+
+  if (!isChatModelId(modelId)) {
+    return {
+      data: null,
+      errorResponse: jsonError('不支持的模型类型', 400),
+    }
+  }
+
+  return {
+    data: {
+      content,
+      normalizedModelId: normalizeChatModelId(modelId),
+    },
     errorResponse: null,
   }
 }

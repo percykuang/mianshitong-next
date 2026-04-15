@@ -40,6 +40,11 @@ enum ChatMessageFeedback {
   dislike
 }
 
+enum ChatMessageCompletionStatus {
+  completed
+  interrupted
+}
+
 enum UserActorType {
   guest
   registered
@@ -81,14 +86,15 @@ model ChatSession {
 }
 
 model ChatMessage {
-  id        String               @id @default(cuid())
-  sessionId String
-  role      ChatMessageRole
-  content   String
-  feedback  ChatMessageFeedback?
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-  session   ChatSession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  id               String                      @id @default(cuid())
+  sessionId        String
+  role             ChatMessageRole
+  content          String
+  completionStatus ChatMessageCompletionStatus?
+  feedback         ChatMessageFeedback?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  session          ChatSession                 @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt(sort: Asc)])
 }
