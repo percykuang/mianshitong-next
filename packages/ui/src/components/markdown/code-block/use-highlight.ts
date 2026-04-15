@@ -1,17 +1,18 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useEffect, useMemo } from 'react'
+import {
+  createJavaScriptRegexEngine,
+  useShikiHighlighter,
+} from 'react-shiki/web'
 import type { ThemeMode } from '../../../providers/app-ui-provider'
 import {
   createHighlightCacheKey,
   getCachedHighlightHtml,
   highlightCodeBlock,
+  resolveShikiLanguage,
 } from './highlight'
-
-interface HighlightResult {
-  key: string
-  html: string | null
-}
 
 interface UseCodeHighlightOptions {
   code: string
@@ -19,57 +20,55 @@ interface UseCodeHighlightOptions {
   themeMode: ThemeMode
 }
 
-const HIGHLIGHT_DEBOUNCE_MS = 120
-
-function getCachedHighlightResult(cacheKey: string) {
-  const cachedHtml = getCachedHighlightHtml(cacheKey)
-
-  return cachedHtml === undefined ? null : { key: cacheKey, html: cachedHtml }
-}
+const HIGHLIGHT_DELAY_MS = 72
+const shikiEngine = createJavaScriptRegexEngine({ forgiving: true })
 
 export function useCodeHighlight({
   code,
   language,
   themeMode,
 }: UseCodeHighlightOptions) {
-  const highlightKey = useMemo(
-    () => createHighlightCacheKey(code, language, themeMode),
-    [code, language, themeMode]
+  const resolvedLanguage = useMemo(
+    () => resolveShikiLanguage(language),
+    [language]
   )
-  const cachedHighlightResult = useMemo(
-    () => getCachedHighlightResult(highlightKey),
-    [highlightKey]
+  const theme = themeMode === 'dark' ? 'github-dark' : 'github-light'
+  const cachedHighlightedHtml = useMemo(() => {
+    if (!resolvedLanguage) {
+      return null
+    }
+
+    const cacheKey = createHighlightCacheKey(code, language, themeMode)
+    return getCachedHighlightHtml(cacheKey) ?? null
+  }, [code, language, resolvedLanguage, themeMode])
+  const highlightedContent = useShikiHighlighter(
+    code,
+    resolvedLanguage ?? undefined,
+    theme,
+    {
+      delay: HIGHLIGHT_DELAY_MS,
+      engine: shikiEngine,
+    }
   )
-  const [highlightResult, setHighlightResult] =
-    useState<HighlightResult | null>(cachedHighlightResult)
 
   useEffect(() => {
-    if (cachedHighlightResult) {
+    if (cachedHighlightedHtml !== null || !resolvedLanguage) {
       return
     }
 
-    let active = true
-    const timer = window.setTimeout(() => {
-      void highlightCodeBlock(code, language, themeMode).then((html) => {
-        if (!active) {
-          return
-        }
-
-        setHighlightResult({ key: highlightKey, html })
-      })
-    }, HIGHLIGHT_DEBOUNCE_MS)
-
-    return () => {
-      active = false
-      window.clearTimeout(timer)
-    }
-  }, [cachedHighlightResult, code, highlightKey, language, themeMode])
+    void highlightCodeBlock(code, language, themeMode)
+  }, [cachedHighlightedHtml, code, language, resolvedLanguage, themeMode])
 
   return {
-    highlightedHtml:
-      cachedHighlightResult?.html ??
-      (highlightResult?.key === highlightKey ? highlightResult.html : null),
-    isHighlighting:
-      !cachedHighlightResult && highlightResult?.key !== highlightKey,
+    cachedHighlightedHtml,
+    highlightedContent:
+      resolvedLanguage !== null && highlightedContent
+        ? highlightedContent
+        : null,
+    isHighlighting: resolvedLanguage !== null && highlightedContent === null,
+  } satisfies {
+    cachedHighlightedHtml: string | null
+    highlightedContent: ReactNode | null
+    isHighlighting: boolean
   }
 }

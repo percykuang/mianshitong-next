@@ -4,12 +4,15 @@ import type {
   ChatModelRuntimeInfo,
 } from '@mianshitong/providers'
 
+export type ChatMessageCompletionStatus = 'completed' | 'interrupted'
+
 export interface ConversationMessage {
   id: string
   role: 'assistant' | 'user'
   label: string
   timestamp: string
   content: string
+  completionStatus?: ChatMessageCompletionStatus
   feedback?: ChatMessageFeedback
   points?: string[]
 }
@@ -23,6 +26,7 @@ export interface ChatSessionPreview {
   title: string
   preview: string
   pinned?: boolean
+  updatedAt: number
   messages: ConversationMessage[]
 }
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useScrollRestoration } from '@mianshitong/hooks'
 import { AppBrand, ChevronLeft, Plus, Tooltip, Trash } from '@mianshitong/ui'
 import { AuthEntry } from '../../auth'
 import { type ChatSessionPreview } from '../types'
@@ -30,6 +31,8 @@ export function ChatSidebar({
   sidebarOpen: boolean
   userEmail: string | null
 }) {
+  const sessionsScrollRef = useScrollRestoration('chat-sidebar-sessions')
+
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-(--mst-color-border-default) bg-white/84 text-(--mst-color-text-primary) backdrop-blur-xl transition-transform duration-200 ease-linear dark:bg-slate-950/68 ${
@@ -93,7 +96,10 @@ export function ChatSidebar({
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-auto px-2 py-2">
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-auto px-2 py-2"
+        ref={sessionsScrollRef}
+      >
         <div className="flex flex-col gap-1">
           {sessions.map((session) => (
             <ChatSidebarSessionItem

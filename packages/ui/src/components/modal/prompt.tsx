@@ -166,7 +166,6 @@ export function createPrompt(confirm: ModalMethod): ModalPromptMethod {
 
     modalRef = confirm({
       centered,
-      closable: true,
       ...props,
       cancelButtonProps,
       content: (

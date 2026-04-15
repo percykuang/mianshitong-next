@@ -1,5 +1,6 @@
 export { createChatSessionTitle, formatChatTimestamp } from './formatters'
 export {
+  type ChatMessageCompletionStatus,
   type ChatMessageFeedback,
   type ChatModelId,
   type ChatModelOption,

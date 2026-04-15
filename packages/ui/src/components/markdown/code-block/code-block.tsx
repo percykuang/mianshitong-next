@@ -1,8 +1,9 @@
 'use client'
 
-import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 import { Check, Copy, Download } from '@mianshitong/icons'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useTransientFlag } from '@mianshitong/hooks'
+import { useCallback } from 'react'
 import type { ExtraProps } from 'react-markdown'
 import { useThemeMode } from '../../../providers/app-ui-provider'
 import {
@@ -37,36 +38,6 @@ interface CodeBlockToolbarProps {
 }
 
 const ACTION_FEEDBACK_DURATION_MS = 1500
-
-function clearTimeoutRef(timerRef: RefObject<number | null>) {
-  if (timerRef.current) {
-    window.clearTimeout(timerRef.current)
-    timerRef.current = null
-  }
-}
-
-function useTransientFlag(durationMs = ACTION_FEEDBACK_DURATION_MS) {
-  const [active, setActive] = useState(false)
-  const timerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      clearTimeoutRef(timerRef)
-    }
-  }, [])
-
-  const trigger = useCallback(() => {
-    setActive(true)
-    clearTimeoutRef(timerRef)
-
-    timerRef.current = window.setTimeout(() => {
-      setActive(false)
-      timerRef.current = null
-    }, durationMs)
-  }, [durationMs])
-
-  return { active, trigger }
-}
 
 function CodeActionButton({ icon, label, onClick }: CodeActionButtonProps) {
   return (
@@ -150,14 +121,18 @@ export function CodeBlock({ children, className, ...rest }: CodeBlockProps) {
   const languageId = normalizeLanguage(className)
   const shouldWrap = shouldWrapCodeBlock(languageId)
   const codeText = String(children).replace(/\n$/, '')
-  const { highlightedHtml, isHighlighting } = useCodeHighlight({
-    code: codeText,
-    language: languageId,
-    themeMode,
-  })
-  const { active: copied, trigger: showCopiedState } = useTransientFlag()
-  const { active: downloaded, trigger: showDownloadedState } =
-    useTransientFlag()
+  const { cachedHighlightedHtml, highlightedContent, isHighlighting } =
+    useCodeHighlight({
+      code: codeText,
+      language: languageId,
+      themeMode,
+    })
+  const { active: copied, trigger: showCopiedState } = useTransientFlag(
+    ACTION_FEEDBACK_DURATION_MS
+  )
+  const { active: downloaded, trigger: showDownloadedState } = useTransientFlag(
+    ACTION_FEEDBACK_DURATION_MS
+  )
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(codeText)
@@ -189,9 +164,11 @@ export function CodeBlock({ children, className, ...rest }: CodeBlockProps) {
         }}
         onDownload={handleDownload}
       />
-      <div {...codeElementProps}>
-        {highlightedHtml ? (
-          <div dangerouslySetInnerHTML={{ __html: highlightedHtml }} />
+      <div className="mst-ui-code-block-body" {...codeElementProps}>
+        {highlightedContent ? (
+          highlightedContent
+        ) : cachedHighlightedHtml ? (
+          <div dangerouslySetInnerHTML={{ __html: cachedHighlightedHtml }} />
         ) : (
           <CodeBlockFallback code={codeText} />
         )}

@@ -7,7 +7,7 @@ const codeBlockStyleText = `
   margin: 0;
   overflow-x: auto;
   padding: 1rem;
-  background: rgb(248 250 252);
+  background: transparent;
   color: rgb(30 41 59);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.75rem;
@@ -22,7 +22,6 @@ const codeBlockStyleText = `
 }
 
 html[data-theme='dark'] .mst-ui-code-block-fallback {
-  background: #24292e;
   color: #e1e4e8;
 }
 
@@ -30,6 +29,7 @@ html[data-theme='dark'] .mst-ui-code-block-fallback {
   margin: 0;
   padding: 1rem !important;
   overflow-x: auto;
+  background: transparent !important;
   white-space: pre !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-size: 0.75rem;

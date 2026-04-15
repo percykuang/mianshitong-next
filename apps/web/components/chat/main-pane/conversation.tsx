@@ -1,12 +1,11 @@
 'use client'
-
-import { type RefObject } from 'react'
 import { ChevronDown } from '@mianshitong/ui'
 import { ChatMessageCard, ChatThinkingMessage } from '../message'
 import { ChatEmptyState } from './empty-state'
 import { type ChatMainPaneProps } from './types'
 
 interface ChatMainPaneConversationProps {
+  activeSessionId: ChatMainPaneProps['activeSessionId']
   editingMessageId: ChatMainPaneProps['editingMessageId']
   editingValue: ChatMainPaneProps['editingValue']
   hasConversationMessages: ChatMainPaneProps['hasConversationMessages']
@@ -19,12 +18,13 @@ interface ChatMainPaneConversationProps {
   onStartEditUserMessage: ChatMainPaneProps['onStartEditUserMessage']
   onSubmitEditUserMessage: ChatMainPaneProps['onSubmitEditUserMessage']
   onScrollToBottom: () => void
-  scrollContainerRef: RefObject<HTMLDivElement | null>
+  scrollContainerRef: (node: HTMLDivElement | null) => void
   showThinkingIndicator: ChatMainPaneProps['showThinkingIndicator']
   streamingMessageId: ChatMainPaneProps['streamingMessageId']
 }
 
 export function ChatMainPaneConversation({
+  activeSessionId,
   editingMessageId,
   editingValue,
   hasConversationMessages,
@@ -43,11 +43,16 @@ export function ChatMainPaneConversation({
 }: ChatMainPaneConversationProps) {
   const showEmptyState = !hasConversationMessages && !isReplying
   const showScrollToBottomButton = hasConversationMessages && !isPinnedToBottom
+  const messageKeyPrefix = activeSessionId ?? 'empty'
+  const lastEditableUserMessageId =
+    [...messages].reverse().find((message) => message.role === 'user')?.id ??
+    null
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         className="absolute inset-0 touch-pan-y overflow-y-auto"
+        key={messageKeyPrefix}
         ref={scrollContainerRef}
       >
         <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6 px-3 py-4 md:px-6 md:pt-6 md:pb-4">
@@ -55,12 +60,14 @@ export function ChatMainPaneConversation({
 
           {messages.map((message, index) => (
             <ChatMessageCard
-              canEditUserMessage={!isReplying}
+              canEditUserMessage={
+                !isReplying && message.id === lastEditableUserMessageId
+              }
               editingValue={editingValue}
               isFirstMessage={index === 0}
               isEditing={editingMessageId === message.id}
               isStreaming={message.id === streamingMessageId}
-              key={message.id}
+              key={`${messageKeyPrefix}:${message.id}`}
               message={message}
               onCancelEditUserMessage={onCancelEditUserMessage}
               onEditingValueChange={onEditingValueChange}

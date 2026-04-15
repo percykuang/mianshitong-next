@@ -12,12 +12,15 @@ import {
 export interface ChatMainPaneProps {
   activeSessionId: string | null
   draft: string
+  followRequestKey: number
   hasConversationMessages: boolean
   isReplying: boolean
   editingMessageId: string | null
   editingValue: string
+  pendingEditedMessageAnchorId: string | null
   modelOptions: readonly ChatModelOption[]
   messages: ConversationMessage[]
+  onEditedMessageAnchorApplied: () => void
   onCancelEditUserMessage: () => void
   onModelChange: (value: ChatModelId) => void
   onDraftChange: (value: string) => void

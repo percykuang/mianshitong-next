@@ -9,12 +9,15 @@ import { useChatMainPaneScroll } from './use-chat-main-pane-scroll'
 export function ChatMainPane({
   activeSessionId,
   draft,
+  followRequestKey,
   hasConversationMessages,
   isReplying,
   editingMessageId,
   editingValue,
+  pendingEditedMessageAnchorId,
   modelOptions,
   messages,
+  onEditedMessageAnchorApplied,
   onCancelEditUserMessage,
   onModelChange,
   onDraftChange,
@@ -36,8 +39,13 @@ export function ChatMainPane({
   const { isPinnedToBottom, scrollContainerRef, scrollToBottom } =
     useChatMainPaneScroll({
       activeSessionId,
+      editingMessageId,
+      followRequestKey,
       isReplying,
+      lastMessageContent: messages.at(-1)?.content,
       messageCount: messages.length,
+      onEditedMessageAnchorApplied,
+      pendingEditedMessageAnchorId,
     })
 
   return (
@@ -54,6 +62,7 @@ export function ChatMainPane({
         />
 
         <ChatMainPaneConversation
+          activeSessionId={activeSessionId}
           editingMessageId={editingMessageId}
           editingValue={editingValue}
           hasConversationMessages={hasConversationMessages}

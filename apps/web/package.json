@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@mianshitong/db": "workspace:*",
+    "@mianshitong/hooks": "workspace:*",
     "@mianshitong/providers": "workspace:*",
     "@mianshitong/shared": "workspace:*",
     "@mianshitong/tokens": "workspace:*",
@@ -22,7 +23,8 @@
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "shiki": "^4.0.2"
+    "shiki": "^4.0.2",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.14",

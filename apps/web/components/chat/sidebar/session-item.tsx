@@ -34,7 +34,7 @@ export function ChatSidebarSessionItem({
   return (
     <div
       data-chat-session-item
-      className={`group/session relative flex min-w-0 items-center rounded-[18px] px-3 py-0.5 transition-colors duration-200 ${
+      className={`group/session relative flex min-w-0 items-center rounded-xl px-3 py-0.5 transition-colors duration-200 ${
         active
           ? 'bg-slate-900/6 text-(--mst-color-text-primary) dark:bg-white/7'
           : 'text-(--mst-color-text-secondary) hover:bg-slate-900/4 hover:text-(--mst-color-text-primary) dark:hover:bg-white/6'
@@ -74,7 +74,7 @@ export function ChatSidebarSessionItem({
 
         <button
           aria-label="更多操作"
-          className={`absolute inset-0 m-auto inline-flex size-7 cursor-pointer items-center justify-center rounded-xl p-0 text-(--mst-color-text-muted) transition-[opacity,color,background-color] duration-150 hover:bg-slate-900/5 hover:text-(--mst-color-text-primary) dark:hover:bg-white/7 ${
+          className={`absolute inset-0 m-auto inline-flex size-7 cursor-pointer items-center justify-center rounded-[14px] p-0 text-(--mst-color-text-muted) transition-[opacity,color,background-color] duration-150 hover:bg-slate-900/5 hover:text-(--mst-color-text-primary) dark:hover:bg-white/7 ${
             menuOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0 group-hover/session:pointer-events-auto group-hover/session:opacity-100'

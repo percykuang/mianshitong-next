@@ -5,6 +5,7 @@ export {
   formatChatTimestamp,
   ChatMainPane,
   ChatSidebar,
+  type ChatMessageCompletionStatus,
   type ChatMessageFeedback,
   type ChatModelId,
   type ChatModelOption,
