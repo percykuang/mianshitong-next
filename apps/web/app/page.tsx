@@ -3,58 +3,14 @@ import {
   AppBrand,
   ChevronRight,
   CircleCheck,
-  Code,
-  FileText,
-  MessageSquare,
   Sparkles,
   Surface,
 } from '@mianshitong/ui'
 import { HomePageDemoCarousel, HomePageHeaderActions } from '@/components'
-import { getCurrentUser } from '@/server/auth-session'
-
-const highlights = [
-  '专注前端开发领域',
-  '基于最新技术栈',
-  'AI 智能分析',
-  '即时反馈建议',
-] as const
-
-const features = [
-  {
-    title: '简历优化',
-    description: '专业的简历分析和优化建议，帮你打造脱颖而出的简历。',
-    icon: FileText,
-  },
-  {
-    title: '模拟面试',
-    description: '真实的面试场景模拟，提供即时反馈和改进建议。',
-    icon: MessageSquare,
-  },
-  {
-    title: '面试题解答',
-    description: '涵盖前端、算法、系统设计等各类编程面试题详解。',
-    icon: Code,
-  },
-] as const
-
-const demos = [
-  {
-    title: '简历智能分析',
-    description: '上传简历，AI 自动分析并提供优化建议。',
-  },
-  {
-    title: '模拟面试场景',
-    description: '真实面试对话，实时反馈和评分。',
-  },
-  {
-    title: '面试题详解',
-    description: '前端经典面试题目，详细解答和思路分析。',
-  },
-] as const
+import { getHomePageProps } from './get-home-page-props'
 
 export default async function HomePage() {
-  const currentUser = await getCurrentUser()
-  const currentUserEmail = currentUser?.email ?? null
+  const { content, userEmail } = await getHomePageProps()
 
   return (
     <div className="min-h-screen">
@@ -66,7 +22,7 @@ export default async function HomePage() {
               labelClassName="text-lg"
               logoClassName="rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
             />
-            <HomePageHeaderActions userEmail={currentUserEmail} />
+            <HomePageHeaderActions userEmail={userEmail} />
           </div>
         </div>
       </header>
@@ -75,16 +31,19 @@ export default async function HomePage() {
         <div className="mx-auto max-w-4xl space-y-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-(--mst-color-border-default) bg-slate-900/4 px-3 py-1 text-sm text-(--mst-color-text-secondary) dark:bg-white/6">
             <Sparkles className="size-4 text-(--mst-color-primary)" />
-            <span>由 AI 驱动的智能面试助手</span>
+            <span>{content.header.badge}</span>
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight text-balance text-(--mst-color-text-primary) md:text-6xl">
-            你的专属
-            <span className="text-(--mst-color-primary)"> AI Agent</span> 面试官
+            {content.header.titlePrefix}
+            <span className="text-(--mst-color-primary)">
+              {content.header.titleHighlight}
+            </span>
+            {content.header.titleSuffix}
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary) md:text-xl">
-            专注编程领域，尤其前端开发。提供简历优化、模拟面试、面试题解答等全方位面试辅导服务。
+            {content.header.description}
           </p>
 
           <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
@@ -92,13 +51,13 @@ export default async function HomePage() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-(--mst-color-primary) px-8 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
               href="/chat"
             >
-              立即开始
+              {content.header.primaryActionLabel}
               <ChevronRight className="size-4" />
             </Link>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-8 md:gap-6">
-            {highlights.map((item) => (
+            {content.highlights.map((item) => (
               <div
                 className="flex items-center gap-2 text-sm text-(--mst-color-text-secondary)"
                 key={item}
@@ -117,15 +76,15 @@ export default async function HomePage() {
       >
         <div className="mb-12 space-y-4 text-center">
           <h2 className="text-3xl font-bold text-balance text-(--mst-color-text-primary) md:text-4xl">
-            核心功能
+            {content.featuresSection.title}
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary)">
-            全方位的面试准备解决方案
+            {content.featuresSection.description}
           </p>
         </div>
 
         <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
-          {features.map((item) => {
+          {content.features.map((item) => {
             const Icon = item.icon
 
             return (
@@ -154,31 +113,31 @@ export default async function HomePage() {
         <div className="mx-auto w-full max-w-6xl">
           <div className="mb-12 space-y-4 text-center">
             <h2 className="text-3xl font-bold text-balance text-(--mst-color-text-primary) md:text-4xl">
-              功能演示
+              {content.demosSection.title}
             </h2>
             <p className="mx-auto max-w-2xl text-lg text-balance text-(--mst-color-text-secondary)">
-              看看 AI 面试官如何帮助你准备面试
+              {content.demosSection.description}
             </p>
           </div>
 
-          <HomePageDemoCarousel demos={demos} />
+          <HomePageDemoCarousel demos={content.demos} />
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-16 md:px-6 md:py-24">
         <div className="mx-auto flex max-w-4xl flex-col space-y-6 rounded-lg bg-(--mst-color-primary) p-8 text-center text-white shadow-(--mst-shadow-sm) md:p-12">
           <h2 className="text-3xl font-bold text-balance md:text-4xl">
-            准备好开始你的面试准备了吗？
+            {content.cta.title}
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-balance text-white/90">
-            立即与 AI 面试官对话，获取专业的面试指导和建议。
+            {content.cta.description}
           </p>
           <div className="flex pt-4">
             <Link
               className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-md bg-white px-8 text-sm font-semibold text-(--mst-color-primary) transition-colors hover:bg-slate-100"
               href="/chat"
             >
-              开始对话
+              {content.cta.buttonLabel}
               <ChevronRight className="size-4" />
             </Link>
           </div>
@@ -193,7 +152,7 @@ export default async function HomePage() {
                 <Sparkles className="size-4 text-white" />
               </div>
               <span className="text-sm text-(--mst-color-text-muted)">
-                © 2026 面试通
+                {content.footer.copyright}
               </span>
             </div>
           </div>
