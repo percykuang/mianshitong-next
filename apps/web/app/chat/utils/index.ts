@@ -2,7 +2,9 @@ export {
   appendAssistantDraftToSession,
   buildOptimisticEditedSession,
   createAssistantFallbackMessage,
+  finalizeReplyToSession,
   finalizeAssistantMessageInSession,
+  projectAssistantReplyOntoSession,
   parseRuntimeDebugInfoFromHeaders,
 } from './chat-message.utils'
 export {
@@ -25,4 +27,18 @@ export {
   createNextSession,
   sortSessions,
 } from './chat-session.utils'
+export {
+  hydratePersistedSession,
+  replaceOptimisticSession,
+  replaceSession,
+  updateMessageFeedbackInSession,
+  updateMessageFeedbackInSessions,
+  upsertSession,
+} from './chat-session-collection.utils'
+export {
+  buildPersistedReplySessionFailureState,
+  buildPersistedReplySessionState,
+  clearPendingReplySidebarSession,
+  createFallbackReplySession,
+} from './chat-reply-session.utils'
 export { streamChatReply, streamEditedChatReply } from './stream-chat-reply'

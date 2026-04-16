@@ -3,7 +3,7 @@ import {
   formatChatTimestamp,
   type ChatSessionPreview,
   type ConversationMessage,
-} from '@/components'
+} from '@/app/chat/domain'
 
 interface CreateNextSessionOptions {
   input: string

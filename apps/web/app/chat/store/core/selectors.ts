@@ -3,6 +3,16 @@
 import { getSessionById, projectReplyOntoSession } from './helpers'
 import { type ActiveReply, type ChatStore } from './types'
 
+const projectedSelectedSessionCache: {
+  activeReply: ActiveReply | null
+  result: ReturnType<typeof getSelectedSession>
+  selectedSession: ReturnType<typeof getSelectedSession>
+} = {
+  activeReply: null,
+  result: null,
+  selectedSession: null,
+}
+
 export function isReplying(activeReply: ActiveReply | null) {
   return (
     activeReply?.status === 'awaiting-first-chunk' ||
@@ -21,10 +31,24 @@ export function getProjectedSelectedSession(
   state: Pick<ChatStore, 'activeReply' | 'selectedSessionId' | 'sessions'>
 ) {
   const selectedSession = getSelectedSession(state)
+  const { activeReply } = state
 
-  return selectedSession
-    ? projectReplyOntoSession(selectedSession, state.activeReply)
+  if (
+    projectedSelectedSessionCache.activeReply === activeReply &&
+    projectedSelectedSessionCache.selectedSession === selectedSession
+  ) {
+    return projectedSelectedSessionCache.result
+  }
+
+  const result = selectedSession
+    ? projectReplyOntoSession(selectedSession, activeReply)
     : null
+
+  projectedSelectedSessionCache.activeReply = activeReply
+  projectedSelectedSessionCache.selectedSession = selectedSession
+  projectedSelectedSessionCache.result = result
+
+  return result
 }
 
 export function getRuntimeDebugInfo(

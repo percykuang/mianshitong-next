@@ -1,13 +1,15 @@
 import { isFetchTypeError, parseJsonSafely } from '@mianshitong/shared'
 import type {
-  ChatModelId,
-  ChatRuntimeDebugInfo,
-  ConversationMessage,
-} from '@/components'
+  ChatRequestBody,
+  ChatRequestMessage,
+  EditMessageBody,
+  StreamMessageBody,
+} from '@/app/chat/contracts'
+import type { ChatModelId, ChatRuntimeDebugInfo } from '@/app/chat/domain'
 import { parseRuntimeDebugInfoFromHeaders } from './chat-message.utils'
 
 interface StreamChatReplyOptions {
-  history: Array<Pick<ConversationMessage, 'content' | 'role'>>
+  history: ChatRequestMessage[]
   message: string
   modelId: ChatModelId
   sessionId?: string
@@ -117,6 +119,18 @@ export async function streamChatReply({
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
+      const payload: ChatRequestBody | StreamMessageBody = sessionId
+        ? {
+            content: message,
+            modelId,
+          }
+        : {
+            history,
+            message,
+            modelId,
+            sessionId,
+          }
+
       response = await fetch(
         sessionId
           ? `/api/chat/sessions/${sessionId}/messages/stream`
@@ -127,19 +141,7 @@ export async function streamChatReply({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(
-            sessionId
-              ? {
-                  content: message,
-                  modelId,
-                }
-              : {
-                  modelId,
-                  message,
-                  sessionId,
-                  history,
-                }
-          ),
+          body: JSON.stringify(payload),
         }
       )
       break
@@ -176,6 +178,10 @@ export async function streamEditedChatReply({
     throw createAbortError()
   }
 
+  const payload: EditMessageBody = {
+    content,
+  }
+
   const response = await fetch(
     `/api/chat/sessions/${sessionId}/messages/${messageId}/edit/stream`,
     {
@@ -184,9 +190,7 @@ export async function streamEditedChatReply({
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        content,
-      }),
+      body: JSON.stringify(payload),
     }
   )
 

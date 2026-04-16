@@ -6,7 +6,7 @@ import {
   type ChatModelId,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
-} from '@/components'
+} from '@/app/chat/domain'
 
 export type ActiveReplyStatus =
   | 'awaiting-first-chunk'

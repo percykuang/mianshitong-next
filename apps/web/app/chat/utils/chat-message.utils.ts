@@ -2,10 +2,11 @@ import {
   createChatSessionTitle,
   formatChatTimestamp,
   type ChatMessageCompletionStatus,
+  type ChatModelId,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
   type ConversationMessage,
-} from '@/components'
+} from '@/app/chat/domain'
 
 interface AppendAssistantDraftOptions {
   content: string
@@ -17,6 +18,12 @@ interface BuildOptimisticEditedSessionOptions {
   content: string
   messageId: string
   session: ChatSessionPreview
+}
+
+function normalizeRequestedModelId(value: string | null): ChatModelId {
+  return value === 'reasoning' || value === 'deepseek-reasoner'
+    ? 'reasoning'
+    : 'balanced'
 }
 
 // 从响应头中解析当前实际命中的模型运行时信息。
@@ -33,10 +40,9 @@ export function parseRuntimeDebugInfoFromHeaders(
     mode: headers.get('x-mst-chat-mode') === 'remote' ? 'remote' : 'local',
     provider:
       headers.get('x-mst-chat-provider') === 'deepseek' ? 'deepseek' : 'ollama',
-    requestedModelId:
-      headers.get('x-mst-chat-requested-model-id') === 'deepseek-reasoner'
-        ? 'deepseek-reasoner'
-        : 'deepseek-chat',
+    requestedModelId: normalizeRequestedModelId(
+      headers.get('x-mst-chat-requested-model-id')
+    ),
   }
 }
 
@@ -80,6 +86,18 @@ export function appendAssistantDraftToSession({
   }
 }
 
+export function projectAssistantReplyOntoSession(input: {
+  content: string
+  messageId: string
+  session: ChatSessionPreview
+}) {
+  if (!input.content.trim()) {
+    return input.session
+  }
+
+  return appendAssistantDraftToSession(input)
+}
+
 export function finalizeAssistantMessageInSession(input: {
   completionStatus: ChatMessageCompletionStatus
   messageId: string
@@ -108,6 +126,27 @@ export function finalizeAssistantMessageInSession(input: {
     updatedAt: now,
     messages: nextMessages,
   }
+}
+
+export function finalizeReplyToSession(input: {
+  completionStatus: ChatMessageCompletionStatus
+  content: string
+  messageId: string
+  session: ChatSessionPreview
+}) {
+  if (!input.content.trim()) {
+    return input.session
+  }
+
+  return finalizeAssistantMessageInSession({
+    completionStatus: input.completionStatus,
+    messageId: input.messageId,
+    session: projectAssistantReplyOntoSession({
+      content: input.content,
+      messageId: input.messageId,
+      session: input.session,
+    }),
+  })
 }
 
 export function buildOptimisticEditedSession({

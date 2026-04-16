@@ -1,8 +1,10 @@
 import type {
-  ChatMessageFeedback,
-  ChatModelId,
-  ChatSessionPreview,
-} from '@/components'
+  CreateSessionBody,
+  InterruptMessageBody,
+  UpdateMessageFeedbackBody,
+  UpdateSessionBody,
+} from '@/app/chat/contracts'
+import type { ChatMessageFeedback, ChatSessionPreview } from '@/app/chat/domain'
 
 interface SessionResponse {
   session: ChatSessionPreview
@@ -60,40 +62,32 @@ export async function getPersistedChatSession(sessionId: string) {
   return payload.session
 }
 
-interface CreatePersistedSessionInput {
-  modelId: ChatModelId
-  title: string
-}
-
 export async function createPersistedChatSession({
   modelId,
   title,
-}: CreatePersistedSessionInput) {
+}: CreateSessionBody) {
+  const requestBody: CreateSessionBody = {
+    modelId,
+    title,
+  }
+
   const response = await fetch('/api/chat/sessions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      modelId,
-      title,
-    }),
+    body: JSON.stringify(requestBody),
   })
 
   await ensureSuccessResponse(response)
 
-  const payload = (await response.json()) as SessionResponse
-  return payload.session
-}
-
-interface UpdatePersistedSessionInput {
-  pinned?: boolean
-  title?: string
+  const responseBody = (await response.json()) as SessionResponse
+  return responseBody.session
 }
 
 export async function updatePersistedChatSession(
   sessionId: string,
-  input: UpdatePersistedSessionInput
+  input: UpdateSessionBody
 ) {
   const response = await fetch(`/api/chat/sessions/${sessionId}`, {
     method: 'PATCH',
@@ -136,6 +130,10 @@ export async function updatePersistedChatMessageFeedback(
   messageId: string,
   feedback: ChatMessageFeedback | null
 ) {
+  const requestBody: UpdateMessageFeedbackBody = {
+    feedback,
+  }
+
   const response = await fetch(
     `/api/chat/sessions/${sessionId}/messages/${messageId}`,
     {
@@ -143,25 +141,24 @@ export async function updatePersistedChatMessageFeedback(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ feedback }),
+      body: JSON.stringify(requestBody),
     }
   )
 
   await ensureSuccessResponse(response)
 
-  const payload = (await response.json()) as SessionResponse
-  return payload.session
-}
-
-interface PersistInterruptedReplyInput {
-  content: string
-  expectedMessageCount: number
-  sessionId: string
+  const responseBody = (await response.json()) as SessionResponse
+  return responseBody.session
 }
 
 export async function persistInterruptedChatReply(
-  input: PersistInterruptedReplyInput
+  input: InterruptMessageBody & { sessionId: string }
 ) {
+  const requestBody: InterruptMessageBody = {
+    content: input.content,
+    expectedMessageCount: input.expectedMessageCount,
+  }
+
   const response = await fetch(
     `/api/chat/sessions/${input.sessionId}/messages/interrupted`,
     {
@@ -169,15 +166,12 @@ export async function persistInterruptedChatReply(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        content: input.content,
-        expectedMessageCount: input.expectedMessageCount,
-      }),
+      body: JSON.stringify(requestBody),
     }
   )
 
   await ensureSuccessResponse(response)
 
-  const payload = (await response.json()) as SessionResponse
-  return payload.session
+  const responseBody = (await response.json()) as SessionResponse
+  return responseBody.session
 }

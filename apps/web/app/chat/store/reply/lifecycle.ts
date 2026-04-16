@@ -1,16 +1,17 @@
 'use client'
 
 import { isFetchTypeError } from '@mianshitong/shared'
-import { type ChatRuntimeDebugInfo } from '@/components'
+import { type ChatRuntimeDebugInfo } from '@/app/chat/domain'
 import {
-  createAssistantFallbackMessage,
+  buildPersistedReplySessionFailureState,
+  buildPersistedReplySessionState,
+  createFallbackReplySession,
   getPersistedChatSession,
   persistInterruptedChatReply,
 } from '../../utils'
 import {
   commitActiveReplyToSession,
   getSessionById,
-  hydratePersistedSession,
   replaceSession,
 } from '../core/helpers'
 import {
@@ -62,28 +63,23 @@ export function createChatReplyLifecycle({
     try {
       const persistedSession = await getPersistedChatSession(sessionId)
 
-      set((state) => ({
-        pendingSidebarSessionId:
-          state.pendingSidebarSessionId === optimisticSessionId ||
-          state.pendingSidebarSessionId === persistedSession.id
-            ? null
-            : state.pendingSidebarSessionId,
-        selectedSessionId: persistedSession.id,
-        sessions: hydratePersistedSession(
-          state.sessions,
+      set((state) =>
+        buildPersistedReplySessionState({
           optimisticSessionId,
-          persistedSession
-        ),
-      }))
+          pendingSidebarSessionId: state.pendingSidebarSessionId,
+          persistedSession,
+          sessions: state.sessions,
+        })
+      )
     } catch (error) {
       console.warn('[chat-store] hydrate persisted session failed', error)
-      set((state) => ({
-        pendingSidebarSessionId:
-          state.pendingSidebarSessionId === optimisticSessionId ||
-          state.pendingSidebarSessionId === sessionId
-            ? null
-            : state.pendingSidebarSessionId,
-      }))
+      set((state) =>
+        buildPersistedReplySessionFailureState({
+          optimisticSessionId,
+          pendingSidebarSessionId: state.pendingSidebarSessionId,
+          sessionId,
+        })
+      )
     }
   }
 
@@ -179,21 +175,20 @@ export function createChatReplyLifecycle({
           state.activeReply?.assistantMessageId === input.assistantMessageId
             ? null
             : state.activeReply,
-        selectedSessionId: persistedSession.id,
-        pendingSidebarSessionId:
-          state.pendingSidebarSessionId ===
-            (input.activeReply.optimisticSessionId ?? persistedSession.id) ||
-          state.pendingSidebarSessionId === persistedSession.id
-            ? null
-            : state.pendingSidebarSessionId,
-        sessions: hydratePersistedSession(
-          state.sessions,
-          input.activeReply.optimisticSessionId ?? persistedSession.id,
-          persistedSession
-        ),
+        ...buildPersistedReplySessionState({
+          optimisticSessionId:
+            input.activeReply.optimisticSessionId ?? persistedSession.id,
+          pendingSidebarSessionId: state.pendingSidebarSessionId,
+          persistedSession,
+          sessions: state.sessions,
+        }),
       }))
     } catch (error) {
       console.warn('[chat-store] persist interrupted reply failed', error)
+      await hydrateSession(
+        interruptedSession.id,
+        input.activeReply.optimisticSessionId ?? interruptedSession.id
+      )
       clearActiveReply(input.assistantMessageId)
     }
   }
@@ -237,12 +232,7 @@ export function createChatReplyLifecycle({
       console.error('[chat-store] send message failed', input.error)
     }
 
-    const fallbackMessage = createAssistantFallbackMessage()
-    const fallbackSession = {
-      ...currentSession,
-      preview: fallbackMessage.content,
-      messages: [...currentSession.messages, fallbackMessage],
-    }
+    const fallbackSession = createFallbackReplySession(currentSession)
 
     set((state) => ({
       activeReply:

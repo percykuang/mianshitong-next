@@ -299,7 +299,18 @@ export function useChatMainPaneScroll({
     }
 
     const resizeObserver = new ResizeObserver(() => {
-      if (!shouldFollow()) {
+      const element = scrollContainerElementRef.current
+
+      if (!element) {
+        return
+      }
+
+      const nearBottom = followLockRef.current ? true : isNearBottom(element)
+
+      syncPinnedState(nearBottom)
+
+      if (!followLockRef.current) {
+        previousScrollTopRef.current = element.scrollTop
         return
       }
 
@@ -317,7 +328,7 @@ export function useChatMainPaneScroll({
     performScrollToBottom,
     scrollContainerElement,
     setPinnedRef,
-    shouldFollow,
+    syncPinnedState,
   ])
 
   useLayoutEffect(() => {

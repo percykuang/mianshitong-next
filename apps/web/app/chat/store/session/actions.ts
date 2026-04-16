@@ -1,18 +1,15 @@
 'use client'
 
-import { type ChatMessageFeedback } from '@/components'
 import {
   deleteAllPersistedChatSessions,
   deletePersistedChatSession,
-  updatePersistedChatMessageFeedback,
-  updatePersistedChatSession,
-} from '../../utils'
-import {
-  getLastEditableUserMessageId,
-  getSessionById,
   replaceSession,
+  updatePersistedChatMessageFeedback,
+  updateMessageFeedbackInSessions,
+  updatePersistedChatSession,
   upsertSession,
-} from '../core/helpers'
+} from '../../utils'
+import { getLastEditableUserMessageId, getSessionById } from '../core/helpers'
 import { isReplying } from '../core/selectors'
 import {
   type ChatStoreActions,
@@ -20,23 +17,15 @@ import {
   type ChatStoreSetState,
 } from '../core/types'
 
-function updateMessageFeedbackInSession(input: {
-  feedback: ChatMessageFeedback | null | undefined
-  messageId: string
-  session: NonNullable<ReturnType<typeof getSessionById>>
-}) {
-  return {
-    ...input.session,
-    messages: input.session.messages.map((message) =>
-      message.id === input.messageId
-        ? {
-            ...message,
-            feedback: input.feedback ?? undefined,
-          }
-        : message
-    ),
-  }
-}
+const RESET_EDITING_STATE = {
+  editingMessageId: null,
+  editingValue: '',
+} as const
+
+const RESET_EDITING_WITH_PENDING_ANCHOR_STATE = {
+  ...RESET_EDITING_STATE,
+  pendingEditedMessageAnchorId: null,
+} as const
 
 interface CreateChatSessionActionsInput {
   feedbackMutationVersionByKey: Map<string, number>
@@ -66,11 +55,7 @@ export function createChatSessionActions({
 > {
   return {
     cancelEditUserMessage() {
-      set({
-        editingMessageId: null,
-        editingValue: '',
-        pendingEditedMessageAnchorId: null,
-      })
+      set(RESET_EDITING_WITH_PENDING_ANCHOR_STATE)
     },
 
     consumePendingEditedMessageAnchor() {
@@ -92,8 +77,7 @@ export function createChatSessionActions({
 
       set({
         draft: '',
-        editingMessageId: null,
-        editingValue: '',
+        ...RESET_EDITING_STATE,
         pendingSidebarSessionId: null,
         pendingEditedMessageAnchorId: null,
         selectedSessionId: null,
@@ -123,8 +107,7 @@ export function createChatSessionActions({
       }
 
       set((currentState) => ({
-        editingMessageId: null,
-        editingValue: '',
+        ...RESET_EDITING_STATE,
         pendingSidebarSessionId:
           currentState.pendingSidebarSessionId === targetSession.id
             ? null
@@ -145,8 +128,7 @@ export function createChatSessionActions({
     newSession() {
       set({
         draft: '',
-        editingMessageId: null,
-        editingValue: '',
+        ...RESET_EDITING_STATE,
         pendingSidebarSessionId: null,
         selectedSessionId: null,
       })
@@ -203,8 +185,7 @@ export function createChatSessionActions({
 
     selectSession(sessionId) {
       set({
-        editingMessageId: null,
-        editingValue: '',
+        ...RESET_EDITING_STATE,
         selectedSessionId: sessionId,
       })
     },
@@ -235,15 +216,11 @@ export function createChatSessionActions({
       }
 
       set((currentState) => ({
-        sessions: replaceSession(
-          currentState.sessions,
-          targetSessionId,
-          updateMessageFeedbackInSession({
-            feedback,
-            messageId,
-            session: selectedSession,
-          })
-        ),
+        sessions: updateMessageFeedbackInSessions(currentState.sessions, {
+          feedback,
+          messageId,
+          sessionId: targetSessionId,
+        }),
       }))
 
       if (!state.persistenceEnabled) {
@@ -287,15 +264,11 @@ export function createChatSessionActions({
           console.error('[chat-store] update message feedback failed', error)
 
           set((currentState) => ({
-            sessions: replaceSession(
-              currentState.sessions,
-              targetSessionId,
-              updateMessageFeedbackInSession({
-                feedback: previousFeedback,
-                messageId,
-                session: selectedSession,
-              })
-            ),
+            sessions: updateMessageFeedbackInSessions(currentState.sessions, {
+              feedback: previousFeedback,
+              messageId,
+              sessionId: targetSessionId,
+            }),
           }))
         })
     },

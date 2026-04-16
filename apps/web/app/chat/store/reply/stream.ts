@@ -1,18 +1,15 @@
 'use client'
 
 import {
+  buildPersistedReplySessionState,
+  clearPendingReplySidebarSession,
   buildOptimisticEditedSession,
   createNextSession,
   getPersistedChatSession,
   streamChatReply,
   streamEditedChatReply,
 } from '../../utils'
-import {
-  getSessionById,
-  hydratePersistedSession,
-  replaceSession,
-  upsertSession,
-} from '../core/helpers'
+import { getSessionById, replaceSession, upsertSession } from '../core/helpers'
 import { isReplying } from '../core/selectors'
 import { type ChatReplyLifecycle } from './lifecycle'
 import { type ChatStoreGetState, type ChatStoreSetState } from '../core/types'
@@ -30,6 +27,37 @@ export function createChatReplyStreamActions({
   set,
   setActiveAbortController,
 }: CreateChatReplyStreamActionsInput) {
+  function getMatchingActiveReply(assistantMessageId: string) {
+    const activeReply = get().activeReply
+
+    return activeReply?.assistantMessageId === assistantMessageId
+      ? activeReply
+      : null
+  }
+
+  async function finalizeCompletedReply(input: {
+    assistantMessageId: string
+    fallbackSessionId: string
+    persistedSessionId: string | null | undefined
+    persistenceEnabled: boolean
+  }) {
+    const completedReply = getMatchingActiveReply(input.assistantMessageId)
+
+    if (completedReply) {
+      lifecycle.finalizeCompletedReply({
+        activeReply: completedReply,
+        assistantMessageId: input.assistantMessageId,
+      })
+    }
+
+    if (input.persistenceEnabled) {
+      await lifecycle.hydrateSession(
+        input.persistedSessionId ?? input.fallbackSessionId,
+        input.fallbackSessionId
+      )
+    }
+  }
+
   async function sendMessage(inputOverride?: string) {
     const initialState = get()
     const input = (inputOverride ?? initialState.draft).trim()
@@ -100,31 +128,16 @@ export function createChatReplyStreamActions({
         runtimeDebugInfo,
       })
 
-      const completedReply = get().activeReply
-
-      if (
-        completedReply &&
-        completedReply.assistantMessageId === assistantMessageId
-      ) {
-        lifecycle.finalizeCompletedReply({
-          activeReply: completedReply,
-          assistantMessageId,
-        })
-      }
-
-      if (initialState.persistenceEnabled) {
-        await lifecycle.hydrateSession(
-          persistedSessionId ?? activeSessionId,
-          activeSessionId
-        )
-      }
+      await finalizeCompletedReply({
+        assistantMessageId,
+        fallbackSessionId: activeSessionId,
+        persistedSessionId,
+        persistenceEnabled: initialState.persistenceEnabled,
+      })
     } catch (error) {
-      const activeReply = get().activeReply
+      const activeReply = getMatchingActiveReply(assistantMessageId)
 
-      if (
-        activeReply &&
-        activeReply.assistantMessageId === assistantMessageId
-      ) {
+      if (activeReply) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           await lifecycle.finalizeInterruptedReply({
             activeReply,
@@ -141,18 +154,13 @@ export function createChatReplyStreamActions({
                 state.activeReply?.assistantMessageId === assistantMessageId
                   ? null
                   : state.activeReply,
-              pendingSidebarSessionId:
-                state.pendingSidebarSessionId ===
-                  (activeReply.optimisticSessionId ?? persistedSession.id) ||
-                state.pendingSidebarSessionId === persistedSession.id
-                  ? null
-                  : state.pendingSidebarSessionId,
-              selectedSessionId: persistedSession.id,
-              sessions: hydratePersistedSession(
-                state.sessions,
-                activeReply.optimisticSessionId ?? persistedSession.id,
-                persistedSession
-              ),
+              ...buildPersistedReplySessionState({
+                optimisticSessionId:
+                  activeReply.optimisticSessionId ?? persistedSession.id,
+                pendingSidebarSessionId: state.pendingSidebarSessionId,
+                persistedSession,
+                sessions: state.sessions,
+              }),
             }))
           } else {
             set((state) => ({
@@ -161,10 +169,10 @@ export function createChatReplyStreamActions({
                   ? null
                   : state.activeReply,
               draft: state.draft || input,
-              pendingSidebarSessionId:
-                state.pendingSidebarSessionId === activeSessionId
-                  ? null
-                  : state.pendingSidebarSessionId,
+              pendingSidebarSessionId: clearPendingReplySidebarSession({
+                pendingSidebarSessionId: state.pendingSidebarSessionId,
+                sessionId: activeSessionId,
+              }),
               selectedSessionId: initialState.selectedSessionId,
               sessions: state.sessions.filter(
                 (session) => session.id !== activeSessionId
@@ -257,33 +265,18 @@ export function createChatReplyStreamActions({
         runtimeDebugInfo,
       })
 
-      const completedReply = get().activeReply
-
-      if (
-        completedReply &&
-        completedReply.assistantMessageId === assistantMessageId
-      ) {
-        lifecycle.finalizeCompletedReply({
-          activeReply: completedReply,
-          assistantMessageId,
-        })
-      }
-
-      if (state.persistenceEnabled) {
-        await lifecycle.hydrateSession(
-          persistedSessionId ?? selectedSession.id,
-          selectedSession.id
-        )
-      }
+      await finalizeCompletedReply({
+        assistantMessageId,
+        fallbackSessionId: selectedSession.id,
+        persistedSessionId,
+        persistenceEnabled: state.persistenceEnabled,
+      })
 
       return true
     } catch (error) {
-      const activeReply = get().activeReply
+      const activeReply = getMatchingActiveReply(assistantMessageId)
 
-      if (
-        activeReply &&
-        activeReply.assistantMessageId === assistantMessageId
-      ) {
+      if (activeReply) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           await lifecycle.finalizeInterruptedReply({
             activeReply,
