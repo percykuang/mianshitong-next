@@ -6,7 +6,9 @@
   "main": "./index.ts",
   "exports": {
     ".": "./index.ts",
-    "./model": "./model/index.ts"
+    "./model": "./model/index.ts",
+    "./model/catalog": "./model/catalog.ts",
+    "./model/types": "./model/types.ts"
   },
   "scripts": {
     "lint": "pnpm --dir ../.. exec eslint packages/providers"

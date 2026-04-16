@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { AuthFormCard, REGISTER_PAGE_COPY } from '@/components'
-import { getCurrentUser } from '@/server/auth-session'
+import { getCurrentAuthUserProfile } from '@/server/auth/services'
 import { resolveAuthRedirect } from '@/utils/auth-redirect'
 
 interface RegisterPageProps {
@@ -12,7 +12,7 @@ interface RegisterPageProps {
 export default async function RegisterPage({
   searchParams,
 }: RegisterPageProps) {
-  const currentUser = await getCurrentUser()
+  const currentUser = await getCurrentAuthUserProfile()
   const resolvedSearchParams = await searchParams
 
   if (currentUser) {

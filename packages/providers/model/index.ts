@@ -1,5 +1,9 @@
 import type { ZodTypeAny } from 'zod'
-import { getDefaultChatModelId, getDefaultChatModelIdForRole } from './catalog'
+import {
+  getChatModelRole,
+  getDefaultChatModelId,
+  getDefaultChatModelIdForRole,
+} from './catalog'
 import { getChatModelInstance, getProviderRoleModelInstance } from './instance'
 import { resolveChatModelSelection } from './runtime'
 import { logModelSelection } from './utils'
@@ -41,9 +45,9 @@ export function getOllamaReasonerModel() {
 export function getChatModel(modelId: ChatModelId = getDefaultChatModelId()) {
   return getLoggedChatModel(
     modelId,
-    modelId === 'deepseek-reasoner'
-      ? 'Using chat reasoner model'
-      : 'Using chat model'
+    getChatModelRole(modelId) === 'reasoner'
+      ? 'Using reasoning chat model'
+      : 'Using balanced chat model'
   )
 }
 

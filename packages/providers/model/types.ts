@@ -1,5 +1,7 @@
 export type MainModelProvider = 'deepseek' | 'ollama'
-export type ChatModelId = 'deepseek-chat' | 'deepseek-reasoner'
+export type ChatModelId = 'balanced' | 'reasoning'
+export type ChatModelAlias = 'deepseek-chat' | 'deepseek-reasoner'
+export type AcceptedChatModelId = ChatModelId | ChatModelAlias
 export type ModelRole = 'chat' | 'reasoner'
 
 export interface ChatModelOption {
@@ -9,6 +11,7 @@ export interface ChatModelOption {
 }
 
 export interface ChatModelCatalogItem extends ChatModelOption {
+  aliases?: readonly ChatModelAlias[]
   role: ModelRole
 }
 

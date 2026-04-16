@@ -1,9 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import {
-  deleteSessionByToken,
-  findUserBySessionToken,
-} from './auth-user-repository'
+import { deleteSessionByToken, findUserBySessionToken } from './user-repository'
 
 export const AUTH_SESSION_COOKIE_NAME = 'mst_session'
 const AUTH_SESSION_COOKIE_PATH = '/'
@@ -39,6 +36,14 @@ export function setAuthSessionCookie(
 
 export function clearAuthSessionCookie(response: NextResponse) {
   response.cookies.set(AUTH_SESSION_COOKIE_NAME, '', createCookieOptions(0))
+}
+
+export function replaceAuthSessionCookie(
+  response: NextResponse,
+  session: { maxAgeSeconds: number; sessionToken: string }
+) {
+  clearAuthSessionCookie(response)
+  setAuthSessionCookie(response, session.sessionToken, session.maxAgeSeconds)
 }
 
 export async function getCurrentUser() {
