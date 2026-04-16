@@ -11,11 +11,10 @@ import { type UseChatControllerResult } from './types'
 import { getRouteSessionIdFromPathname } from '../../utils'
 import {
   getIsReplying,
+  getProjectedSelectedSession,
   getRuntimeDebugInfo,
-  getSessionById,
   getStreamingMessageId,
   getShowThinkingIndicator,
-  projectReplyOntoSession,
   useChatStore,
 } from '../../store'
 
@@ -37,24 +36,17 @@ export function useChatController(): UseChatControllerResult {
   const pendingEditedMessageAnchorId = useChatStore(
     (state) => state.pendingEditedMessageAnchorId
   )
-  const activeReply = useChatStore((state) => state.activeReply)
   const pendingSidebarSessionId = useChatStore(
     (state) => state.pendingSidebarSessionId
   )
   const selectedModelId = useChatStore((state) => state.selectedModelId)
   const selectedSessionId = useChatStore((state) => state.selectedSessionId)
   const sessions = useChatStore((state) => state.sessions)
+  const selectedSession = useChatStore(getProjectedSelectedSession)
   const isReplying = useChatStore(getIsReplying)
   const runtimeDebugInfo = useChatStore(getRuntimeDebugInfo)
   const showThinkingIndicator = useChatStore(getShowThinkingIndicator)
   const streamingMessageId = useChatStore(getStreamingMessageId)
-  const selectedSession = useMemo(() => {
-    const currentSelectedSession = getSessionById(sessions, selectedSessionId)
-
-    return currentSelectedSession
-      ? projectReplyOntoSession(currentSelectedSession, activeReply)
-      : null
-  }, [activeReply, selectedSessionId, sessions])
   const sidebarSessions = useMemo(
     () =>
       pendingSidebarSessionId

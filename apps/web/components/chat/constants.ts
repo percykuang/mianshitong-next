@@ -1,8 +1,8 @@
 import { type ChatModelId, type ChatUsageSummary } from './types'
 
 export const mockChatUsageByModel: Record<ChatModelId, ChatUsageSummary> = {
-  'deepseek-chat': { used: 12, max: 50 },
-  'deepseek-reasoner': { used: 6, max: 20 },
+  balanced: { used: 12, max: 50 },
+  reasoning: { used: 6, max: 20 },
 }
 
 export const quickPrompts = [

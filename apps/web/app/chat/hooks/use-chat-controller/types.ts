@@ -4,7 +4,7 @@ import {
   type ChatModelId,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
-} from '@/components'
+} from '@/app/chat/domain'
 
 export interface ChatControllerComposerGroup {
   composerRef: RefObject<HTMLTextAreaElement | null>

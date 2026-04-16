@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { type ChatSessionPreview } from '@/components'
+import { type ChatSessionPreview } from '@/app/chat/domain'
 import { buildChatPath } from '../../utils'
 
 export function useChatSessionSelectionRouteSyncEffect(input: {

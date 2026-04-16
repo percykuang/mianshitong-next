@@ -2,14 +2,13 @@
 
 import { useCallback, useState } from 'react'
 import {
-  ChatMainPane,
-  ChatSidebar,
   type ChatModelId,
   type ChatModelOption,
   type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
-} from '@/components'
-import { useChatController } from './hooks'
+} from '@/app/chat/domain'
+import { ChatMainPane, ChatSidebar } from '@/components'
+import { useChatController } from './hooks/use-chat-controller'
 import { ChatStoreProvider } from './store/provider'
 
 interface ChatPageClientProps {

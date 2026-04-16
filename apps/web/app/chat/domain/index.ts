@@ -1,3 +1,4 @@
+export { createChatSessionTitle, formatChatTimestamp } from './formatters'
 export type {
   ChatMessageCompletionStatus,
   ChatMessageFeedback,
@@ -7,4 +8,4 @@ export type {
   ChatSessionPreview,
   ChatUsageSummary,
   ConversationMessage,
-} from '@/app/chat/domain'
+} from './types'
