@@ -1,5 +1,5 @@
 import { getChatModel, getChatModelRuntimeInfo } from '@mianshitong/providers'
-import { persistAssistantReply } from './persistence'
+import { persistAssistantReply } from '@/server/chat/persistence'
 
 const SYSTEM_PROMPT = `你是面试通的 AI 面试助手。
 

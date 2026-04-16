@@ -1,20 +1,23 @@
 import {
-  getDefaultChatModelId,
-  isChatModelId,
-  normalizeChatModelId,
-  type ChatModelId,
-} from '@mianshitong/providers'
+  createSessionBodySchema,
+  editMessageBodySchema,
+  interruptMessageBodySchema,
+  streamMessageBodySchema,
+  updateMessageFeedbackBodySchema,
+  updateSessionBodySchema,
+  type CreateSessionBody,
+  type EditMessageBody,
+  type InterruptMessageBody,
+  type ParsedCreateSessionBody,
+  type ParsedInterruptMessageBody,
+  type ParsedStreamMessageBody,
+  type ParsedUpdateMessageFeedbackBody,
+  type ParsedUpdateSessionBody,
+  type StreamMessageBody,
+  type UpdateMessageFeedbackBody,
+  type UpdateSessionBody,
+} from '@/app/chat/contracts'
 import { jsonError } from '../utils'
-
-export interface CreateSessionBody {
-  modelId?: string
-  title?: string
-}
-
-export interface ParsedCreateSessionBody {
-  modelId: ChatModelId
-  title?: string
-}
 
 type ParseCreateSessionBodyResult =
   | {
@@ -26,16 +29,6 @@ type ParseCreateSessionBodyResult =
       errorResponse: Response
     }
 
-export interface UpdateSessionBody {
-  pinned?: boolean
-  title?: string
-}
-
-export interface ParsedUpdateSessionBody {
-  pinned?: boolean
-  title?: string
-}
-
 type ParseUpdateSessionBodyResult =
   | {
       data: ParsedUpdateSessionBody
@@ -46,27 +39,9 @@ type ParseUpdateSessionBodyResult =
       errorResponse: Response
     }
 
-export interface UpdateMessageFeedbackBody {
-  feedback?: 'dislike' | 'like' | null
-}
-
-export interface EditMessageBody {
-  content?: string
-}
-
-export interface InterruptMessageBody {
-  content?: string
-  expectedMessageCount?: number
-}
-
-export interface StreamMessageBody {
-  content?: string
-  modelId?: string
-}
-
 type ParseUpdateMessageFeedbackBodyResult =
   | {
-      data: 'dislike' | 'like' | null
+      data: ParsedUpdateMessageFeedbackBody
       errorResponse: null
     }
   | {
@@ -86,10 +61,7 @@ type ParseEditMessageBodyResult =
 
 type ParseInterruptMessageBodyResult =
   | {
-      data: {
-        content: string
-        expectedMessageCount: number
-      }
+      data: ParsedInterruptMessageBody
       errorResponse: null
     }
   | {
@@ -99,10 +71,7 @@ type ParseInterruptMessageBodyResult =
 
 type ParseStreamMessageBodyResult =
   | {
-      data: {
-        content: string
-        normalizedModelId: ChatModelId
-      }
+      data: ParsedStreamMessageBody
       errorResponse: null
     }
   | {
@@ -110,34 +79,27 @@ type ParseStreamMessageBodyResult =
       errorResponse: Response
     }
 
-function normalizeSessionTitle(title: string | undefined) {
-  return title?.trim() ?? ''
-}
-
-function isValidFeedback(value: unknown): value is 'dislike' | 'like' | null {
-  return value === null || value === 'like' || value === 'dislike'
+function getValidationErrorMessage(message: string | undefined) {
+  return message ?? '请求参数不合法'
 }
 
 export function parseCreateSessionBody(
   body: CreateSessionBody | null
 ): ParseCreateSessionBodyResult {
-  const modelId =
-    typeof body?.modelId === 'string' && body.modelId.trim().length > 0
-      ? body.modelId.trim()
-      : getDefaultChatModelId()
+  const result = createSessionBodySchema.safeParse(body)
 
-  if (!isChatModelId(modelId)) {
+  if (!result.success) {
     return {
       data: null,
-      errorResponse: jsonError('不支持的模型类型', 400),
+      errorResponse: jsonError(
+        getValidationErrorMessage(result.error.issues[0]?.message),
+        400
+      ),
     }
   }
 
   return {
-    data: {
-      modelId: normalizeChatModelId(modelId),
-      title: body?.title,
-    },
+    data: result.data,
     errorResponse: null,
   }
 }
@@ -145,35 +107,20 @@ export function parseCreateSessionBody(
 export function parseUpdateSessionBody(
   body: UpdateSessionBody | null
 ): ParseUpdateSessionBodyResult {
-  const normalizedTitle =
-    typeof body?.title === 'string'
-      ? normalizeSessionTitle(body.title)
-      : undefined
+  const result = updateSessionBodySchema.safeParse(body)
 
-  if (
-    typeof body?.pinned !== 'boolean' &&
-    typeof normalizedTitle !== 'string'
-  ) {
+  if (!result.success) {
     return {
       data: null,
-      errorResponse: jsonError('至少需要提供一个可更新字段', 400),
-    }
-  }
-
-  if (typeof normalizedTitle === 'string' && normalizedTitle.length === 0) {
-    return {
-      data: null,
-      errorResponse: jsonError('会话标题不能为空', 400),
+      errorResponse: jsonError(
+        getValidationErrorMessage(result.error.issues[0]?.message),
+        400
+      ),
     }
   }
 
   return {
-    data: {
-      ...(typeof body?.pinned === 'boolean' ? { pinned: body.pinned } : {}),
-      ...(typeof normalizedTitle === 'string'
-        ? { title: normalizedTitle }
-        : {}),
-    },
+    data: result.data,
     errorResponse: null,
   }
 }
@@ -181,9 +128,9 @@ export function parseUpdateSessionBody(
 export function parseUpdateMessageFeedbackBody(
   body: UpdateMessageFeedbackBody | null
 ): ParseUpdateMessageFeedbackBodyResult {
-  const hasFeedbackField = body !== null && Object.hasOwn(body, 'feedback')
+  const result = updateMessageFeedbackBodySchema.safeParse(body)
 
-  if (!hasFeedbackField || !isValidFeedback(body?.feedback)) {
+  if (!result.success) {
     return {
       data: null,
       errorResponse: jsonError('feedback 只能是 like、dislike 或 null', 400),
@@ -191,7 +138,7 @@ export function parseUpdateMessageFeedbackBody(
   }
 
   return {
-    data: body.feedback,
+    data: result.data.feedback,
     errorResponse: null,
   }
 }
@@ -199,17 +146,20 @@ export function parseUpdateMessageFeedbackBody(
 export function parseEditMessageBody(
   body: EditMessageBody | null
 ): ParseEditMessageBodyResult {
-  const content = typeof body?.content === 'string' ? body.content.trim() : ''
+  const result = editMessageBodySchema.safeParse(body)
 
-  if (!content) {
+  if (!result.success) {
     return {
       data: null,
-      errorResponse: jsonError('消息内容不能为空', 400),
+      errorResponse: jsonError(
+        getValidationErrorMessage(result.error.issues[0]?.message),
+        400
+      ),
     }
   }
 
   return {
-    data: content,
+    data: result.data,
     errorResponse: null,
   }
 }
@@ -217,31 +167,20 @@ export function parseEditMessageBody(
 export function parseInterruptMessageBody(
   body: InterruptMessageBody | null
 ): ParseInterruptMessageBodyResult {
-  const content = typeof body?.content === 'string' ? body.content.trim() : ''
-  const expectedMessageCount =
-    typeof body?.expectedMessageCount === 'number'
-      ? Math.floor(body.expectedMessageCount)
-      : NaN
+  const result = interruptMessageBodySchema.safeParse(body)
 
-  if (!content) {
+  if (!result.success) {
     return {
       data: null,
-      errorResponse: jsonError('中断消息内容不能为空', 400),
-    }
-  }
-
-  if (!Number.isFinite(expectedMessageCount) || expectedMessageCount < 0) {
-    return {
-      data: null,
-      errorResponse: jsonError('expectedMessageCount 非法', 400),
+      errorResponse: jsonError(
+        getValidationErrorMessage(result.error.issues[0]?.message),
+        400
+      ),
     }
   }
 
   return {
-    data: {
-      content,
-      expectedMessageCount,
-    },
+    data: result.data,
     errorResponse: null,
   }
 }
@@ -249,31 +188,29 @@ export function parseInterruptMessageBody(
 export function parseStreamMessageBody(
   body: StreamMessageBody | null
 ): ParseStreamMessageBodyResult {
-  const content = typeof body?.content === 'string' ? body.content.trim() : ''
-  const modelId =
-    typeof body?.modelId === 'string' && body.modelId.trim().length > 0
-      ? body.modelId.trim()
-      : getDefaultChatModelId()
+  const result = streamMessageBodySchema.safeParse(body)
 
-  if (!content) {
+  if (!result.success) {
     return {
       data: null,
-      errorResponse: jsonError('消息内容不能为空', 400),
-    }
-  }
-
-  if (!isChatModelId(modelId)) {
-    return {
-      data: null,
-      errorResponse: jsonError('不支持的模型类型', 400),
+      errorResponse: jsonError(
+        getValidationErrorMessage(result.error.issues[0]?.message),
+        400
+      ),
     }
   }
 
   return {
-    data: {
-      content,
-      normalizedModelId: normalizeChatModelId(modelId),
-    },
+    data: result.data,
     errorResponse: null,
   }
+}
+
+export type {
+  CreateSessionBody,
+  EditMessageBody,
+  InterruptMessageBody,
+  StreamMessageBody,
+  UpdateMessageFeedbackBody,
+  UpdateSessionBody,
 }

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { updateChatMessageFeedbackByActor } from '@/server/chat-session-repository'
+import { updateActorChatMessageFeedback } from '@/server/chat/services'
+import { parseUpdateMessageFeedbackBody } from '../../../requests'
 import {
-  parseUpdateMessageFeedbackBody,
-  type UpdateMessageFeedbackBody,
-} from '../../../requests'
-import { jsonError, parseJsonBody, resolveChatActor } from '../../../../utils'
+  jsonError,
+  parseJsonBodyOrError,
+  withChatActor,
+} from '../../../../utils'
 
 interface SessionMessageRouteContext {
   params: Promise<{ messageId: string; sessionId: string }>
@@ -14,31 +15,28 @@ export async function PATCH(
   request: Request,
   context: SessionMessageRouteContext
 ) {
-  const { actor, errorResponse } = await resolveChatActor()
+  const { data: feedback, errorResponse } = await parseJsonBodyOrError(
+    request,
+    parseUpdateMessageFeedbackBody
+  )
 
-  if (!actor) {
+  if (errorResponse) {
     return errorResponse
   }
 
-  const body = await parseJsonBody<UpdateMessageFeedbackBody>(request)
-  const { data: feedback, errorResponse: bodyErrorResponse } =
-    parseUpdateMessageFeedbackBody(body)
+  return withChatActor(async (actor) => {
+    const { messageId, sessionId } = await context.params
+    const session = await updateActorChatMessageFeedback({
+      actorId: actor.id,
+      feedback,
+      messageId,
+      sessionId,
+    })
 
-  if (bodyErrorResponse) {
-    return bodyErrorResponse
-  }
+    if (!session) {
+      return jsonError('消息不存在或无权限访问', 404)
+    }
 
-  const { messageId, sessionId } = await context.params
-  const session = await updateChatMessageFeedbackByActor(
-    actor.id,
-    sessionId,
-    messageId,
-    feedback
-  )
-
-  if (!session) {
-    return jsonError('消息不存在或无权限访问', 404)
-  }
-
-  return NextResponse.json({ session })
+    return NextResponse.json({ session })
+  })
 }

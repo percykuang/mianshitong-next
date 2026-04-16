@@ -1,60 +1,44 @@
 import { NextResponse } from 'next/server'
 import {
-  createChatSession,
-  deleteAllChatSessionsByActor,
-  listChatSessionsByActor,
-} from '@/server/chat-session-repository'
-import { parseCreateSessionBody, type CreateSessionBody } from './requests'
-import { parseJsonBody, resolveChatActor } from '../utils'
+  createActorChatSession,
+  deleteAllActorChatSessions,
+  listActorChatSessions,
+} from '@/server/chat/services'
+import { parseCreateSessionBody } from './requests'
+import { parseJsonBodyOrError, withChatActor } from '../utils'
 
 export async function GET() {
-  const { actor, errorResponse } = await resolveChatActor()
+  return withChatActor(async (actor) => {
+    const sessions = await listActorChatSessions(actor.id)
 
-  if (!actor) {
-    return errorResponse
-  }
-
-  const sessions = await listChatSessionsByActor(actor.id)
-
-  return NextResponse.json({ sessions })
+    return NextResponse.json({ sessions })
+  })
 }
 
 export async function POST(request: Request) {
-  const { actor, errorResponse } = await resolveChatActor()
+  const { data: parsedBody, errorResponse } = await parseJsonBodyOrError(
+    request,
+    parseCreateSessionBody
+  )
 
-  if (!actor) {
+  if (errorResponse) {
     return errorResponse
   }
 
-  const body = await parseJsonBody<CreateSessionBody>(request)
-  const { data: parsedBody, errorResponse: bodyErrorResponse } =
-    parseCreateSessionBody(body)
+  return withChatActor(async (actor) => {
+    const session = await createActorChatSession(actor, parsedBody)
 
-  if (!parsedBody) {
-    return bodyErrorResponse
-  }
-
-  const session = await createChatSession({
-    actorId: actor.id,
-    userId: actor.authUserId,
-    title: parsedBody.title,
-    modelId: parsedBody.modelId,
+    return NextResponse.json({ session }, { status: 201 })
   })
-
-  return NextResponse.json({ session }, { status: 201 })
 }
 
 export async function DELETE() {
-  const { actor, errorResponse } = await resolveChatActor()
+  return withChatActor(async (actor) => {
+    const deletedCount = await deleteAllActorChatSessions(actor.id)
 
-  if (!actor) {
-    return errorResponse
-  }
-
-  const deletedCount = await deleteAllChatSessionsByActor(actor.id)
-
-  return NextResponse.json({
-    ok: true,
-    deletedCount,
+    return NextResponse.json({
+      ok: true,
+      deletedCount,
+    })
   })
 }

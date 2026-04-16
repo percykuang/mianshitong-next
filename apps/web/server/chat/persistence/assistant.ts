@@ -3,8 +3,11 @@ import {
   isSameAssistantReply,
   shouldRetryAssistantReplyWithoutCompletionStatus,
   type ChatMessageCompletionStatus,
-  type EditableChatMessageRecord,
 } from './shared'
+import {
+  findInterruptedSessionRecord,
+  type InterruptedSessionRecord,
+} from './query'
 
 export async function persistAssistantReply(
   sessionId: string,
@@ -71,27 +74,10 @@ export async function persistInterruptedAssistantReply(input: {
   expectedMessageCount: number
   sessionId: string
 }) {
-  const session = (await chatPrisma.chatSession.findFirst({
-    where: {
-      id: input.sessionId,
-      actorId: input.actorId,
-    },
-    select: {
-      id: true,
-      messages: {
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-        select: {
-          completionStatus: true,
-          id: true,
-          role: true,
-          content: true,
-        },
-      },
-    },
-  })) as {
-    id: string
-    messages: EditableChatMessageRecord[]
-  } | null
+  const session = (await findInterruptedSessionRecord(
+    input.actorId,
+    input.sessionId
+  )) as InterruptedSessionRecord | null
 
   if (!session) {
     return {
@@ -113,8 +99,7 @@ export async function persistInterruptedAssistantReply(input: {
     }
 
     return {
-      error: null,
-      sessionId: session.id,
+      error: 'message_count_mismatch' as const,
     }
   }
 

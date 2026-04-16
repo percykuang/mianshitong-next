@@ -1,75 +1,64 @@
 import { NextResponse } from 'next/server'
 import {
-  deleteChatSessionByActor,
-  findChatSessionByActor,
-  updateChatSessionByActor,
-} from '@/server/chat-session-repository'
-import { parseUpdateSessionBody, type UpdateSessionBody } from '../requests'
-import { jsonError, parseJsonBody, resolveChatActor } from '../../utils'
+  deleteActorChatSession,
+  getActorChatSession,
+  updateActorChatSession,
+} from '@/server/chat/services'
+import { parseUpdateSessionBody } from '../requests'
+import { jsonError, parseJsonBodyOrError, withChatActor } from '../../utils'
 
 interface SessionRouteContext {
   params: Promise<{ sessionId: string }>
 }
 
 export async function GET(_: Request, context: SessionRouteContext) {
-  const { actor, errorResponse } = await resolveChatActor()
+  return withChatActor(async (actor) => {
+    const { sessionId } = await context.params
+    const session = await getActorChatSession(actor.id, sessionId)
 
-  if (!actor) {
-    return errorResponse
-  }
+    if (!session) {
+      return jsonError('会话不存在或无权限访问', 404)
+    }
 
-  const { sessionId } = await context.params
-  const session = await findChatSessionByActor(actor.id, sessionId)
-
-  if (!session) {
-    return jsonError('会话不存在或无权限访问', 404)
-  }
-
-  return NextResponse.json({ session })
+    return NextResponse.json({ session })
+  })
 }
 
 export async function PATCH(request: Request, context: SessionRouteContext) {
-  const { actor, errorResponse } = await resolveChatActor()
+  const { data: parsedBody, errorResponse } = await parseJsonBodyOrError(
+    request,
+    parseUpdateSessionBody
+  )
 
-  if (!actor) {
+  if (errorResponse) {
     return errorResponse
   }
 
-  const body = await parseJsonBody<UpdateSessionBody>(request)
-  const { data: parsedBody, errorResponse: bodyErrorResponse } =
-    parseUpdateSessionBody(body)
+  return withChatActor(async (actor) => {
+    const { sessionId } = await context.params
+    const session = await updateActorChatSession(
+      actor.id,
+      sessionId,
+      parsedBody
+    )
 
-  if (!parsedBody) {
-    return bodyErrorResponse
-  }
+    if (!session) {
+      return jsonError('会话不存在或无权限访问', 404)
+    }
 
-  const { sessionId } = await context.params
-  const session = await updateChatSessionByActor(
-    actor.id,
-    sessionId,
-    parsedBody
-  )
-
-  if (!session) {
-    return jsonError('会话不存在或无权限访问', 404)
-  }
-
-  return NextResponse.json({ session })
+    return NextResponse.json({ session })
+  })
 }
 
 export async function DELETE(_: Request, context: SessionRouteContext) {
-  const { actor, errorResponse } = await resolveChatActor()
+  return withChatActor(async (actor) => {
+    const { sessionId } = await context.params
+    const isDeleted = await deleteActorChatSession(actor.id, sessionId)
 
-  if (!actor) {
-    return errorResponse
-  }
+    if (!isDeleted) {
+      return jsonError('会话不存在或无权限访问', 404)
+    }
 
-  const { sessionId } = await context.params
-  const isDeleted = await deleteChatSessionByActor(actor.id, sessionId)
-
-  if (!isDeleted) {
-    return jsonError('会话不存在或无权限访问', 404)
-  }
-
-  return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true })
+  })
 }

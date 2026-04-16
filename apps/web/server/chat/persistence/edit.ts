@@ -1,9 +1,9 @@
-import { normalizeChatModelId } from '@mianshitong/providers'
+import { normalizeChatModelId } from '@mianshitong/providers/model/catalog'
+import { chatPrisma, createChatSessionTitle } from './shared'
 import {
-  chatPrisma,
-  createChatSessionTitle,
+  findEditableSessionRecord,
   type EditableChatSessionRecord,
-} from './shared'
+} from './query'
 
 export async function editUserMessageAndLoadConversation(input: {
   actorId: string
@@ -11,24 +11,10 @@ export async function editUserMessageAndLoadConversation(input: {
   messageId: string
   sessionId: string
 }) {
-  const session = (await chatPrisma.chatSession.findFirst({
-    where: {
-      id: input.sessionId,
-      actorId: input.actorId,
-    },
-    select: {
-      id: true,
-      modelId: true,
-      messages: {
-        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-        select: {
-          id: true,
-          role: true,
-          content: true,
-        },
-      },
-    },
-  })) as EditableChatSessionRecord | null
+  const session = (await findEditableSessionRecord(
+    input.actorId,
+    input.sessionId
+  )) as EditableChatSessionRecord | null
 
   if (!session) {
     return {
@@ -37,11 +23,16 @@ export async function editUserMessageAndLoadConversation(input: {
   }
 
   const targetIndex = session.messages.findIndex(
-    (message) => message.id === input.messageId && message.role === 'user'
+    (message: EditableChatSessionRecord['messages'][number]) =>
+      message.id === input.messageId && message.role === 'user'
   )
   const lastEditableUserMessageId =
-    [...session.messages].reverse().find((message) => message.role === 'user')
-      ?.id ?? null
+    [...session.messages]
+      .reverse()
+      .find(
+        (message: EditableChatSessionRecord['messages'][number]) =>
+          message.role === 'user'
+      )?.id ?? null
 
   if (targetIndex < 0 || lastEditableUserMessageId !== input.messageId) {
     return {
@@ -51,16 +42,22 @@ export async function editUserMessageAndLoadConversation(input: {
 
   const trailingMessageIds = session.messages
     .slice(targetIndex + 1)
-    .map((message) => message.id)
+    .map((message: EditableChatSessionRecord['messages'][number]) => message.id)
   const firstUserMessageIndex = session.messages.findIndex(
-    (message) => message.role === 'user'
+    (message: EditableChatSessionRecord['messages'][number]) =>
+      message.role === 'user'
   )
   const conversation = session.messages
     .slice(0, targetIndex + 1)
-    .map((message, index) => ({
-      role: message.role,
-      content: index === targetIndex ? input.message : message.content,
-    }))
+    .map(
+      (
+        message: EditableChatSessionRecord['messages'][number],
+        index: number
+      ) => ({
+        role: message.role,
+        content: index === targetIndex ? input.message : message.content,
+      })
+    )
 
   await chatPrisma.$transaction(async (tx) => {
     await tx.chatMessage.update({

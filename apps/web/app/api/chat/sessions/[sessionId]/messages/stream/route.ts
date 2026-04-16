@@ -1,22 +1,14 @@
-import { getChatModel, getChatModelRuntimeInfo } from '@mianshitong/providers'
-import {
-  findOrCreateChatSession,
-  persistUserMessageAndLoadConversation,
-} from '@/app/api/chat/persistence'
-import { toConversation } from '@/app/api/chat/request'
+import { prepareSessionChatReply } from '@/server/chat/services'
 import {
   createChatResponseStream,
   createChatStreamHeaders,
 } from '@/app/api/chat/stream'
 import {
   jsonError,
-  parseJsonBody,
-  resolveChatActor,
+  parseJsonBodyOrError,
+  withChatActor,
 } from '@/app/api/chat/utils'
-import {
-  parseStreamMessageBody,
-  type StreamMessageBody,
-} from '../../../requests'
+import { parseStreamMessageBody } from '../../../requests'
 
 interface MessageStreamRouteContext {
   params: Promise<{ sessionId: string }>
@@ -26,58 +18,50 @@ export async function POST(
   request: Request,
   context: MessageStreamRouteContext
 ) {
-  const { actor, errorResponse: actorErrorResponse } = await resolveChatActor()
+  const { data: parsedBody, errorResponse } = await parseJsonBodyOrError(
+    request,
+    parseStreamMessageBody
+  )
 
-  if (!actor) {
-    return actorErrorResponse
-  }
-
-  const body = await parseJsonBody<StreamMessageBody>(request)
-  const { data: parsedBody, errorResponse } = parseStreamMessageBody(body)
-
-  if (!parsedBody) {
+  if (errorResponse) {
     return errorResponse
   }
 
-  try {
-    const { sessionId } = await context.params
-    const { content, normalizedModelId } = parsedBody
-    const model = getChatModel(normalizedModelId)
-    const runtime = getChatModelRuntimeInfo(normalizedModelId)
-    const session = await findOrCreateChatSession({
-      actor,
-      message: content,
-      normalizedModelId,
-      normalizedSessionId: sessionId,
-    })
+  return withChatActor(async (actor) => {
+    try {
+      const { sessionId } = await context.params
+      const result = await prepareSessionChatReply({
+        actor,
+        body: parsedBody,
+        sessionId,
+      })
 
-    if (!session) {
-      return jsonError('会话不存在或无权限访问', 404)
-    }
+      if (result.error === 'session_not_found') {
+        return jsonError('会话不存在或无权限访问', 404)
+      }
 
-    const persistedSessionId = session.id
-    const sessionMessages = await persistUserMessageAndLoadConversation({
-      message: content,
-      normalizedModelId,
-      sessionId: persistedSessionId,
-    })
-    const conversation = toConversation(sessionMessages)
-    const stream = createChatResponseStream({
-      conversation,
-      model,
-      persistedSessionId,
-      requestSignal: request.signal,
-    })
+      if (!result.reply) {
+        return jsonError('AI 服务暂时不可用，请稍后再试', 500)
+      }
 
-    return new Response(stream, {
-      headers: createChatStreamHeaders({
+      const { conversation, model, persistedSessionId, runtime } = result.reply
+      const stream = createChatResponseStream({
+        conversation,
+        model,
         persistedSessionId,
-        runtime,
-      }),
-    })
-  } catch (error) {
-    console.error('[api/chat-session-stream] model invoke failed', error)
+        requestSignal: request.signal,
+      })
 
-    return jsonError('AI 服务暂时不可用，请稍后再试', 500)
-  }
+      return new Response(stream, {
+        headers: createChatStreamHeaders({
+          persistedSessionId,
+          runtime,
+        }),
+      })
+    } catch (error) {
+      console.error('[api/chat-session-stream] model invoke failed', error)
+
+      return jsonError('AI 服务暂时不可用，请稍后再试', 500)
+    }
+  })
 }
