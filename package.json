@@ -24,9 +24,9 @@
   },
   "scripts": {
     "dev:web": "pnpm db:generate && pnpm --filter @mianshitong/web dev",
-    "dev:admin": "pnpm --filter @mianshitong/admin dev",
+    "dev:admin": "pnpm db:generate && pnpm --filter @mianshitong/admin dev",
     "build:web": "pnpm db:generate && pnpm --filter @mianshitong/web build",
-    "build:admin": "pnpm --filter @mianshitong/admin build",
+    "build:admin": "pnpm db:generate && pnpm --filter @mianshitong/admin build",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose stop db",
     "db:logs": "docker compose logs -f --tail=200 db",
