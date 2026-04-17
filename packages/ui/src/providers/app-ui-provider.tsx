@@ -2,8 +2,8 @@
 
 import '@ant-design/v5-patch-for-react-19'
 import { StyleProvider } from '@ant-design/cssinjs'
-import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { App, ConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
 import {
   DEFAULT_THEME_MODE,
   THEME_COOKIE_KEY,
@@ -101,14 +101,52 @@ function applyThemeMode(themeMode: ThemeMode) {
   document.cookie = `${THEME_COOKIE_KEY}=${themeMode}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
+function ignoreThemeModeUpdate() {
+  return undefined
+}
+
 export interface AppUiProviderProps {
+  app: 'web'
+  children: ReactNode
+}
+
+interface StaticAppUiProviderProps {
   app: 'web' | 'admin'
   children: ReactNode
+  themeMode: ThemeMode
+}
+
+function UiRuntimeProvider({
+  app,
+  children,
+  contextValue,
+  themeMode,
+}: StaticAppUiProviderProps & {
+  contextValue: ThemeModeContextValue
+}) {
+  const themeTokens = createThemeTokens(app, themeMode)
+
+  return (
+    <ThemeModeContext.Provider value={contextValue}>
+      <StyleProvider layer>
+        <ConfigProvider
+          locale={zhCN}
+          wave={{ disabled: true }}
+          theme={createAntdTheme(themeTokens, themeMode)}
+        >
+          <App>
+            <CodeBlockStyles />
+            <ModalAppBridge />
+            {children}
+          </App>
+        </ConfigProvider>
+      </StyleProvider>
+    </ThemeModeContext.Provider>
+  )
 }
 
 export function AppUiProvider({ app, children }: AppUiProviderProps) {
   const [themeMode, setThemeMode] = useState<ThemeMode>(readInitialThemeMode)
-  const themeTokens = createThemeTokens(app, themeMode)
 
   useEffect(() => {
     applyThemeMode(themeMode)
@@ -128,19 +166,35 @@ export function AppUiProvider({ app, children }: AppUiProviderProps) {
   )
 
   return (
-    <ThemeModeContext.Provider value={contextValue}>
-      <AntdRegistry>
-        <StyleProvider layer>
-          <ConfigProvider theme={createAntdTheme(themeTokens, themeMode)}>
-            <App>
-              <CodeBlockStyles />
-              <ModalAppBridge />
-              {children}
-            </App>
-          </ConfigProvider>
-        </StyleProvider>
-      </AntdRegistry>
-    </ThemeModeContext.Provider>
+    <UiRuntimeProvider
+      app={app}
+      contextValue={contextValue}
+      themeMode={themeMode}
+    >
+      {children}
+    </UiRuntimeProvider>
+  )
+}
+
+export function AdminUiProvider({ children }: { children: ReactNode }) {
+  const themeMode: ThemeMode = 'light'
+  const contextValue = useMemo<ThemeModeContextValue>(
+    () => ({
+      themeMode,
+      setThemeMode: ignoreThemeModeUpdate,
+      toggleThemeMode: ignoreThemeModeUpdate,
+    }),
+    [themeMode]
+  )
+
+  return (
+    <UiRuntimeProvider
+      app="admin"
+      contextValue={contextValue}
+      themeMode={themeMode}
+    >
+      {children}
+    </UiRuntimeProvider>
   )
 }
 
@@ -148,7 +202,7 @@ export function useThemeMode() {
   const context = useContext(ThemeModeContext)
 
   if (!context) {
-    throw new Error('useThemeMode must be used within AppUiProvider')
+    throw new Error('useThemeMode must be used within an app UI provider')
   }
 
   return context

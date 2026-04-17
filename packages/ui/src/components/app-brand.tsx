@@ -26,7 +26,7 @@ export function AppBrand({
       {showLabel ? (
         <span
           className={cn(
-            'font-semibold text-(--mst-color-primary)',
+            'ml-1.5 font-semibold text-lg text-(--mst-color-primary)',
             labelClassName
           )}
         >

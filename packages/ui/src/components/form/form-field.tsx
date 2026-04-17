@@ -16,7 +16,7 @@ export function FormField({
   ...props
 }: FormFieldProps) {
   return (
-    <div {...props} className={cn('space-y-2', className)}>
+    <div {...props} className={cn('grid gap-2', className)}>
       {label ? (
         <label className="block text-sm font-medium text-(--mst-color-text-primary)">
           {label}

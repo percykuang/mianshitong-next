@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
-import { AppUiProvider } from '@mianshitong/ui'
+import { AdminUiProvider, AppUiRegistry } from '@mianshitong/ui'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Mianshitong Admin',
-  description: '面向运营与管理的后台模板',
+  title: '面试通 | 后台管理',
+  description: '面向运营与管理的后台管理系统',
 }
 
 const themeVariablesStyleText = createThemeVariablesStyleText('admin')
@@ -16,12 +16,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="zh-CN">
+    <html data-theme="light" lang="zh-CN">
       <head>
         <style>{themeVariablesStyleText}</style>
       </head>
       <body className="mst-app mst-app-admin">
-        <AppUiProvider app="admin">{children}</AppUiProvider>
+        <AppUiRegistry>
+          <AdminUiProvider>{children}</AdminUiProvider>
+        </AppUiRegistry>
       </body>
     </html>
   )

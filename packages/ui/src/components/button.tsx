@@ -7,7 +7,7 @@ export interface ButtonProps extends Omit<
   AntButtonProps,
   'color' | 'size' | 'type' | 'variant'
 > {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'danger'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'link' | 'danger' | 'text'
   size?: 'sm' | 'md' | 'lg'
 }
 
@@ -20,6 +20,10 @@ function resolveButtonType(
 
   if (variant === 'link') {
     return 'link'
+  }
+
+  if (variant === 'text') {
+    return 'text'
   }
 
   return 'default'
@@ -47,6 +51,7 @@ export function Button({
   return (
     <AntButton
       {...props}
+      autoInsertSpace={false}
       danger={danger || variant === 'danger'}
       ghost={ghost || variant === 'ghost'}
       size={resolveButtonSize(size)}

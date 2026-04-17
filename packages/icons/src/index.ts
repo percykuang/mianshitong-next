@@ -1,5 +1,6 @@
 export * from './actions'
 export * from './brand'
+export * from './favicon'
 export * from './files'
 export * from './navigation'
 export * from './status'

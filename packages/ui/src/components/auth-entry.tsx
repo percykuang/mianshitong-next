@@ -3,7 +3,18 @@ import { cn } from '@mianshitong/shared'
 import { Loader, Logout, User } from '@mianshitong/icons'
 import { Tooltip } from './tooltip'
 
+export interface AuthEntryClassNames {
+  authenticatedContainer?: string
+  avatar?: string
+  email?: string
+  guest?: string
+  guestText?: string
+  logoutButton?: string
+  userIcon?: string
+}
+
 export interface AuthEntryProps {
+  classNames?: AuthEntryClassNames
   loginHref?: string
   loginLabel?: string
   logoutPending?: boolean
@@ -44,6 +55,7 @@ const AUTH_ENTRY_STYLES = {
 } as const
 
 export function AuthEntry({
+  classNames,
   loginHref = '/login',
   loginLabel = '登录',
   logoutPending = false,
@@ -59,6 +71,7 @@ export function AuthEntry({
       aria-label={logoutLabel}
       className={cn(
         styles.logoutButtonClass,
+        classNames?.logoutButton,
         logoutPending &&
           'bg-transparent! text-(--mst-color-text-muted)! hover:bg-transparent! hover:text-(--mst-color-text-muted)! dark:hover:bg-transparent!'
       )}
@@ -78,10 +91,12 @@ export function AuthEntry({
     return (
       <Link
         aria-label={loginLabel}
-        className={styles.guestClass}
+        className={cn(styles.guestClass, classNames?.guest)}
         href={loginHref}
       >
-        <span className={styles.guestTextClass}>{loginLabel}</span>
+        <span className={cn(styles.guestTextClass, classNames?.guestText)}>
+          {loginLabel}
+        </span>
       </Link>
     )
   }
@@ -89,12 +104,17 @@ export function AuthEntry({
   return (
     <div
       aria-label={userLabel ?? '已登录用户'}
-      className={styles.authenticatedContainerClass}
+      className={cn(
+        styles.authenticatedContainerClass,
+        classNames?.authenticatedContainer
+      )}
     >
-      <span className={styles.avatarClass}>
-        <User className={styles.userIconClass} />
+      <span className={cn(styles.avatarClass, classNames?.avatar)}>
+        <User className={cn(styles.userIconClass, classNames?.userIcon)} />
       </span>
-      <span className={styles.emailClass}>{userLabel}</span>
+      <span className={cn(styles.emailClass, classNames?.email)}>
+        {userLabel}
+      </span>
       {logoutPending ? (
         logoutButton
       ) : (

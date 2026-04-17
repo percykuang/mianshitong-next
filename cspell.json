@@ -17,6 +17,7 @@
   "words": [
     "admin",
     "antd",
+    "anticon",
     "apps",
     "Consolas",
     "cssinjs",
@@ -36,6 +37,7 @@
     "monorepo",
     "nextjs",
     "nosniff",
+    "nowrap",
     "ollama",
     "opengraph",
     "PingFang",
@@ -44,6 +46,7 @@
     "remixicon",
     "Segoe",
     "shiki",
+    "Sider",
     "turbopack"
   ]
 }
