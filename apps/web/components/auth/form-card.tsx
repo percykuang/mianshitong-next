@@ -44,7 +44,7 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-10 md:px-6">
         <div className="grid w-full gap-8 lg:grid-cols-[1.05fr_440px] lg:items-center">
           <section className="hidden space-y-6 lg:block">
-            <AppBrand className="gap-3 rounded-full bg-transparent px-4 py-2 text-sm font-medium text-(--mst-color-text-primary) backdrop-blur-sm" />
+            <AppBrand className="rounded-full bg-transparent px-4 py-2 font-medium text-(--mst-color-text-primary) backdrop-blur-sm" />
 
             <div className="max-w-xl space-y-4">
               <p className="text-sm font-semibold tracking-[0.2em] text-(--mst-color-primary) uppercase">
@@ -87,9 +87,6 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
               <h2 className="text-2xl font-semibold text-(--mst-color-text-primary)">
                 {copy.title}
               </h2>
-              <p className="text-sm leading-6 text-(--mst-color-text-secondary)">
-                {copy.description}
-              </p>
             </div>
 
             <form

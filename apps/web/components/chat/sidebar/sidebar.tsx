@@ -42,8 +42,8 @@ export function ChatSidebar({
       <div className="flex flex-col gap-3 border-b border-(--mst-color-border-default) p-3">
         <div className="flex items-center justify-between gap-2">
           <AppBrand
-            className="min-w-0 gap-2.5"
-            labelClassName="block truncate text-base"
+            className="min-w-0"
+            labelClassName="block truncate"
             logoClassName="rounded-xl shadow-(--mst-shadow-sm)"
           />
 

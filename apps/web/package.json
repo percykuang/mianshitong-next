@@ -12,6 +12,7 @@
   "dependencies": {
     "@mianshitong/db": "workspace:*",
     "@mianshitong/hooks": "workspace:*",
+    "@mianshitong/icons": "workspace:*",
     "@mianshitong/providers": "workspace:*",
     "@mianshitong/shared": "workspace:*",
     "@mianshitong/tokens": "workspace:*",

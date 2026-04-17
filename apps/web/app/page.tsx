@@ -18,8 +18,7 @@ export default async function HomePage() {
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 md:px-6 md:pt-5">
           <div className="flex items-center justify-between gap-3 rounded-full px-3 py-2 bg-transparent dark:border-white/10 md:rounded-none md:border-0 md:px-0 md:py-0">
             <AppBrand
-              className="min-w-0 gap-2.5 sm:gap-3"
-              labelClassName="text-lg"
+              className="min-w-0"
               logoClassName="rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
             />
             <HomePageHeaderActions userEmail={userEmail} />
