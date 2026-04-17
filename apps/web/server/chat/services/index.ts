@@ -7,6 +7,7 @@ export {
   prepareEditedChatReply,
   prepareSessionChatReply,
 } from './reply-service'
+export { checkChatQuota, getChatUsageSummary } from './usage-service'
 export {
   createActorChatSession,
   deleteActorChatSession,

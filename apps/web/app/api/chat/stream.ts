@@ -98,6 +98,7 @@ export function createChatStreamHeaders(input: {
 }
 
 export function createChatResponseStream(input: {
+  actorId: string
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
   model: ReturnType<typeof getChatModel>
   persistedSessionId: string
@@ -132,11 +133,12 @@ export function createChatResponseStream(input: {
           controller.enqueue(encoder.encode(text))
         }
 
-        await persistAssistantReply(
-          input.persistedSessionId,
-          assistantContent,
-          'completed'
-        )
+        await persistAssistantReply({
+          actorId: input.actorId,
+          completionStatus: 'completed',
+          content: assistantContent,
+          sessionId: input.persistedSessionId,
+        })
 
         closeReadableStreamController(controller)
       } catch (error) {

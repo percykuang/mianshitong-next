@@ -35,6 +35,9 @@ export function ChatMainPane({
   sidebarOpen,
   streamingMessageId,
   textareaRef,
+  usage,
+  usageError,
+  usageLoading,
 }: ChatMainPaneProps) {
   const { isPinnedToBottom, scrollContainerRef, scrollToBottom } =
     useChatMainPaneScroll({
@@ -93,6 +96,9 @@ export function ChatMainPane({
             selectedModelId={selectedModelId}
             showQuickPrompts={!hasConversationMessages && !isReplying}
             textareaRef={textareaRef}
+            usage={usage}
+            usageError={usageError}
+            usageLoading={usageLoading}
           />
         </div>
       </div>

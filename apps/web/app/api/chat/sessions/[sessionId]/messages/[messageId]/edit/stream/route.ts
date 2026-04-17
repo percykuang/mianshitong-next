@@ -31,7 +31,7 @@ export async function POST(
     try {
       const { messageId, sessionId } = await context.params
       const result = await prepareEditedChatReply({
-        actorId: actor.id,
+        actor,
         content,
         messageId,
         sessionId,
@@ -45,12 +45,17 @@ export async function POST(
         return jsonError('当前仅支持编辑最后一条用户消息', 400)
       }
 
+      if (result.error === 'quota_exceeded') {
+        return jsonError('今日模型配额已用完，请明天再试', 429)
+      }
+
       if (!result.reply) {
         return jsonError('AI 服务暂时不可用，请稍后再试', 500)
       }
 
       const { conversation, model, persistedSessionId, runtime } = result.reply
       const stream = createChatResponseStream({
+        actorId: actor.id,
         conversation,
         model,
         persistedSessionId,

@@ -10,6 +10,7 @@ model AuthUser {
   id           String        @id @default(cuid())
   email        String        @unique
   passwordHash String
+  role         AuthUserRole  @default(user)
   actor        UserActor?
   sessions     AuthSession[]
   chatSessions ChatSession[]
@@ -45,22 +46,29 @@ enum ChatMessageCompletionStatus {
   interrupted
 }
 
+enum AuthUserRole {
+  user
+  admin
+}
+
 enum UserActorType {
   guest
   registered
 }
 
 model UserActor {
-  id             String        @id @default(cuid())
-  type           UserActorType
-  displayName    String
-  authUserId     String?       @unique
-  guestTokenHash String?       @unique
-  chatSessions   ChatSession[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  lastSeenAt     DateTime      @default(now())
-  authUser       AuthUser?     @relation(fields: [authUserId], references: [id], onDelete: SetNull)
+  id              String           @id @default(cuid())
+  type            UserActorType
+  displayName     String
+  authUserId      String?          @unique
+  guestTokenHash  String?          @unique
+  dailyModelQuota Int?
+  chatSessions    ChatSession[]
+  chatReplyUsages ChatReplyUsage[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  lastSeenAt      DateTime         @default(now())
+  authUser        AuthUser?        @relation(fields: [authUserId], references: [id], onDelete: SetNull)
 
   @@index([type, lastSeenAt(sort: Desc)])
 }
@@ -97,4 +105,14 @@ model ChatMessage {
   session          ChatSession                 @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt(sort: Asc)])
+}
+
+model ChatReplyUsage {
+  id                 String    @id @default(cuid())
+  actorId            String
+  assistantMessageId String @unique
+  createdAt          DateTime  @default(now())
+  actor              UserActor @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, createdAt(sort: Desc)])
 }

@@ -48,21 +48,40 @@ function UsageTriggerIcon({ percent }: { percent: number }) {
 
 export function ComposerUsage({
   usage,
+  usageError = false,
   usageLoading = false,
 }: {
   usage?: ChatUsageSummary | null
+  usageError?: boolean
   usageLoading?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const usageUnavailable = usageError && !usageLoading && !usage
   const usagePercent =
-    usage && usage.max > 0 ? Math.min(100, (usage.used / usage.max) * 100) : 0
+    usage && usage.max > 0
+      ? Math.min(100, (usage.used / usage.max) * 100)
+      : usage
+        ? 100
+        : 0
   const usagePercentLabel =
-    usageLoading && !usage ? '--.-%' : `${usagePercent.toFixed(1)}%`
+    usageLoading && !usage
+      ? '--.-%'
+      : usageUnavailable
+        ? '--'
+        : `${usagePercent.toFixed(1)}%`
   const usedCountLabel =
-    usageLoading && !usage ? '--' : String(usage?.used ?? 0)
+    usageLoading && !usage
+      ? '--'
+      : usageUnavailable
+        ? '--'
+        : String(usage?.used ?? 0)
   const totalCountLabel =
-    usageLoading && !usage ? '--' : String(usage?.max ?? 0)
+    usageLoading && !usage
+      ? '--'
+      : usageUnavailable
+        ? '--'
+        : String(usage?.max ?? 0)
 
   return (
     <>
@@ -110,6 +129,11 @@ export function ComposerUsage({
               <span>总次数</span>
               <span>{totalCountLabel}</span>
             </div>
+            {usageUnavailable ? (
+              <div className="pt-1 text-xs text-(--mst-color-text-muted)">
+                额度加载失败，请稍后重试
+              </div>
+            ) : null}
           </div>
         </div>
       </Popover>

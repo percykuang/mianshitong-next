@@ -9,34 +9,53 @@ import {
   type InterruptedSessionRecord,
 } from './query'
 
-export async function persistAssistantReply(
-  sessionId: string,
-  content: string,
-  completionStatus: ChatMessageCompletionStatus = 'completed'
-) {
-  if (!content.trim()) {
+function shouldConsumeChatReplyQuota() {
+  return true
+}
+
+export async function persistAssistantReply(input: {
+  actorId: string
+  content: string
+  completionStatus?: ChatMessageCompletionStatus
+  sessionId: string
+}) {
+  if (!input.content.trim()) {
     return
   }
 
+  const completionStatus = input.completionStatus ?? 'completed'
+
   try {
     await chatPrisma.$transaction(async (tx) => {
-      await tx.chatMessage.create({
+      const assistantMessage = await tx.chatMessage.create({
         data: {
-          sessionId,
+          sessionId: input.sessionId,
           role: 'assistant',
-          content,
+          content: input.content,
           completionStatus,
+        },
+        select: {
+          id: true,
         },
       })
 
       await tx.chatSession.update({
         where: {
-          id: sessionId,
+          id: input.sessionId,
         },
         data: {
-          preview: content,
+          preview: input.content,
         },
       })
+
+      if (shouldConsumeChatReplyQuota()) {
+        await tx.chatReplyUsage.create({
+          data: {
+            actorId: input.actorId,
+            assistantMessageId: assistantMessage.id,
+          },
+        })
+      }
     })
   } catch (error) {
     if (!shouldRetryAssistantReplyWithoutCompletionStatus(error)) {
@@ -48,22 +67,34 @@ export async function persistAssistantReply(
     )
 
     await chatPrisma.$transaction(async (tx) => {
-      await tx.chatMessage.create({
+      const assistantMessage = await tx.chatMessage.create({
         data: {
-          sessionId,
+          sessionId: input.sessionId,
           role: 'assistant',
-          content,
+          content: input.content,
+        },
+        select: {
+          id: true,
         },
       })
 
       await tx.chatSession.update({
         where: {
-          id: sessionId,
+          id: input.sessionId,
         },
         data: {
-          preview: content,
+          preview: input.content,
         },
       })
+
+      if (shouldConsumeChatReplyQuota()) {
+        await tx.chatReplyUsage.create({
+          data: {
+            actorId: input.actorId,
+            assistantMessageId: assistantMessage.id,
+          },
+        })
+      }
     })
   }
 }
@@ -103,7 +134,12 @@ export async function persistInterruptedAssistantReply(input: {
     }
   }
 
-  await persistAssistantReply(session.id, input.content, 'interrupted')
+  await persistAssistantReply({
+    actorId: input.actorId,
+    completionStatus: 'interrupted',
+    content: input.content,
+    sessionId: session.id,
+  })
 
   return {
     error: null,

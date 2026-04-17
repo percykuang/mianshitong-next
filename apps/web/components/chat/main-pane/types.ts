@@ -6,6 +6,7 @@ import {
   type ChatModelId,
   type ChatModelOption,
   type ChatRuntimeDebugInfo,
+  type ChatUsageSummary,
   type ConversationMessage,
 } from '../types'
 
@@ -41,4 +42,7 @@ export interface ChatMainPaneProps {
   sidebarOpen: boolean
   streamingMessageId: string | null
   textareaRef: RefObject<HTMLTextAreaElement | null>
+  usage: ChatUsageSummary | null
+  usageError: boolean
+  usageLoading: boolean
 }

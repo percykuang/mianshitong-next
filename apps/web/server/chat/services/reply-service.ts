@@ -13,6 +13,7 @@ import {
   type ChatModelId,
 } from '@mianshitong/providers'
 import type { ChatActor } from '../actor'
+import { checkChatQuota } from './usage-service'
 
 interface PreparedChatReply {
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
@@ -27,7 +28,7 @@ type PreparedChatReplyResult =
       reply: PreparedChatReply
     }
   | {
-      error: 'session_not_found'
+      error: 'quota_exceeded' | 'session_not_found'
       reply: null
     }
 
@@ -56,6 +57,15 @@ export async function prepareChatReply(
   actor: ChatActor,
   input: ParsedChatRequest
 ): Promise<PreparedChatReplyResult> {
+  const quota = await checkChatQuota(actor)
+
+  if (quota.exceeded) {
+    return {
+      error: 'quota_exceeded',
+      reply: null,
+    }
+  }
+
   const sessionResult = await findOrCreateChatSession({
     actor,
     message: input.message,
@@ -85,6 +95,15 @@ export async function prepareSessionChatReply(input: {
   body: ParsedStreamMessageBody
   sessionId: string
 }): Promise<PreparedChatReplyResult> {
+  const quota = await checkChatQuota(input.actor)
+
+  if (quota.exceeded) {
+    return {
+      error: 'quota_exceeded',
+      reply: null,
+    }
+  }
+
   const sessionResult = await findOrCreateChatSession({
     actor: input.actor,
     message: input.body.content,
@@ -111,7 +130,7 @@ export async function prepareSessionChatReply(input: {
 
 type PreparedEditedChatReplyResult =
   | {
-      error: 'message_not_editable' | 'session_not_found'
+      error: 'message_not_editable' | 'quota_exceeded' | 'session_not_found'
       reply: null
     }
   | {
@@ -120,13 +139,22 @@ type PreparedEditedChatReplyResult =
     }
 
 export async function prepareEditedChatReply(input: {
-  actorId: string
+  actor: ChatActor
   content: string
   messageId: string
   sessionId: string
 }): Promise<PreparedEditedChatReplyResult> {
+  const quota = await checkChatQuota(input.actor)
+
+  if (quota.exceeded) {
+    return {
+      error: 'quota_exceeded',
+      reply: null,
+    }
+  }
+
   const result = await editUserMessageAndLoadConversation({
-    actorId: input.actorId,
+    actorId: input.actor.id,
     message: input.content,
     messageId: input.messageId,
     sessionId: input.sessionId,

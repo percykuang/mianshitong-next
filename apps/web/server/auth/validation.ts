@@ -19,7 +19,7 @@ export function validateCredentials(input: unknown): ValidationResult {
 
   const { email, password } = input as Partial<CredentialsInput>
   const normalizedEmail = email?.trim().toLowerCase()
-  const normalizedPassword = password?.trim()
+  const normalizedPassword = typeof password === 'string' ? password : undefined
 
   if (!normalizedEmail || !EMAIL_PATTERN.test(normalizedEmail)) {
     return {
