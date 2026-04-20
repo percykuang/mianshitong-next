@@ -1,7 +1,8 @@
 import { prisma } from '@mianshitong/db'
+
 import {
-  createChatSessionTitle,
   type ChatMessageCompletionStatus,
+  createChatSessionTitle,
 } from '@/app/chat/domain'
 
 export { createChatSessionTitle }

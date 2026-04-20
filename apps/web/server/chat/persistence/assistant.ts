@@ -1,13 +1,13 @@
 import {
+  type InterruptedSessionRecord,
+  findInterruptedSessionRecord,
+} from './query'
+import {
+  type ChatMessageCompletionStatus,
   chatPrisma,
   isSameAssistantReply,
   shouldRetryAssistantReplyWithoutCompletionStatus,
-  type ChatMessageCompletionStatus,
 } from './shared'
-import {
-  findInterruptedSessionRecord,
-  type InterruptedSessionRecord,
-} from './query'
 
 function shouldConsumeChatReplyQuota() {
   return true

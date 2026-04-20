@@ -1,9 +1,10 @@
 import {
-  chatRequestBodySchema,
   type ChatRequestBody,
   type ChatRequestMessage,
   type ParsedChatRequest,
+  chatRequestBodySchema,
 } from '@/app/chat/contracts'
+
 import { jsonError } from './utils'
 
 type ParseChatRequestResult =

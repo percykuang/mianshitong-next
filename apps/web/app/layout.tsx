@@ -1,8 +1,9 @@
-import type { Metadata } from 'next'
-import { cookies } from 'next/headers'
 import { DEFAULT_THEME_MODE, THEME_COOKIE_KEY } from '@mianshitong/shared'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider, AppUiRegistry } from '@mianshitong/ui'
+import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
+
 import './globals.css'
 
 function parseThemeCookie(value: string | undefined) {

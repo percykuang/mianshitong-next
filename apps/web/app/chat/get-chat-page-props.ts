@@ -1,7 +1,8 @@
 import {
-  getChatPageBootstrapData,
   type ChatPageBootstrapData,
+  getChatPageBootstrapData,
 } from '@/server/chat/services'
+
 import { normalizeRouteSessionId } from './utils'
 
 export async function getChatPageProps(

@@ -1,8 +1,8 @@
 import {
-  createChatSessionTitle,
-  formatChatTimestamp,
   type ChatSessionPreview,
   type ConversationMessage,
+  createChatSessionTitle,
+  formatChatTimestamp,
 } from '@/app/chat/domain'
 
 interface CreateNextSessionOptions {

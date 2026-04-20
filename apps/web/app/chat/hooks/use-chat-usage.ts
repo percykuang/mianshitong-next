@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+
 import type { ChatUsageSummary } from '@/app/chat/domain'
 
 async function fetchChatUsage() {

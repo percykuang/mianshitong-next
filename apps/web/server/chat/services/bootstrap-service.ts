@@ -1,14 +1,16 @@
 import {
+  type ChatModelId,
   getChatModelOptions,
   getChatModelRuntimeInfo,
   getDefaultChatModelId,
-  type ChatModelId,
 } from '@mianshitong/providers'
+
 import type {
   ChatModelOption,
   ChatRuntimeDebugInfo,
   ChatSessionPreview,
 } from '@/app/chat/domain'
+
 import { loadCurrentActorChatSessions } from './session-service'
 
 export interface ChatPageBootstrapData {

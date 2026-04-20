@@ -1,4 +1,5 @@
 import { getCurrentAuthUserProfile } from '@/server/auth/services'
+
 import { HOME_PAGE_CONTENT } from './home-page.data'
 
 export interface HomePageProps {

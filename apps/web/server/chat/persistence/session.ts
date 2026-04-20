@@ -1,5 +1,7 @@
-import type { ChatActor } from '@/server/chat/actor'
 import type { ChatModelId } from '@mianshitong/providers/model/types'
+
+import type { ChatActor } from '@/server/chat/actor'
+
 import { CHAT_MESSAGE_ORDER_BY } from './query'
 import { chatPrisma, createChatSessionTitle } from './shared'
 

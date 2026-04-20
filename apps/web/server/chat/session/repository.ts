@@ -1,14 +1,16 @@
 import { prisma } from '@mianshitong/db'
+
 import type { ChatSessionPreview } from '@/app/chat/domain'
+
 import { toChatSessionPreview } from './presenter'
 import {
   CHAT_MESSAGE_ID_SELECT,
   CHAT_SESSION_SUMMARY_SELECT,
-  SESSION_MESSAGES_INCLUDE,
-  SESSIONS_ORDER_BY,
   type ChatMessageIdRecord,
   type ChatSessionSummary,
   type PersistedChatSessionWithMessages,
+  SESSIONS_ORDER_BY,
+  SESSION_MESSAGES_INCLUDE,
 } from './query'
 
 type ChatMessageFeedbackValue = 'dislike' | 'like' | null

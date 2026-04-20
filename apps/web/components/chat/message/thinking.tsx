@@ -7,7 +7,7 @@ export function ChatThinkingMessage() {
     <article className="group/message w-full">
       <div className="flex w-full items-start gap-2 md:gap-3">
         <span
-          className="inline-flex size-8 shrink-0 -mt-0.5 items-center justify-center rounded-full border border-(--mst-color-border-default) bg-white/88 text-[rgb(138_146_160)] shadow-(--mst-shadow-sm) backdrop-blur-sm dark:bg-slate-950/76 dark:text-slate-300"
+          className="-mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-(--mst-color-border-default) bg-white/88 text-[rgb(138_146_160)] shadow-(--mst-shadow-sm) backdrop-blur-sm dark:bg-slate-950/76 dark:text-slate-300"
           style={{
             animation: 'chat-shell-thinking-avatar 2.4s ease-in-out infinite',
           }}

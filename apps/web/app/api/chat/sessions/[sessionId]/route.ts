@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
+
 import {
   deleteActorChatSession,
   getActorChatSession,
   updateActorChatSession,
 } from '@/server/chat/services'
-import { parseUpdateSessionBody } from '../requests'
+
 import { jsonError, parseJsonBodyOrError, withChatActor } from '../../utils'
+import { parseUpdateSessionBody } from '../requests'
 
 interface SessionRouteContext {
   params: Promise<{ sessionId: string }>

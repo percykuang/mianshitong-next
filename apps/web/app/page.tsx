@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import {
   AppBrand,
   ChevronRight,
@@ -6,7 +5,10 @@ import {
   Sparkles,
   Surface,
 } from '@mianshitong/ui'
+import Link from 'next/link'
+
 import { HomePageDemoCarousel, HomePageHeaderActions } from '@/components'
+
 import { getHomePageProps } from './get-home-page-props'
 
 export default async function HomePage() {
@@ -16,7 +18,7 @@ export default async function HomePage() {
     <div className="min-h-screen">
       <header>
         <div className="mx-auto w-full max-w-6xl px-4 pt-4 md:px-6 md:pt-5">
-          <div className="flex items-center justify-between gap-3 rounded-full px-3 py-2 bg-transparent dark:border-white/10 md:rounded-none md:border-0 md:px-0 md:py-0">
+          <div className="flex items-center justify-between gap-3 rounded-full bg-transparent px-3 py-2 md:rounded-none md:border-0 md:px-0 md:py-0 dark:border-white/10">
             <AppBrand
               className="min-w-0"
               logoClassName="rounded-xl shadow-(--mst-shadow-sm) sm:size-9"
@@ -108,7 +110,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className=" px-4 py-16  md:py-24">
+      <section className="px-4 py-16 md:py-24">
         <div className="mx-auto w-full max-w-6xl">
           <div className="mb-12 space-y-4 text-center">
             <h2 className="text-3xl font-bold text-balance text-(--mst-color-text-primary) md:text-4xl">

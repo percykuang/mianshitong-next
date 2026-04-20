@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+
 import { AuthFormCard, REGISTER_PAGE_COPY } from '@/components'
 import { getCurrentAuthUserProfile } from '@/server/auth/services'
 import { resolveAuthRedirect } from '@/utils/auth'

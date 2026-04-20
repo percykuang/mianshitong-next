@@ -1,4 +1,5 @@
 import { isFetchTypeError, parseJsonSafely } from '@mianshitong/shared'
+
 import type {
   ChatRequestBody,
   ChatRequestMessage,
@@ -6,6 +7,7 @@ import type {
   StreamMessageBody,
 } from '@/app/chat/contracts'
 import type { ChatModelId, ChatRuntimeDebugInfo } from '@/app/chat/domain'
+
 import { parseRuntimeDebugInfoFromHeaders } from './chat-message.utils'
 
 interface StreamChatReplyOptions {

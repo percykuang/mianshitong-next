@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
+
 import {
   createActorChatSession,
   deleteAllActorChatSessions,
   listActorChatSessions,
 } from '@/server/chat/services'
-import { parseCreateSessionBody } from './requests'
+
 import { parseJsonBodyOrError, withChatActor } from '../utils'
+import { parseCreateSessionBody } from './requests'
 
 export async function GET() {
   return withChatActor(async (actor) => {

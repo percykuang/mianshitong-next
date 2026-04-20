@@ -1,5 +1,6 @@
 'use client'
 import { ChevronDown } from '@mianshitong/ui'
+
 import { ChatMessageCard, ChatThinkingMessage } from '../message'
 import { ChatEmptyState } from './empty-state'
 import { type ChatMainPaneProps } from './types'
@@ -55,7 +56,7 @@ export function ChatMainPaneConversation({
         key={messageKeyPrefix}
         ref={scrollContainerRef}
       >
-        <div className="mx-auto flex w-full min-w-0 max-w-4xl flex-col gap-6 px-3 py-4 md:px-6 md:pt-6 md:pb-4">
+        <div className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6 px-3 py-4 md:px-6 md:pt-6 md:pb-4">
           {showEmptyState ? <ChatEmptyState /> : null}
 
           {messages.map((message, index) => (

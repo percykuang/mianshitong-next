@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
-import { parseInterruptMessageBody } from '../../../requests'
+
 import { persistInterruptedReplyForActor } from '@/server/chat/services'
+
 import {
   jsonError,
   parseJsonBodyOrError,
   withChatActor,
 } from '../../../../utils'
+import { parseInterruptMessageBody } from '../../../requests'
 
 interface InterruptedMessageRouteContext {
   params: Promise<{ sessionId: string }>

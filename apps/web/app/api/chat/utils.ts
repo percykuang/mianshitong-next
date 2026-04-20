@@ -1,6 +1,7 @@
 import { parseJsonSafely } from '@mianshitong/shared'
 import { NextResponse } from 'next/server'
-import { getCurrentChatActor, type ChatActor } from '@/server/chat/actor'
+
+import { type ChatActor, getCurrentChatActor } from '@/server/chat/actor'
 
 interface JsonErrorPayload {
   error: string

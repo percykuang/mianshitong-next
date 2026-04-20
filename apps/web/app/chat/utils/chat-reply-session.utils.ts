@@ -1,4 +1,5 @@
 import { type ChatSessionPreview } from '@/app/chat/domain'
+
 import { createAssistantFallbackMessage } from './chat-message.utils'
 import { hydratePersistedSession } from './chat-session-collection.utils'
 

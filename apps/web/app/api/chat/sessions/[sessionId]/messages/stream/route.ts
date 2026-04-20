@@ -1,4 +1,3 @@
-import { prepareSessionChatReply } from '@/server/chat/services'
 import {
   createChatResponseStream,
   createChatStreamHeaders,
@@ -8,6 +7,8 @@ import {
   parseJsonBodyOrError,
   withChatActor,
 } from '@/app/api/chat/utils'
+import { prepareSessionChatReply } from '@/server/chat/services'
+
 import { parseStreamMessageBody } from '../../../requests'
 
 interface MessageStreamRouteContext {

@@ -1,15 +1,16 @@
+import type { AuthFieldError } from '@/utils/auth'
+
+import { hashPassword, verifyPassword } from '../password'
+import { deleteCurrentSession, getCurrentUser } from '../session'
 import {
   createAuthSession,
   createUser,
   findUserByEmail,
 } from '../user-repository'
-import { deleteCurrentSession, getCurrentUser } from '../session'
-import { hashPassword, verifyPassword } from '../password'
 import {
   validateLoginCredentials,
   validateRegistrationCredentials,
 } from '../validation'
-import type { AuthFieldError } from '@/utils/auth'
 
 export interface AuthUserSummary {
   email: string

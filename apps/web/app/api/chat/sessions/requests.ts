@@ -1,10 +1,4 @@
 import {
-  createSessionBodySchema,
-  editMessageBodySchema,
-  interruptMessageBodySchema,
-  streamMessageBodySchema,
-  updateMessageFeedbackBodySchema,
-  updateSessionBodySchema,
   type CreateSessionBody,
   type EditMessageBody,
   type InterruptMessageBody,
@@ -16,7 +10,14 @@ import {
   type StreamMessageBody,
   type UpdateMessageFeedbackBody,
   type UpdateSessionBody,
+  createSessionBodySchema,
+  editMessageBodySchema,
+  interruptMessageBodySchema,
+  streamMessageBodySchema,
+  updateMessageFeedbackBodySchema,
+  updateSessionBodySchema,
 } from '@/app/chat/contracts'
+
 import { jsonError } from '../utils'
 
 type ParseCreateSessionBodyResult =

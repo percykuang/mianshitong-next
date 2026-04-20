@@ -4,17 +4,19 @@ import {
   type ChatMessageCompletionStatus,
   type ChatSessionPreview,
 } from '@/app/chat/domain'
+
 import {
   finalizeReplyToSession,
   projectAssistantReplyOntoSession,
 } from '../../utils'
+import { type ActiveReply } from './types'
+
 export {
   hydratePersistedSession,
   replaceOptimisticSession,
   replaceSession,
   upsertSession,
 } from '../../utils'
-import { type ActiveReply } from './types'
 
 export function getSessionById(
   sessions: ChatSessionPreview[],

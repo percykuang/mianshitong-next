@@ -1,9 +1,10 @@
 import { normalizeChatModelId } from '@mianshitong/providers/model/catalog'
-import { chatPrisma, createChatSessionTitle } from './shared'
+
 import {
-  findEditableSessionRecord,
   type EditableChatSessionRecord,
+  findEditableSessionRecord,
 } from './query'
+import { chatPrisma, createChatSessionTitle } from './shared'
 
 export async function editUserMessageAndLoadConversation(input: {
   actorId: string

@@ -1,11 +1,14 @@
-import type { ChatSessionPreview } from '@/app/chat/domain'
-import { persistInterruptedAssistantReply } from '@/server/chat/persistence'
 import type {
   ParsedCreateSessionBody,
   ParsedInterruptMessageBody,
   ParsedUpdateMessageFeedbackBody,
   ParsedUpdateSessionBody,
 } from '@/app/chat/contracts'
+import type { ChatSessionPreview } from '@/app/chat/domain'
+import { persistInterruptedAssistantReply } from '@/server/chat/persistence'
+
+import { getCurrentChatActor } from '../actor'
+import type { ChatActor } from '../actor'
 import {
   createChatSession,
   deleteAllChatSessionsByActor,
@@ -15,8 +18,6 @@ import {
   updateChatMessageFeedbackByActor,
   updateChatSessionByActor,
 } from '../session'
-import { getCurrentChatActor } from '../actor'
-import type { ChatActor } from '../actor'
 
 export async function listActorChatSessions(actorId: string) {
   return listChatSessionsByActor(actorId)

@@ -2,6 +2,7 @@
 
 import { useScrollRestoration } from '@mianshitong/hooks'
 import { AppBrand, ChevronLeft, Plus, Tooltip, Trash } from '@mianshitong/ui'
+
 import { AuthEntry } from '../../auth'
 import { type ChatSessionPreview } from '../types'
 import { ChatSidebarSessionItem } from './session-item'
@@ -59,7 +60,7 @@ export function ChatSidebar({
             >
               <button
                 aria-label="删除所有会话记录"
-                className="cursor-pointer inline-flex items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-red-500 dark:hover:bg-white/6"
+                className="inline-flex cursor-pointer items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-red-500 dark:hover:bg-white/6"
                 onClick={onDeleteAllSessions}
                 type="button"
               >
@@ -77,7 +78,7 @@ export function ChatSidebar({
             >
               <button
                 aria-label="新建会话"
-                className="cursor-pointer mr-1 inline-flex items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-blue-500 dark:hover:bg-white/6"
+                className="mr-1 inline-flex cursor-pointer items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-blue-500 dark:hover:bg-white/6"
                 onClick={onNewSession}
                 type="button"
               >
@@ -86,7 +87,7 @@ export function ChatSidebar({
             </Tooltip>
             <button
               aria-label="关闭侧栏"
-              className="cursor-pointer inline-flex h-9 items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-(--mst-color-primary) md:hidden dark:hover:bg-white/6"
+              className="inline-flex h-9 cursor-pointer items-center justify-center rounded-full p-2 text-(--mst-color-text-muted) transition-colors hover:bg-slate-900/4 hover:text-(--mst-color-primary) md:hidden dark:hover:bg-white/6"
               onClick={onCloseSidebar}
               type="button"
             >

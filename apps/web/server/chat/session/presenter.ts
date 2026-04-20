@@ -1,8 +1,9 @@
 import {
-  formatChatTimestamp,
   type ChatSessionPreview,
   type ConversationMessage,
+  formatChatTimestamp,
 } from '@/app/chat/domain'
+
 import type {
   PersistedChatMessage,
   PersistedChatSessionWithMessages,
