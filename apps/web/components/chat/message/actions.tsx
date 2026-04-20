@@ -39,7 +39,7 @@ interface ChatMessageActionsProps {
 const actionButtonClassName =
   'border-0! bg-transparent! text-(--mst-color-text-muted) shadow-none! transition-[transform,color,background-color] duration-150 hover:bg-slate-900/4! active:scale-95 dark:hover:bg-white/6!'
 
-const neutralActionButtonClassName = 'hover:text-(--mst-color-text-primary)!'
+const neutralActionButtonClassName = 'hover:text-(--mst-color-primary)!'
 
 const feedbackButtonClassName = 'hover:text-(--mst-color-primary)!'
 

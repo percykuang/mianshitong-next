@@ -45,7 +45,7 @@ function CodeActionButton({ icon, label, onClick }: CodeActionButtonProps) {
   return (
     <button
       aria-label={label}
-      className="cursor-pointer p-1 text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+      className="cursor-pointer rounded-md p-1 text-zinc-500 transition-colors hover:bg-slate-900/4 hover:text-(--mst-color-primary) dark:text-zinc-400 dark:hover:bg-white/6 dark:hover:text-(--mst-color-primary)"
       onClick={onClick}
       type="button"
     >
