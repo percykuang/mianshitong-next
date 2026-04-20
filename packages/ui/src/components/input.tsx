@@ -2,6 +2,8 @@
 
 import { Input as AntInput } from 'antd'
 import type { InputProps as AntInputProps } from 'antd'
+import type { InputRef } from 'antd'
+import { forwardRef } from 'react'
 
 export interface InputProps extends Omit<AntInputProps, 'size' | 'status'> {
   size?: 'sm' | 'md' | 'lg'
@@ -20,16 +22,16 @@ function resolveSize(size: InputProps['size']): AntInputProps['size'] {
   return 'middle'
 }
 
-export function Input({
-  size = 'md',
-  status = 'default',
-  ...props
-}: InputProps) {
+export const Input = forwardRef<InputRef, InputProps>(function Input(
+  { size = 'md', status = 'default', ...props },
+  ref
+) {
   return (
     <AntInput
       {...props}
+      ref={ref}
       size={resolveSize(size)}
       status={status === 'default' ? undefined : status}
     />
   )
-}
+})

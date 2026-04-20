@@ -5,6 +5,8 @@ export {
   RiDeleteBinLine as Trash,
   RiDownloadLine as Download,
   RiEditLine as Pencil,
+  RiEyeLine as Eye,
+  RiEyeOffLine as EyeOff,
   RiFilterLine as Filter,
   RiFileCopyLine as Copy,
   RiGithubFill as Github,

@@ -46,6 +46,10 @@ export {
 } from './components/modal/index'
 export { PageHeader } from './components/page-header'
 export {
+  PasswordInput,
+  type PasswordInputProps,
+} from './components/password-input'
+export {
   Popover,
   type PopoverPlacement,
   type PopoverProps,

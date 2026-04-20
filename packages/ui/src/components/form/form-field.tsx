@@ -15,6 +15,8 @@ export function FormField({
   children,
   ...props
 }: FormFieldProps) {
+  const message = error ?? hint
+
   return (
     <div {...props} className={cn('grid gap-2', className)}>
       {label ? (
@@ -23,10 +25,19 @@ export function FormField({
         </label>
       ) : null}
       {children}
-      {error ? (
-        <p className="text-xs text-(--mst-color-danger)">{error}</p>
-      ) : hint ? (
-        <p className="text-xs text-(--mst-color-text-muted)">{hint}</p>
+      {message ? (
+        <p
+          aria-live={error ? 'polite' : undefined}
+          className={cn(
+            'text-xs leading-4',
+            error
+              ? 'text-(--mst-color-danger)'
+              : 'text-(--mst-color-text-muted)',
+            'visible'
+          )}
+        >
+          {message}
+        </p>
       ) : null}
     </div>
   )
