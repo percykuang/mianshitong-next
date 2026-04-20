@@ -8,6 +8,7 @@ import type { ExtraProps } from 'react-markdown'
 import { useThemeMode } from '../../../providers/app-ui-provider'
 import {
   getDownloadFilename,
+  getCodeTextContent,
   normalizeLanguage,
   sanitizeCodeElementProps,
   shouldWrapCodeBlock,
@@ -120,7 +121,7 @@ export function CodeBlock({ children, className, ...rest }: CodeBlockProps) {
   const codeElementProps = sanitizeCodeElementProps(rest)
   const languageId = normalizeLanguage(className)
   const shouldWrap = shouldWrapCodeBlock(languageId)
-  const codeText = String(children).replace(/\n$/, '')
+  const codeText = getCodeTextContent(children).replace(/\n$/, '')
   const { cachedHighlightedHtml, highlightedContent, isHighlighting } =
     useCodeHighlight({
       code: codeText,
@@ -149,6 +150,11 @@ export function CodeBlock({ children, className, ...rest }: CodeBlockProps) {
     URL.revokeObjectURL(url)
     showDownloadedState()
   }, [codeText, languageId, showDownloadedState])
+
+  // 渲染层的最后一道保险：真正空的代码块不应占位显示成一个“假代码块”。
+  if (!codeText.trim()) {
+    return null
+  }
 
   return (
     <div

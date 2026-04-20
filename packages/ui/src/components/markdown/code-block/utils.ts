@@ -1,3 +1,4 @@
+import { Children, isValidElement, type ReactNode } from 'react'
 import type { MarkdownCodeProps } from './code-block'
 
 const DOWNLOAD_EXTENSION_MAP: Record<string, string> = {
@@ -47,4 +48,20 @@ export function sanitizeCodeElementProps(
   delete nextProps.inline
   delete nextProps.node
   return nextProps
+}
+
+export function getCodeTextContent(children: ReactNode): string {
+  return Children.toArray(children)
+    .map((child) => {
+      if (typeof child === 'string' || typeof child === 'number') {
+        return String(child)
+      }
+
+      if (isValidElement<{ children?: ReactNode }>(child)) {
+        return getCodeTextContent(child.props.children)
+      }
+
+      return ''
+    })
+    .join('')
 }

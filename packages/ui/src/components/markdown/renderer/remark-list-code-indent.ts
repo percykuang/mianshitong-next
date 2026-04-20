@@ -1,9 +1,11 @@
-// remark 插件，主要影响列表中的代码块内容格式，不是样式层。
+// remark 插件，只处理“已经在列表项里的代码块”缩进，不负责修复错误的 Markdown 结构。
+
+import { isDevelopmentEnv } from '../../../utils/env'
 
 interface MarkdownAstNode {
+  children?: MarkdownAstNode[]
   type?: string
   value?: string
-  children?: MarkdownAstNode[]
 }
 
 function getLineIndentWidth(line: string) {
@@ -11,7 +13,7 @@ function getLineIndentWidth(line: string) {
 }
 
 function dedentCodeValue(value: string) {
-  // 列表项里的代码块通常会带上列表缩进，这里移除公共缩进。
+  // 列表项中的 fenced code block 常常会带上一层列表缩进，这里只移除公共缩进。
   const normalizedValue = value.replace(/\r\n?/g, '\n')
   const lines = normalizedValue.split('\n')
   let commonIndent: number | null = null
@@ -42,8 +44,7 @@ function dedentCodeValue(value: string) {
       }
 
       const indent = getLineIndentWidth(line)
-      const removeWidth = Math.min(commonIndent, indent)
-      return line.slice(removeWidth)
+      return line.slice(Math.min(commonIndent, indent))
     })
     .join('\n')
 }
@@ -55,7 +56,7 @@ function visitMarkdownTree(
 ) {
   visitor(node, ancestors)
 
-  if (!Array.isArray(node.children)) {
+  if (!Array.isArray(node.children) || node.children.length === 0) {
     return
   }
 
@@ -65,22 +66,31 @@ function visitMarkdownTree(
 }
 
 export function remarkNormalizeListCodeIndent() {
-  // 让列表项里的代码块视觉上和普通围栏代码块保持对齐。
   return (tree: MarkdownAstNode) => {
-    visitMarkdownTree(tree, [], (node, ancestors) => {
-      if (node.type !== 'code' || typeof node.value !== 'string') {
-        return
+    try {
+      visitMarkdownTree(tree, [], (node, ancestors) => {
+        if (node.type !== 'code' || typeof node.value !== 'string') {
+          return
+        }
+
+        // 只在 code 已经被 remark 正确解析为 listItem 子节点时做缩进修正。
+        const inListItem = ancestors.some(
+          (ancestorNode) => ancestorNode.type === 'listItem'
+        )
+
+        if (!inListItem) {
+          return
+        }
+
+        node.value = dedentCodeValue(node.value)
+      })
+    } catch (error) {
+      if (isDevelopmentEnv()) {
+        console.error(
+          '[MarkdownRenderer] failed to normalize list code block indent',
+          error
+        )
       }
-
-      const inListItem = ancestors.some(
-        (ancestorNode) => ancestorNode.type === 'listItem'
-      )
-
-      if (!inListItem) {
-        return
-      }
-
-      node.value = dedentCodeValue(node.value)
-    })
+    }
   }
 }

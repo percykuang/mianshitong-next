@@ -32,15 +32,17 @@ export function useCodeHighlight({
     () => resolveShikiLanguage(language),
     [language]
   )
+
   const theme = themeMode === 'dark' ? 'github-dark' : 'github-light'
+
   const cachedHighlightedHtml = useMemo(() => {
     if (!resolvedLanguage) {
       return null
     }
-
     const cacheKey = createHighlightCacheKey(code, language, themeMode)
     return getCachedHighlightHtml(cacheKey) ?? null
   }, [code, language, resolvedLanguage, themeMode])
+
   const highlightedContent = useShikiHighlighter(
     code,
     resolvedLanguage ?? undefined,

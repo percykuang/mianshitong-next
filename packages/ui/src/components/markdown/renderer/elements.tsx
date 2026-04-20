@@ -190,7 +190,10 @@ export const markdownElements: Components = {
     const childNodes = Children.toArray(children)
     const firstChild = childNodes[0]
 
-    if (isValidElement<CodeComponentProps>(firstChild)) {
+    if (
+      isValidElement<CodeComponentProps>(firstChild) &&
+      (firstChild.type === 'code' || firstChild.props.node?.tagName === 'code')
+    ) {
       const {
         children: codeChildren,
         className,
