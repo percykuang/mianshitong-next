@@ -1,16 +1,6 @@
 import { getChatModel, getChatModelRuntimeInfo } from '@mianshitong/providers'
 import { persistAssistantReply } from '@/server/chat/persistence'
-
-const SYSTEM_PROMPT = `你是面试通的 AI 面试助手。
-
-你的任务是围绕求职、面试、简历优化、项目表达、技术追问这些主题，给出清晰、具体、可执行的中文回答。
-
-回答要求：
-1. 默认使用简体中文。
-2. 优先直接回答问题，再给结构化建议。
-3. 如果用户的问题适合列表化表达，可以自然使用 Markdown。
-4. 不要编造不存在的经历、项目或数据；如果信息不足，明确指出并引导用户补充。
-5. 输出尽量适合聊天场景，避免过度冗长。`
+import { CHAT_REPLY_POLICY_INSTRUCTION } from '@/server/chat/policy'
 
 function normalizeContent(
   content:
@@ -113,7 +103,7 @@ export function createChatResponseStream(input: {
         const outputStream = await input.model.stream([
           {
             role: 'system',
-            content: SYSTEM_PROMPT,
+            content: CHAT_REPLY_POLICY_INSTRUCTION,
           },
           ...input.conversation,
         ])

@@ -8,16 +8,26 @@ import {
   useState,
 } from 'react'
 
-const BOTTOM_THRESHOLD_PX = 96
+const BREAK_FOLLOW_THRESHOLD_PX = 64
+const RESUME_FOLLOW_THRESHOLD_PX = 24
 const EDITED_MESSAGE_VIEWPORT_PADDING_PX = 16
 const SCROLL_LOCK_FRAME_COUNT = 4
 const SCROLL_BURST_DELAYS_MS = [80, 180, 320]
 
-function isNearBottom(element: HTMLElement) {
-  return (
-    element.scrollHeight - element.clientHeight - element.scrollTop <=
-    BOTTOM_THRESHOLD_PX
-  )
+function getDistanceFromBottom(element: HTMLElement) {
+  return element.scrollHeight - element.clientHeight - element.scrollTop
+}
+
+function isNearBottom(element: HTMLElement, threshold: number) {
+  return getDistanceFromBottom(element) <= threshold
+}
+
+function isWithinResumeThreshold(element: HTMLElement) {
+  return isNearBottom(element, RESUME_FOLLOW_THRESHOLD_PX)
+}
+
+function shouldBreakFollow(element: HTMLElement) {
+  return getDistanceFromBottom(element) > BREAK_FOLLOW_THRESHOLD_PX
 }
 
 interface UseChatMainPaneScrollOptions {
@@ -51,10 +61,13 @@ export function useChatMainPaneScroll({
   const previousScrollTopRef = useRef(0)
   const previousSessionIdRef = useRef<string | null>(null)
   const pendingSessionScrollRef = useRef<string | null>(null)
+  const pendingPinnedStateFrameRef = useRef<number | null>(null)
   const pendingScrollLockFrameRef = useRef<number | null>(null)
   const scrollBurstFrameIdsRef = useRef<number[]>([])
   const scrollBurstTimeoutIdsRef = useRef<number[]>([])
+  // 标记当前是否处于“强制跟随到底部”阶段，通常由发送消息、切换会话或主动回到底部触发。
   const followLockRef = useRef(false)
+  // 标记当前滚动位置是否仍可视为“贴底”，用于决定是否显示回到底部按钮与是否继续自动跟随。
   const pinnedToBottomRef = useRef(true)
 
   const syncPinnedState = useCallback((nextValue: boolean) => {
@@ -68,9 +81,46 @@ export function useChatMainPaneScroll({
     pinnedToBottomRef.current = nextValue
   }, [])
 
+  const clearPendingPinnedStateFrame = useCallback(() => {
+    if (pendingPinnedStateFrameRef.current !== null) {
+      window.cancelAnimationFrame(pendingPinnedStateFrameRef.current)
+      pendingPinnedStateFrameRef.current = null
+    }
+  }, [])
+
+  const schedulePinnedStateSync = useCallback(
+    (nextValue: boolean) => {
+      setPinnedRef(nextValue)
+      clearPendingPinnedStateFrame()
+      pendingPinnedStateFrameRef.current = window.requestAnimationFrame(() => {
+        pendingPinnedStateFrameRef.current = null
+        setIsPinnedToBottom((previousValue) =>
+          previousValue === nextValue ? previousValue : nextValue
+        )
+      })
+    },
+    [clearPendingPinnedStateFrame, setPinnedRef]
+  )
+
+  const enableFollowLock = useCallback(() => {
+    followLockRef.current = true
+  }, [])
+
   const shouldFollow = useCallback(() => {
     return followLockRef.current || pinnedToBottomRef.current
   }, [])
+
+  const syncPinnedStateFromElement = useCallback(
+    (element: HTMLElement) => {
+      const nextValue = followLockRef.current
+        ? true
+        : isWithinResumeThreshold(element)
+
+      syncPinnedState(nextValue)
+      return nextValue
+    },
+    [syncPinnedState]
+  )
 
   const scrollContainerRef = useCallback((node: HTMLDivElement | null) => {
     scrollContainerElementRef.current = node
@@ -114,6 +164,7 @@ export function useChatMainPaneScroll({
 
   const scheduleScrollBurstToBottom = useCallback(() => {
     clearScheduledScrollBurst()
+    enableFollowLock()
     syncPinnedState(true)
 
     const run = () => {
@@ -138,7 +189,12 @@ export function useChatMainPaneScroll({
       }, delay)
       scrollBurstTimeoutIdsRef.current.push(timeoutId)
     }
-  }, [clearScheduledScrollBurst, performScrollToBottom, syncPinnedState])
+  }, [
+    clearScheduledScrollBurst,
+    enableFollowLock,
+    performScrollToBottom,
+    syncPinnedState,
+  ])
 
   const stopFollowing = useCallback(() => {
     followLockRef.current = false
@@ -233,10 +289,11 @@ export function useChatMainPaneScroll({
 
   useEffect(() => {
     return () => {
+      clearPendingPinnedStateFrame()
       clearScheduledScrollBurst()
       clearScrollLock()
     }
-  }, [clearScheduledScrollBurst, clearScrollLock])
+  }, [clearPendingPinnedStateFrame, clearScheduledScrollBurst, clearScrollLock])
 
   useLayoutEffect(() => {
     if (!scrollContainerElement) {
@@ -244,18 +301,18 @@ export function useChatMainPaneScroll({
     }
 
     previousScrollTopRef.current = scrollContainerElement.scrollTop
-    setPinnedRef(
-      followLockRef.current ? true : isNearBottom(scrollContainerElement)
+    schedulePinnedStateSync(
+      followLockRef.current
+        ? true
+        : isWithinResumeThreshold(scrollContainerElement)
     )
 
     const handleScroll = () => {
       const currentScrollTop = scrollContainerElement.scrollTop
-      const isUserScrollingUp =
-        currentScrollTop < previousScrollTopRef.current - 1
-      const nearBottom = isNearBottom(scrollContainerElement)
+      const nearBottom = isWithinResumeThreshold(scrollContainerElement)
       previousScrollTopRef.current = currentScrollTop
 
-      if (isUserScrollingUp && followLockRef.current) {
+      if (followLockRef.current && shouldBreakFollow(scrollContainerElement)) {
         stopFollowing()
         return
       }
@@ -277,8 +334,8 @@ export function useChatMainPaneScroll({
     }
   }, [
     isReplying,
+    schedulePinnedStateSync,
     scrollContainerElement,
-    setPinnedRef,
     stopFollowing,
     syncPinnedState,
   ])
@@ -305,16 +362,14 @@ export function useChatMainPaneScroll({
         return
       }
 
-      const nearBottom = followLockRef.current ? true : isNearBottom(element)
+      const nearBottom = syncPinnedStateFromElement(element)
 
-      syncPinnedState(nearBottom)
-
-      if (!followLockRef.current) {
+      if (!nearBottom || !followLockRef.current) {
         previousScrollTopRef.current = element.scrollTop
         return
       }
 
-      setPinnedRef(true)
+      syncPinnedState(true)
       performScrollToBottom()
     })
 
@@ -327,7 +382,7 @@ export function useChatMainPaneScroll({
     activeSessionId,
     performScrollToBottom,
     scrollContainerElement,
-    setPinnedRef,
+    syncPinnedStateFromElement,
     syncPinnedState,
   ])
 
@@ -340,7 +395,7 @@ export function useChatMainPaneScroll({
       return
     }
 
-    followLockRef.current = true
+    enableFollowLock()
 
     if (pendingEditedMessageAnchorId) {
       onEditedMessageAnchorApplied()
@@ -354,6 +409,7 @@ export function useChatMainPaneScroll({
       window.cancelAnimationFrame(frameId)
     }
   }, [
+    enableFollowLock,
     followRequestKey,
     onEditedMessageAnchorApplied,
     pendingEditedMessageAnchorId,
@@ -367,7 +423,7 @@ export function useChatMainPaneScroll({
       followLockRef.current = false
       clearScheduledScrollBurst()
       clearScrollLock()
-      setPinnedRef(true)
+      schedulePinnedStateSync(true)
       return
     }
 
@@ -378,7 +434,7 @@ export function useChatMainPaneScroll({
       return
     }
 
-    followLockRef.current = true
+    enableFollowLock()
     pendingSessionScrollRef.current = activeSessionId
     const frameId = window.requestAnimationFrame(() => {
       scheduleScrollBurstToBottom()
@@ -391,8 +447,9 @@ export function useChatMainPaneScroll({
     activeSessionId,
     clearScheduledScrollBurst,
     clearScrollLock,
+    enableFollowLock,
     scheduleScrollBurstToBottom,
-    setPinnedRef,
+    schedulePinnedStateSync,
   ])
 
   useLayoutEffect(() => {
@@ -433,14 +490,14 @@ export function useChatMainPaneScroll({
     }
 
     if (isReplying && !wasReplying && shouldFollow()) {
-      setPinnedRef(true)
+      schedulePinnedStateSync(true)
       performScrollToBottom()
       return
     }
 
     if (!isReplying && wasReplying) {
       if (shouldFollow()) {
-        setPinnedRef(true)
+        schedulePinnedStateSync(true)
         performScrollToBottom()
       }
 
@@ -451,7 +508,7 @@ export function useChatMainPaneScroll({
     clearScheduledScrollBurst,
     isReplying,
     performScrollToBottom,
-    setPinnedRef,
+    schedulePinnedStateSync,
     shouldFollow,
   ])
 
@@ -460,7 +517,7 @@ export function useChatMainPaneScroll({
       return
     }
 
-    setPinnedRef(true)
+    schedulePinnedStateSync(true)
     performScrollToBottom()
   }, [
     activeSessionId,
@@ -468,7 +525,7 @@ export function useChatMainPaneScroll({
     lastMessageContent,
     messageCount,
     performScrollToBottom,
-    setPinnedRef,
+    schedulePinnedStateSync,
     shouldFollow,
   ])
 
