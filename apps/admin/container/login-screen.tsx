@@ -7,6 +7,7 @@ import {
   Button,
   FormField,
   Input,
+  PasswordInput,
   Surface,
   useAppInstance,
 } from '@mianshitong/ui'
@@ -87,9 +88,12 @@ export function LoginScreen({ redirectTo }: LoginScreenProps) {
                 <Input
                   autoComplete="email"
                   className="h-13 rounded-xl border-white/10! bg-white/6! text-white! placeholder:text-slate-400! shadow-none! hover:border-[#4d76c5]! focus:border-[#5d89e8]! focus:shadow-[0_0_0_2px_rgb(77_118_197/0.18)]!"
+                  classNames={{
+                    input: 'text-sm placeholder:text-sm',
+                  }}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="admin@example.com"
-                  size="lg"
+                  size="md"
                   value={email}
                 />
               </FormField>
@@ -98,13 +102,17 @@ export function LoginScreen({ redirectTo }: LoginScreenProps) {
                 className="[&_label]:text-sm [&_label]:font-medium [&_label]:text-[#dbe7ff]"
                 label="密码"
               >
-                <Input
+                <PasswordInput
                   autoComplete="current-password"
                   className="h-13 rounded-xl border-white/10! bg-white/6! text-white! placeholder:text-slate-400! shadow-none! hover:border-[#4d76c5]! focus:border-[#5d89e8]! focus:shadow-[0_0_0_2px_rgb(77_118_197/0.18)]!"
+                  classNames={{
+                    input: 'text-sm placeholder:text-sm',
+                    suffix:
+                      'text-slate-400 transition-colors hover:text-[#9ebeff]',
+                  }}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="请输入密码"
-                  size="lg"
-                  type="password"
+                  size="md"
                   value={password}
                 />
               </FormField>
