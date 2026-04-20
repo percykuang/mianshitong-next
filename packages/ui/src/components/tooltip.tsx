@@ -1,9 +1,11 @@
 'use client'
 
+import { type ReactNode, useInsertionEffect } from 'react'
+
 import { cn } from '@mianshitong/shared'
 import { Tooltip as AntTooltip } from 'antd'
 import type { TooltipProps as AntTooltipProps } from 'antd'
-import { type ReactNode, useInsertionEffect } from 'react'
+
 import { resolvePopupContainer } from '../utils/resolve-popup-container'
 
 const surfaceTooltipRootClass = 'mst-ui-tooltip-surface'

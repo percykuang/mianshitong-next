@@ -1,6 +1,7 @@
-import Link from 'next/link'
-import { cn } from '@mianshitong/shared'
 import { Loader, Logout, User } from '@mianshitong/icons'
+import { cn } from '@mianshitong/shared'
+import Link from 'next/link'
+
 import { Tooltip } from './tooltip'
 
 export interface AuthEntryClassNames {

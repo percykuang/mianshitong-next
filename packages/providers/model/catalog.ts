@@ -1,7 +1,7 @@
 import type {
   AcceptedChatModelId,
-  ChatModelCatalogItem,
   ChatModelAlias,
+  ChatModelCatalogItem,
   ChatModelId,
   ChatModelOption,
   ModelRole,

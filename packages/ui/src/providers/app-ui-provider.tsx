@@ -1,27 +1,29 @@
 'use client'
 
-import '@ant-design/v5-patch-for-react-19'
+import {
+  type ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+
 import { StyleProvider } from '@ant-design/cssinjs'
-import { App, ConfigProvider } from 'antd'
-import zhCN from 'antd/locale/zh_CN'
+import '@ant-design/v5-patch-for-react-19'
 import {
   DEFAULT_THEME_MODE,
   THEME_COOKIE_KEY,
   THEME_STORAGE_KEY,
 } from '@mianshitong/shared'
 import {
+  type ThemeMode as MianshitongThemeMode,
   createAntdTheme,
   createThemeTokens,
-  type ThemeMode as MianshitongThemeMode,
 } from '@mianshitong/tokens'
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { App, ConfigProvider } from 'antd'
+import zhCN from 'antd/locale/zh_CN'
+
 import { CodeBlockStyles } from '../components/markdown/code-block/styles'
 import { ModalAppBridge } from '../components/modal/index'
 

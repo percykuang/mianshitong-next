@@ -1,4 +1,5 @@
-import { Children, isValidElement, type ReactNode } from 'react'
+import { Children, type ReactNode, isValidElement } from 'react'
+
 import type { MarkdownCodeProps } from './code-block'
 
 const DOWNLOAD_EXTENSION_MAP: Record<string, string> = {

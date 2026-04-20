@@ -1,8 +1,9 @@
 import { ChatOpenAI } from '@langchain/openai'
+
 import {
+  type ResolvedModelConfig,
   resolveChatModelSelection,
   resolveProviderModelConfig,
-  type ResolvedModelConfig,
 } from './runtime'
 import type { ChatModelId, MainModelProvider, ModelRole } from './types'
 import { createModelInstanceCacheKey } from './utils'

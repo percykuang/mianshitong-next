@@ -1,5 +1,5 @@
 import type { MianshitongTokens } from '../semantic'
-import { createThemeTokens, type ThemeApp } from '../themes/create-theme-tokens'
+import { type ThemeApp, createThemeTokens } from '../themes/create-theme-tokens'
 
 const tokenVariableMap = {
   colorBgPage: '--mst-color-bg-page',

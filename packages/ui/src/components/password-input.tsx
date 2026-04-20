@@ -1,11 +1,12 @@
 'use client'
 
+import { forwardRef } from 'react'
+
 import { Eye, EyeOff } from '@mianshitong/icons'
 import { cn } from '@mianshitong/shared'
 import { Input as AntInput } from 'antd'
 import type { InputRef } from 'antd'
 import type { PasswordProps as AntPasswordProps } from 'antd/es/input/Password'
-import { forwardRef } from 'react'
 
 export interface PasswordInputProps extends Omit<
   AntPasswordProps,

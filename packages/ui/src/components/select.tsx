@@ -1,8 +1,9 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { Select as AntSelect } from 'antd'
 import type { SelectProps as AntSelectProps } from 'antd'
-import type { ReactNode } from 'react'
 
 export interface SelectOption {
   label: ReactNode

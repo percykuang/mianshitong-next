@@ -1,11 +1,13 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { Modal as AntModal } from 'antd'
 import type {
   ModalFuncProps as AntModalFuncProps,
   ModalProps as AntModalProps,
 } from 'antd'
-import type { ReactNode } from 'react'
+
 import type { InputProps } from '../input'
 
 export interface ModalProps extends Omit<AntModalProps, 'open'> {

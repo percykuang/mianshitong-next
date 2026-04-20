@@ -1,4 +1,5 @@
 import { defineConfig } from 'prisma/config'
+
 import { getRequiredDatabaseUrl } from './src/database-url'
 
 export default defineConfig({

@@ -1,10 +1,11 @@
 'use client'
 
 import {
+  type BundledLanguage,
   bundledLanguages,
   codeToHtml,
-  type BundledLanguage,
 } from 'shiki/bundle/web'
+
 import type { ThemeMode } from '../../../providers/app-ui-provider'
 
 const LIGHT_THEME = 'github-light'

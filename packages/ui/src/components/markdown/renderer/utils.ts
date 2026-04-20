@@ -1,9 +1,10 @@
 import {
   Children,
-  isValidElement,
   type ReactElement,
   type ReactNode,
+  isValidElement,
 } from 'react'
+
 import { isDevelopmentEnv } from '../../../utils/env'
 import { CodeBlock } from '../code-block'
 

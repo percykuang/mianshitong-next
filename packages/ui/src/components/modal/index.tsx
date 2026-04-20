@@ -1,8 +1,10 @@
 'use client'
 
-import { Modal as AntModal } from 'antd'
 import type { ReactNode } from 'react'
-import { getModalAppMethod, ModalAppBridge } from './bridge'
+
+import { Modal as AntModal } from 'antd'
+
+import { ModalAppBridge, getModalAppMethod } from './bridge'
 import { createPrompt } from './prompt'
 import type {
   ModalComponent,

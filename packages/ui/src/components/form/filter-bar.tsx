@@ -1,5 +1,6 @@
-import { cn } from '@mianshitong/shared'
 import type { HTMLAttributes } from 'react'
+
+import { cn } from '@mianshitong/shared'
 
 export type FilterBarProps = HTMLAttributes<HTMLDivElement>
 

@@ -1,11 +1,13 @@
 'use client'
 
-import { Children, isValidElement, type ComponentPropsWithoutRef } from 'react'
+import { Children, type ComponentPropsWithoutRef, isValidElement } from 'react'
+
 import type { Components, ExtraProps } from 'react-markdown'
+
 import {
   CodeBlock,
-  renderInlineCode,
   type MarkdownCodeProps,
+  renderInlineCode,
 } from '../code-block'
 import {
   containsBlockChild,
@@ -44,7 +46,7 @@ function renderHeading(
 
   return (
     <Tag
-      className={`mt-6 mb-2 font-semibold leading-tight ${markdownTextClassName} ${headingSizeClassNames[tag]}`}
+      className={`mt-6 mb-2 leading-tight font-semibold ${markdownTextClassName} ${headingSizeClassNames[tag]}`}
       {...elementProps}
     >
       {children}

@@ -1,9 +1,10 @@
 'use client'
 
+import { forwardRef } from 'react'
+
 import { Input as AntInput } from 'antd'
 import type { InputProps as AntInputProps } from 'antd'
 import type { InputRef } from 'antd'
-import { forwardRef } from 'react'
 
 export interface InputProps extends Omit<AntInputProps, 'size' | 'status'> {
   size?: 'sm' | 'md' | 'lg'

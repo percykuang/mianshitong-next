@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import { cn } from '@mianshitong/shared'
 import { MianshitongLogoMark } from '@mianshitong/icons'
+import { cn } from '@mianshitong/shared'
+import Link from 'next/link'
 
 export interface AppBrandProps {
   className?: string
@@ -26,7 +26,7 @@ export function AppBrand({
       {showLabel ? (
         <span
           className={cn(
-            'ml-1.5 font-semibold text-lg text-(--mst-color-primary)',
+            'ml-1.5 text-lg font-semibold text-(--mst-color-primary)',
             labelClassName
           )}
         >

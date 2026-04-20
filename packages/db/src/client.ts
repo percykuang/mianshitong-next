@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 import { createRequire } from 'node:module'
+
 import { getRequiredDatabaseUrl } from './database-url'
 
 type PrismaClientConstructor = typeof import('@prisma/client').PrismaClient

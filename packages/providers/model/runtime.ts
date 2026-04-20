@@ -1,16 +1,16 @@
-import type {
-  ChatModelId,
-  ChatModelRuntimeInfo,
-  MainModelProvider,
-  ModelRole,
-} from './types'
+import { getChatModelRole } from './catalog'
 import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_TEMPERATURE,
   PROVIDER_CONFIG_BY_NAME,
   PROVIDER_ROLE_CONFIG_BY_NAME,
 } from './config'
-import { getChatModelRole } from './catalog'
+import type {
+  ChatModelId,
+  ChatModelRuntimeInfo,
+  MainModelProvider,
+  ModelRole,
+} from './types'
 import {
   getNumberEnvWithFallback,
   getStringEnv,

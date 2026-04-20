@@ -2,9 +2,10 @@
 
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+
 import { isDevelopmentEnv } from '../../../utils/env'
-import { remarkNormalizeListCodeIndent } from './remark-list-code-indent'
 import { markdownElements } from './elements'
+import { remarkNormalizeListCodeIndent } from './remark-list-code-indent'
 import { normalizeMarkdownContent } from './utils'
 
 // 入口层。负责把内容喂给 react-markdown，并挂上插件和样式。

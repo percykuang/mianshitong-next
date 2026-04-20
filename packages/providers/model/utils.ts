@@ -1,6 +1,7 @@
+import { config as loadDotenv } from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
-import { config as loadDotenv } from 'dotenv'
+
 import type {
   ChatModelRuntimeInfo,
   MainModelProvider,

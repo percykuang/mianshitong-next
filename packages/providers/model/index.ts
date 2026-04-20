@@ -1,4 +1,5 @@
 import type { ZodTypeAny } from 'zod'
+
 import {
   getChatModelRole,
   getDefaultChatModelId,
@@ -6,8 +7,8 @@ import {
 } from './catalog'
 import { getChatModelInstance, getProviderRoleModelInstance } from './instance'
 import { resolveChatModelSelection } from './runtime'
-import { logModelSelection } from './utils'
 import type { ChatModelId, ModelRole } from './types'
+import { logModelSelection } from './utils'
 
 // 获取并记录指定聊天模型对应的实例。
 function getLoggedChatModel(modelId: ChatModelId, label: string) {

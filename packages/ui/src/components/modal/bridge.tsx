@@ -1,7 +1,9 @@
 'use client'
 
-import { App } from 'antd'
 import { useEffect } from 'react'
+
+import { App } from 'antd'
+
 import type { ModalAppApi, ModalMethodName } from './types'
 
 let modalAppApi: ModalAppApi | null = null

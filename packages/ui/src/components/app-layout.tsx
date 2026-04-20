@@ -1,8 +1,9 @@
 'use client'
 
+import type { ComponentProps } from 'react'
+
 import { Layout as AntLayout } from 'antd'
 import type { LayoutProps as AntLayoutProps } from 'antd'
-import type { ComponentProps } from 'react'
 
 export type AppLayoutProps = AntLayoutProps
 export type AppLayoutHeaderProps = ComponentProps<typeof AntLayout.Header>

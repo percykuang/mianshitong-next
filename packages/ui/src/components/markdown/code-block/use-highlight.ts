@@ -2,10 +2,12 @@
 
 import type { ReactNode } from 'react'
 import { useEffect, useMemo } from 'react'
+
 import {
   createJavaScriptRegexEngine,
   useShikiHighlighter,
 } from 'react-shiki/web'
+
 import type { ThemeMode } from '../../../providers/app-ui-provider'
 import {
   createHighlightCacheKey,
