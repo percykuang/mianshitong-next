@@ -1,4 +1,8 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import {
+  type AuthFieldError,
+  validateRegistrationEmail,
+  validateRegistrationPassword,
+} from '@/utils/auth'
 
 export interface CredentialsInput {
   email: string
@@ -7,10 +11,10 @@ export interface CredentialsInput {
 
 export interface ValidationResult {
   data?: CredentialsInput
-  error?: string
+  error?: string | AuthFieldError
 }
 
-export function validateCredentials(input: unknown): ValidationResult {
+function parseCredentialsInput(input: unknown): ValidationResult {
   if (!input || typeof input !== 'object') {
     return {
       error: '请求体格式不正确',
@@ -21,21 +25,57 @@ export function validateCredentials(input: unknown): ValidationResult {
   const normalizedEmail = email?.trim().toLowerCase()
   const normalizedPassword = typeof password === 'string' ? password : undefined
 
-  if (!normalizedEmail || !EMAIL_PATTERN.test(normalizedEmail)) {
+  if (
+    typeof normalizedEmail !== 'string' ||
+    typeof normalizedPassword !== 'string'
+  ) {
     return {
-      error: '请输入有效邮箱地址',
+      error: '请求体格式不正确',
     }
   }
 
-  if (!normalizedPassword || normalizedPassword.length < 8) {
+  return {
+    data: {
+      email: normalizedEmail,
+      password: normalizedPassword,
+    },
+  }
+}
+
+export function validateLoginCredentials(input: unknown): ValidationResult {
+  return parseCredentialsInput(input)
+}
+
+export function validateRegistrationCredentials(
+  input: unknown
+): ValidationResult {
+  const parsed = parseCredentialsInput(input)
+
+  if (!parsed.data) {
+    return parsed
+  }
+
+  const { email: normalizedEmail, password: normalizedPassword } = parsed.data
+
+  const emailError = validateRegistrationEmail(normalizedEmail)
+
+  if (emailError) {
     return {
-      error: '密码至少 8 位',
+      error: {
+        field: 'email',
+        message: emailError,
+      },
     }
   }
 
-  if (normalizedPassword.length > 16) {
+  const passwordError = validateRegistrationPassword(normalizedPassword)
+
+  if (passwordError) {
     return {
-      error: '密码长度不能超过 16 位',
+      error: {
+        field: 'password',
+        message: passwordError,
+      },
     }
   }
 

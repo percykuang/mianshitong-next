@@ -1,11 +1,26 @@
 'use client'
 
+import { App } from 'antd'
+import type { InputRef } from 'antd'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
-import { AppBrand, Button, FormField, Input, Surface } from '@mianshitong/ui'
+import { useRef, useState, type SyntheticEvent, type ChangeEvent } from 'react'
+import {
+  AppBrand,
+  Button,
+  FormField,
+  Input,
+  PasswordInput,
+  Surface,
+} from '@mianshitong/ui'
 import type { AuthPageCopy } from './copy'
-import { createAuthPageHref, resolveAuthRedirect } from '@/utils/auth-redirect'
+import {
+  createAuthPageHref,
+  isAuthFieldError,
+  resolveAuthRedirect,
+  validateRegistrationEmail,
+  validateRegistrationPassword,
+} from '@/utils/auth'
 
 interface AuthFormCardProps {
   mode: 'login' | 'register'
@@ -24,10 +39,14 @@ const personalizedFeatureCardClass =
 export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { message } = App.useApp()
+  const emailInputRef = useRef<InputRef>(null)
+  const passwordInputRef = useRef<InputRef>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
   const redirectTarget = resolveAuthRedirect(searchParams.get('redirect'))
   const alternateAuthHref = createAuthPageHref(
     copy.footerLinkHref,
@@ -36,6 +55,110 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
   const submitButtonClassName = pending
     ? 'h-11 w-full cursor-not-allowed! bg-(--mst-color-primary)! text-white! hover:bg-(--mst-color-primary)!'
     : 'h-11 w-full'
+
+  function focusEmailField() {
+    emailInputRef.current?.focus()
+  }
+
+  function focusPasswordField() {
+    passwordInputRef.current?.focus({ cursor: 'end' })
+  }
+
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register'
+    const nextEmailError =
+      mode === 'register' ? validateRegistrationEmail(email) : null
+    const nextPasswordError =
+      mode === 'register' ? validateRegistrationPassword(password) : null
+
+    if (nextEmailError) {
+      setEmailError(nextEmailError)
+      focusEmailField()
+    }
+
+    if (nextPasswordError) {
+      setPasswordError(nextPasswordError)
+      if (!nextEmailError) {
+        focusPasswordField()
+      }
+    }
+
+    if (nextEmailError || nextPasswordError) {
+      return
+    }
+
+    setEmailError(null)
+    setPasswordError(null)
+    setPending(true)
+
+    // 表单层只负责收集与反馈，真正的鉴权结果以后端响应为准。
+    void fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const data = (await response.json().catch(() => ({}))) as {
+            error?: string | { field?: string; message?: string }
+          }
+
+          throw (
+            data.error ??
+            (mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试')
+          )
+        }
+
+        router.replace(redirectTarget)
+      })
+      .catch((error: unknown) => {
+        if (mode === 'register' && isAuthFieldError(error)) {
+          if (error.field === 'email') {
+            setEmailError(error.message)
+            focusEmailField()
+          } else if (error.field === 'password') {
+            setPasswordError(error.message)
+            focusPasswordField()
+          }
+
+          setPending(false)
+          return
+        }
+
+        message.error(
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : '提交失败，请稍后重试'
+        )
+        setPending(false)
+      })
+  }
+
+  function handleEmailChange(event: ChangeEvent<HTMLInputElement>) {
+    const nextEmail = event.target.value
+    setEmail(nextEmail)
+
+    if (emailError) {
+      setEmailError(null)
+    }
+  }
+
+  function handlePasswordChange(event: ChangeEvent<HTMLInputElement>) {
+    const nextPassword = event.target.value
+    setPassword(nextPassword)
+
+    if (passwordError) {
+      setPasswordError(null)
+    }
+  }
 
   return (
     <main className="relative overflow-hidden">
@@ -89,88 +212,45 @@ export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
               </h2>
             </div>
 
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault()
-                const endpoint =
-                  mode === 'login' ? '/api/auth/login' : '/api/auth/register'
-
-                setPending(true)
-                setSubmitError(null)
-
-                // 表单层只负责收集与反馈，真正的鉴权结果以后端响应为准。
-                void fetch(endpoint, {
-                  method: 'POST',
-                  headers: {
-                    'content-type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    email,
-                    password,
-                  }),
-                })
-                  .then(async (response) => {
-                    if (!response.ok) {
-                      const data = (await response
-                        .json()
-                        .catch(() => ({}))) as { error?: string }
-
-                      throw new Error(
-                        data.error ??
-                          (mode === 'login'
-                            ? '登录失败，请稍后重试'
-                            : '注册失败，请稍后重试')
-                      )
-                    }
-
-                    router.replace(redirectTarget)
-                  })
-                  .catch((error: unknown) => {
-                    setSubmitError(
-                      error instanceof Error
-                        ? error.message
-                        : '提交失败，请稍后重试'
-                    )
-                    setPending(false)
-                  })
-              }}
-            >
-              <FormField label="邮箱">
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              <FormField error={emailError} label="邮箱">
                 <Input
                   autoComplete="email"
-                  onChange={(event) => {
-                    setEmail(event.target.value)
-                    setSubmitError(null)
+                  classNames={{
+                    input: 'text-sm placeholder:text-sm',
                   }}
+                  onChange={handleEmailChange}
                   placeholder="请输入邮箱地址"
+                  ref={emailInputRef}
                   size="lg"
+                  status={
+                    mode === 'register' && emailError ? 'error' : 'default'
+                  }
                   type="email"
                   value={email}
                 />
               </FormField>
 
-              <FormField label="密码">
-                <Input
+              <FormField error={passwordError} label="密码">
+                <PasswordInput
                   autoComplete={
                     mode === 'login' ? 'current-password' : 'new-password'
                   }
-                  onChange={(event) => {
-                    setPassword(event.target.value)
-                    setSubmitError(null)
+                  classNames={{
+                    input: 'text-sm placeholder:text-sm',
+                    suffix:
+                      'text-(--mst-color-text-muted) transition-colors hover:text-(--mst-color-primary)',
                   }}
+                  onChange={handlePasswordChange}
                   placeholder={copy.passwordPlaceholder}
+                  ref={passwordInputRef}
                   size="lg"
-                  type="password"
+                  status={
+                    mode === 'register' && passwordError ? 'error' : 'default'
+                  }
                   value={password}
                 />
               </FormField>
-
-              {submitError ? (
-                <div className="rounded-(--mst-radius-lg) border border-(--mst-color-border-default) bg-slate-900/4 px-4 py-3 text-sm text-(--mst-color-text-secondary) dark:bg-white/4">
-                  {submitError}
-                </div>
-              ) : null}
 
               <Button
                 className={submitButtonClassName}

@@ -5,7 +5,11 @@ import {
 } from '../user-repository'
 import { deleteCurrentSession, getCurrentUser } from '../session'
 import { hashPassword, verifyPassword } from '../password'
-import { validateCredentials } from '../validation'
+import {
+  validateLoginCredentials,
+  validateRegistrationCredentials,
+} from '../validation'
+import type { AuthFieldError } from '@/utils/auth'
 
 export interface AuthUserSummary {
   email: string
@@ -26,7 +30,7 @@ type AuthMutationResult =
       user: AuthUserSummary
     }
   | {
-      error: string
+      error: string | AuthFieldError
       ok: false
       session?: never
       status: 400 | 401 | 409
@@ -81,13 +85,13 @@ export async function getCurrentAuthUserProfile() {
 export async function loginWithCredentials(
   input: unknown
 ): Promise<AuthMutationResult> {
-  const parsed = validateCredentials(input)
+  const parsed = validateLoginCredentials(input)
 
   if (!parsed.data) {
     return {
-      error: parsed.error ?? '参数不合法',
+      error: '邮箱或密码错误',
       ok: false,
-      status: 400,
+      status: 401,
     }
   }
 
@@ -128,7 +132,7 @@ export async function loginWithCredentials(
 export async function registerWithCredentials(
   input: unknown
 ): Promise<AuthMutationResult> {
-  const parsed = validateCredentials(input)
+  const parsed = validateRegistrationCredentials(input)
 
   if (!parsed.data) {
     return {
@@ -142,7 +146,10 @@ export async function registerWithCredentials(
 
   if (existingUser) {
     return {
-      error: '该邮箱已注册',
+      error: {
+        field: 'email',
+        message: '该邮箱已注册',
+      },
       ok: false,
       status: 409,
     }
@@ -162,7 +169,10 @@ export async function registerWithCredentials(
 
   if (!user) {
     return {
-      error: '该邮箱已注册',
+      error: {
+        field: 'email',
+        message: '该邮箱已注册',
+      },
       ok: false,
       status: 409,
     }

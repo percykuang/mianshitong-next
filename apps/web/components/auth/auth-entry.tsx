@@ -7,7 +7,7 @@ import {
   AuthEntry as AuthEntryView,
   type AuthEntryProps as AuthEntryViewProps,
 } from '@mianshitong/ui'
-import { createAuthPageHref } from '@/utils/auth-redirect'
+import { createAuthPageHref } from '@/utils/auth'
 import { logoutCurrentUser } from '@/utils/logout'
 
 export interface AuthEntryProps {

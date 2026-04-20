@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { AuthFormCard, LOGIN_PAGE_COPY } from '@/components'
 import { getCurrentAuthUserProfile } from '@/server/auth/services'
-import { resolveAuthRedirect } from '@/utils/auth-redirect'
+import { resolveAuthRedirect } from '@/utils/auth'
 
 interface LoginPageProps {
   searchParams: Promise<{
