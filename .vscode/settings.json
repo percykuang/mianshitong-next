@@ -1,29 +1,55 @@
 {
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
-  "editor.quickSuggestions": {
-    "strings": "on"
-  },
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
-  "css.lint.unknownAtRules": "ignore",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": true,
+	"editor.quickSuggestions": {
+		"strings": "on"
+	},
+	"files.associations": {
+		"*.css": "tailwindcss"
+	},
+	"css.lint.unknownAtRules": "ignore",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"[css]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"json.schemaDownload.enable": false,
+	"json.schemas": [
+		{
+			"fileMatch": [
+				"/.prettierrc",
+				"/.prettierrc.json",
+				"/.prettierrc.json5",
+				"/.prettierrc.yaml",
+				"/.prettierrc.yml"
+			],
+			"url": "./.vscode/schemas/prettierrc.schema.json"
+		},
+		{
+			"fileMatch": [
+				"/tsconfig.json",
+				"/tsconfig.*.json",
+				"/jsconfig.json",
+				"/jsconfig.*.json",
+				"/**/tsconfig.json",
+				"/**/tsconfig.*.json",
+				"/**/jsconfig.json",
+				"/**/jsconfig.*.json"
+			],
+			"url": "./.vscode/schemas/tsconfig.schema.json"
+		}
+	]
 }

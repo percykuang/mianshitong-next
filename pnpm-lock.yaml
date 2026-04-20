@@ -72,12 +72,24 @@ importers:
 
   apps/admin:
     dependencies:
+      '@mianshitong/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@mianshitong/hooks':
+        specifier: workspace:*
+        version: link:../../packages/hooks
+      '@mianshitong/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@mianshitong/tokens':
         specifier: workspace:*
         version: link:../../packages/tokens
       '@mianshitong/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      antd:
+        specifier: ^5.29.3
+        version: 5.29.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       next:
         specifier: 16.2.2
         version: 16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -124,6 +136,9 @@ importers:
       '@mianshitong/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@mianshitong/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@mianshitong/providers':
         specifier: workspace:*
         version: link:../../packages/providers

@@ -14,43 +14,43 @@ const scrollTopByKey = new Map<string, number>()
  * @returns 绑定到滚动容器上的 ref。
  */
 export function useScrollRestoration<T extends HTMLElement = HTMLDivElement>(
-  key: string
+	key: string
 ) {
-  const scrollContainerRef = useRef<T | null>(null)
+	const scrollContainerRef = useRef<T | null>(null)
 
-  useLayoutEffect(() => {
-    const container = scrollContainerRef.current
+	useLayoutEffect(() => {
+		const container = scrollContainerRef.current
 
-    if (!container) {
-      return
-    }
+		if (!container) {
+			return
+		}
 
-    container.scrollTop = scrollTopByKey.get(key) ?? 0
-  }, [key])
+		container.scrollTop = scrollTopByKey.get(key) ?? 0
+	}, [key])
 
-  useEffect(() => {
-    const container = scrollContainerRef.current
+	useEffect(() => {
+		const container = scrollContainerRef.current
 
-    if (!container) {
-      return
-    }
+		if (!container) {
+			return
+		}
 
-    const scrollContainer = container
+		const scrollContainer = container
 
-    function handleScroll() {
-      scrollTopByKey.set(key, scrollContainer.scrollTop)
-    }
+		const handleScroll = () => {
+			scrollTopByKey.set(key, scrollContainer.scrollTop)
+		}
 
-    handleScroll()
-    scrollContainer.addEventListener('scroll', handleScroll, {
-      passive: true,
-    })
+		handleScroll()
+		scrollContainer.addEventListener('scroll', handleScroll, {
+			passive: true,
+		})
 
-    return () => {
-      scrollTopByKey.set(key, scrollContainer.scrollTop)
-      scrollContainer.removeEventListener('scroll', handleScroll)
-    }
-  }, [key])
+		return () => {
+			scrollTopByKey.set(key, scrollContainer.scrollTop)
+			scrollContainer.removeEventListener('scroll', handleScroll)
+		}
+	}, [key])
 
-  return scrollContainerRef
+	return scrollContainerRef
 }
