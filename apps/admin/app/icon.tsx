@@ -1,7 +1,7 @@
 import {
-  getMianshitongAppIconSvg,
   MIANSHITONG_APP_ICON_CONTENT_TYPE,
   MIANSHITONG_APP_ICON_SIZE,
+  getMianshitongAppIconSvg,
 } from '@mianshitong/icons'
 
 export const size = MIANSHITONG_APP_ICON_SIZE

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
+
+import { requireCurrentUser } from '@/server/auth/service'
 import {
   deleteAdminUser,
   updateAdminUserDailyModelQuota,
 } from '@/server/user/service'
-import { requireCurrentUser } from '@/server/auth/service'
 
 interface UserRouteContext {
   params: Promise<{ userId: string }>

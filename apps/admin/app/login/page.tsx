@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+
 import { LoginScreen } from '@/container'
 import { getCurrentUserProfile } from '@/server/auth/service'
 import { resolveRedirect } from '@/utils'

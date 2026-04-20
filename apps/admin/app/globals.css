@@ -4,7 +4,7 @@
 @import 'tailwindcss';
 
 /* 显式注册共享 UI 包源码，确保其中的 Tailwind class 也会被扫描并产出样式。 */
-@source "../../../packages/ui/src";
+@source '../../../packages/ui/src';
 
 :root {
   color-scheme: light;

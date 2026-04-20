@@ -1,6 +1,7 @@
-import type { Metadata } from 'next'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AdminUiProvider, AppUiRegistry } from '@mianshitong/ui'
+import type { Metadata } from 'next'
+
 import './globals.css'
 
 export const metadata: Metadata = {

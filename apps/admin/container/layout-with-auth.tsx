@@ -1,7 +1,10 @@
-import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { Layout } from './layout'
+
+import { redirect } from 'next/navigation'
+
 import { getCurrentUserProfile } from '@/server/auth/service'
+
+import { Layout } from './layout'
 
 export async function LayoutWithAuth({ children }: { children: ReactNode }) {
   const currentAdminUser = await getCurrentUserProfile()

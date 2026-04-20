@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+
 import { logoutCurrentAdminUser } from '@/server/auth/service'
 import { clearAuthSessionCookie } from '@/server/auth/session'
 

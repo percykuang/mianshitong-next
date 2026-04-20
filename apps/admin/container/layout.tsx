@@ -1,8 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+
 import {
   AppBrand,
   AppLayout,
@@ -13,6 +12,9 @@ import {
   NavMenu,
   User,
 } from '@mianshitong/ui'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
 import { useLogout } from '@/hooks'
 
 const NAV_ITEMS = [

@@ -1,6 +1,9 @@
-import 'server-only'
 import { prisma } from '@mianshitong/db'
+import 'server-only'
+
 import {
+  type Pagination,
+  type SortOrder,
   buildDateRangeWhere,
   createPaginatedQuery,
   createPagination,
@@ -9,8 +12,6 @@ import {
   normalizePageSize,
   parsePage,
   parseSearchText,
-  type Pagination,
-  type SortOrder,
 } from '@/server/shared/query'
 
 type ChatMessageRole = 'assistant' | 'user'

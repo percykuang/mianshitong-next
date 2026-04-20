@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+
 import { requireCurrentUser } from '@/server/auth/service'
 import { deleteAdminSession } from '@/server/session/service'
 

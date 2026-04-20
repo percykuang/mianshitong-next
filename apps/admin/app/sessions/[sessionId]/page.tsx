@@ -1,15 +1,17 @@
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import {
   Button,
   Card,
   Descriptions,
+  type DescriptionsProps,
   Tag,
   TypographyText,
-  type DescriptionsProps,
 } from '@mianshitong/ui'
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+
 import { getAdminSessionDetail } from '@/server/session/service'
 import { resolveAdminInternalPath } from '@/utils/redirect'
+
 import { SessionMessagesCard } from './session-messages-card'
 
 interface AdminSessionDetailPageProps {
