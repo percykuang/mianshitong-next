@@ -243,6 +243,7 @@ export function UserList({ users }: { users: AdminUserListResult }) {
       width: 120,
     },
     {
+      fixed: 'right',
       align: 'center',
       key: 'actions',
       render: (_, user) => (
@@ -302,7 +303,7 @@ export function UserList({ users }: { users: AdminUserListResult }) {
           },
         }}
         rowKey="id"
-        scroll={{ x: 1220 }}
+        scroll={{ x: 'max-content' }}
       />
       <Modal
         centered

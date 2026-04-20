@@ -136,6 +136,7 @@ export function useColumns({ filters }: { filters: AdminSessionFilters }) {
         width: 180,
       },
       {
+        fixed: 'right',
         key: 'actions',
         render: (_, session) => (
           <Dropdown

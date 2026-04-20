@@ -216,6 +216,7 @@ export function SessionList({
           },
         }}
         rowKey="id"
+        scroll={{ x: 'max-content' }}
       />
 
       <Drawer
