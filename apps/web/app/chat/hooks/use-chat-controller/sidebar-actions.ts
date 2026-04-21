@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 
-import { Modal } from '@mianshitong/ui'
-import { App } from 'antd'
+import { Modal, useAppInstance } from '@mianshitong/ui'
 
 import {
   type ChatControllerSidebarGroup,
@@ -12,6 +11,9 @@ import {
 } from './types'
 
 interface UseChatControllerSidebarActionsOptions {
+  navigation: {
+    requestPushNavigation: () => void
+  }
   replyState: Pick<ChatReplyStateLike, 'setDraft'>
   sessionState: Pick<
     ChatSessionStateLike,
@@ -29,14 +31,16 @@ interface UseChatControllerSidebarActionsOptions {
 }
 
 export function useChatControllerSidebarActions({
+  navigation,
   replyState,
   sessionState,
 }: UseChatControllerSidebarActionsOptions): ChatControllerSidebarGroup {
-  const { message } = App.useApp()
+  const { message } = useAppInstance()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const sessions = sessionState.sessions
 
   const handleNewSession = () => {
+    navigation.requestPushNavigation()
     void sessionState.handleInterruptAndNewSession()
   }
 
@@ -129,6 +133,7 @@ export function useChatControllerSidebarActions({
     handleNewSession,
     handleRenameSession,
     handleSelectSession(sessionId) {
+      navigation.requestPushNavigation()
       void sessionState.handleInterruptAndSelectSession(sessionId)
     },
     handleTogglePinSession: sessionState.handleTogglePinSession,

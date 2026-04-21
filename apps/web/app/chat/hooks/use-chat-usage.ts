@@ -6,6 +6,7 @@ import type { ChatUsageSummary } from '@/app/chat/domain'
 
 async function fetchChatUsage() {
   const response = await fetch('/api/chat/usage', {
+    // 不缓存，保证永远拿服务器最新返回的数据
     cache: 'no-store',
   })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 
 import { useAppInstance } from '@mianshitong/ui'
 
@@ -24,6 +24,12 @@ interface ChatPageClientProps {
   initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
   persistenceEnabled: boolean
   userEmail: string | null
+}
+
+function focusComposer(composerRef: RefObject<HTMLTextAreaElement | null>) {
+  window.requestAnimationFrame(() => {
+    composerRef.current?.focus()
+  })
 }
 
 export function ChatPageClient({
@@ -85,6 +91,8 @@ function ChatPageClientShell({
     setEditingValue,
   } = messages
   const conversationMessages = selectedSession?.messages ?? []
+  const selectedSessionId = selectedSession?.id ?? null
+  const previousSelectedSessionIdRef = useRef<string | null>(selectedSessionId)
 
   const requestFollow = () => {
     setFollowRequestKey((value) => value + 1)
@@ -118,6 +126,7 @@ function ChatPageClientShell({
 
     await handleSendMessage(inputOverride)
     await refreshUsage()
+    focusComposer(composerRef)
   }
 
   const handleSubmitPrompt = async (prompt: string) => {
@@ -128,6 +137,7 @@ function ChatPageClientShell({
     requestFollow()
     await handleSelectPrompt(prompt)
     await refreshUsage()
+    focusComposer(composerRef)
   }
 
   const handleSubmitEditedMessage = async () => {
@@ -143,9 +153,7 @@ function ChatPageClientShell({
 
     await refreshUsage()
     requestFollow()
-    window.requestAnimationFrame(() => {
-      composerRef.current?.focus()
-    })
+    focusComposer(composerRef)
   }
 
   const closeSidebar = () => {
@@ -155,6 +163,22 @@ function ChatPageClientShell({
   const toggleSidebar = () => {
     setSidebarOpen((value) => !value)
   }
+
+  useEffect(() => {
+    focusComposer(composerRef)
+  }, [composerRef])
+
+  useEffect(() => {
+    // 只有真正发生“切换会话 / 新建会话”时才需要再次回焦；
+    // 首次渲染或 selectedSessionId 没变化时，直接跳过，避免重复抢焦点。
+    if (previousSelectedSessionIdRef.current === selectedSessionId) {
+      return
+    }
+
+    previousSelectedSessionIdRef.current = selectedSessionId
+
+    focusComposer(composerRef)
+  }, [composerRef, selectedSessionId])
 
   return (
     <div className="group/sidebar-wrapper relative flex h-dvh w-full overflow-hidden bg-white text-(--mst-color-text-primary) antialiased dark:bg-(--mst-color-bg-page)">

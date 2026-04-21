@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import {
   getIsReplying,
@@ -12,7 +12,7 @@ import {
   getStreamingMessageId,
   useChatStore,
 } from '../../store'
-import { getRouteSessionIdFromPathname } from '../../utils'
+import { useChatNavigation } from '../use-chat-navigation'
 import {
   useChatPathSyncEffect,
   useChatSessionSelectionRouteSyncEffect,
@@ -29,9 +29,9 @@ export type {
 
 export function useChatController(): UseChatControllerResult {
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
-  const router = useRouter()
   const pathname = usePathname()
-  const routeSessionId = getRouteSessionIdFromPathname(pathname)
+  const navigation = useChatNavigation(pathname)
+  const routeSessionId = navigation.routeSessionId
   const draft = useChatStore((state) => state.draft)
   const editingMessageId = useChatStore((state) => state.editingMessageId)
   const editingValue = useChatStore((state) => state.editingValue)
@@ -101,6 +101,7 @@ export function useChatController(): UseChatControllerResult {
     setDraft,
   }
   const sidebar = useChatControllerSidebarActions({
+    navigation,
     replyState,
     sessionState,
   })
@@ -115,14 +116,10 @@ export function useChatController(): UseChatControllerResult {
     onSelectRouteSession: sessionState.handleSelectSession,
   })
   useChatPathSyncEffect({
-    isReplying,
+    applyHistory: navigation.applyHistory,
     pathname,
     selectedSessionId,
-    replacePath(targetPath) {
-      router.replace(targetPath, {
-        scroll: false,
-      })
-    },
+    takeRequestedHistoryMode: navigation.takeRequestedHistoryMode,
   })
 
   return {
