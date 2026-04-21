@@ -44,8 +44,6 @@ export function ChatComposer({
   usageError: boolean
   usageLoading: boolean
 }) {
-  const quotaExhausted = usage ? usage.used >= usage.max : false
-
   const handleTextareaKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (
       event.key !== 'Enter' ||
@@ -83,7 +81,7 @@ export function ChatComposer({
           {quickPrompts.map((prompt) => (
             <button
               className="flex h-auto w-full cursor-pointer justify-center rounded-full border border-(--mst-color-border-default) bg-white/88 p-3 text-left text-sm leading-relaxed font-medium whitespace-normal text-(--mst-color-text-secondary) shadow-[0_1px_2px_rgb(15_23_42/0.03)] transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-[rgb(15_23_42/0.08)] hover:bg-slate-900/4 hover:text-(--mst-color-text-primary) hover:shadow-[0_2px_6px_rgb(15_23_42/0.06),inset_0_1px_0_rgb(255_255_255/0.72)] disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-950/60 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:shadow-[0_2px_8px_rgb(2_8_23/0.2)]"
-              disabled={quotaExhausted || isReplying}
+              disabled={isReplying}
               key={prompt}
               onMouseDown={preventButtonFocusSteal}
               onClick={() => onSelectPrompt(prompt)}
@@ -146,7 +144,7 @@ export function ChatComposer({
             <button
               aria-label="发送消息"
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--mst-color-primary) text-white transition-colors duration-200 hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
-              disabled={!draft.trim() || isReplying || quotaExhausted}
+              disabled={!draft.trim() || isReplying}
               onMouseDown={preventButtonFocusSteal}
               type="submit"
             >
