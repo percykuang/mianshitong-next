@@ -7,11 +7,11 @@ import {
   Button,
   FormField,
   Input,
+  type InputRef,
   PasswordInput,
   Surface,
+  useAppInstance,
 } from '@mianshitong/ui'
-import { App } from 'antd'
-import type { InputRef } from 'antd'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -42,7 +42,7 @@ const personalizedFeatureCardClass =
 export function AuthFormCard({ mode, copy }: AuthFormCardProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { message } = App.useApp()
+  const { message } = useAppInstance()
   const emailInputRef = useRef<InputRef>(null)
   const passwordInputRef = useRef<InputRef>(null)
   const [email, setEmail] = useState('')

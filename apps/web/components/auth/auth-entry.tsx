@@ -5,8 +5,8 @@ import { useState } from 'react'
 import {
   AuthEntry as AuthEntryView,
   type AuthEntryProps as AuthEntryViewProps,
+  useAppInstance,
 } from '@mianshitong/ui'
-import { App } from 'antd'
 import { usePathname, useSearchParams } from 'next/navigation'
 
 import { createAuthPageHref } from '@/utils/auth'
@@ -20,7 +20,7 @@ export interface AuthEntryProps {
 export function AuthEntry({ userEmail = null, variant }: AuthEntryProps) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { message } = App.useApp()
+  const { message } = useAppInstance()
   const [logoutPending, setLogoutPending] = useState(false)
 
   const queryString = searchParams.toString()

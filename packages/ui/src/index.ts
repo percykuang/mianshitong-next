@@ -28,7 +28,7 @@ export { Descriptions, type DescriptionsProps } from './components/descriptions'
 export { Drawer } from './components/drawer'
 export { Dropdown } from './components/dropdown'
 export { Empty } from './components/empty'
-export { Input } from './components/input'
+export { Input, type InputProps, type InputRef } from './components/input'
 export {
   List,
   ListItem,

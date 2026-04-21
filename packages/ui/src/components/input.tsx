@@ -6,6 +6,8 @@ import { Input as AntInput } from 'antd'
 import type { InputProps as AntInputProps } from 'antd'
 import type { InputRef } from 'antd'
 
+export type { InputRef }
+
 export interface InputProps extends Omit<AntInputProps, 'size' | 'status'> {
   size?: 'sm' | 'md' | 'lg'
   status?: 'default' | 'error' | 'warning'

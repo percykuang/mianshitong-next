@@ -18,7 +18,6 @@ import {
   ThumbsUp,
   ThumbsUpFill,
 } from '@mianshitong/ui'
-import { ConfigProvider } from 'antd'
 
 import type { ChatMessageFeedback } from '../types'
 
@@ -125,70 +124,64 @@ export function ChatMessageActions({
 }: ChatMessageActionsProps) {
   if (isUserMessage) {
     return (
-      <ConfigProvider wave={{ disabled: true }}>
-        <>
-          {canEditUserMessage ? (
-            <ActionButton
-              aria-label="编辑"
-              className={neutralActionButtonClassName}
-              onClick={onStartEditUserMessage}
-            >
-              <Pencil className="size-3.5" />
-            </ActionButton>
-          ) : null}
-          <CopyMessageButton content={content} label="复制" />
-        </>
-      </ConfigProvider>
+      <>
+        {canEditUserMessage ? (
+          <ActionButton
+            aria-label="编辑"
+            className={neutralActionButtonClassName}
+            onClick={onStartEditUserMessage}
+          >
+            <Pencil className="size-3.5" />
+          </ActionButton>
+        ) : null}
+        <CopyMessageButton content={content} label="复制" />
+      </>
     )
   }
 
   return (
-    <ConfigProvider wave={{ disabled: true }}>
-      <>
-        <CopyMessageButton content={content} label="复制" />
-        <ActionButton
-          aria-label="点赞"
-          aria-pressed={feedback === 'like'}
-          className={`${feedbackButtonClassName} ${
-            feedback === 'like' ? activeFeedbackButtonClassName : ''
-          }`.trim()}
-          onClick={() =>
-            onFeedbackChange?.(feedback === 'like' ? null : 'like')
-          }
+    <>
+      <CopyMessageButton content={content} label="复制" />
+      <ActionButton
+        aria-label="点赞"
+        aria-pressed={feedback === 'like'}
+        className={`${feedbackButtonClassName} ${
+          feedback === 'like' ? activeFeedbackButtonClassName : ''
+        }`.trim()}
+        onClick={() => onFeedbackChange?.(feedback === 'like' ? null : 'like')}
+      >
+        <span
+          className={feedbackIconClassName}
+          key={feedback === 'like' ? 'upvote-fill' : 'upvote-line'}
         >
-          <span
-            className={feedbackIconClassName}
-            key={feedback === 'like' ? 'upvote-fill' : 'upvote-line'}
-          >
-            {feedback === 'like' ? (
-              <ThumbsUpFill className="size-3.5" />
-            ) : (
-              <ThumbsUp className="size-3.5" />
-            )}
-          </span>
-        </ActionButton>
-        <ActionButton
-          aria-label="点踩"
-          aria-pressed={feedback === 'dislike'}
-          className={`${feedbackButtonClassName} ${
-            feedback === 'dislike' ? activeFeedbackButtonClassName : ''
-          }`.trim()}
-          onClick={() =>
-            onFeedbackChange?.(feedback === 'dislike' ? null : 'dislike')
-          }
+          {feedback === 'like' ? (
+            <ThumbsUpFill className="size-3.5" />
+          ) : (
+            <ThumbsUp className="size-3.5" />
+          )}
+        </span>
+      </ActionButton>
+      <ActionButton
+        aria-label="点踩"
+        aria-pressed={feedback === 'dislike'}
+        className={`${feedbackButtonClassName} ${
+          feedback === 'dislike' ? activeFeedbackButtonClassName : ''
+        }`.trim()}
+        onClick={() =>
+          onFeedbackChange?.(feedback === 'dislike' ? null : 'dislike')
+        }
+      >
+        <span
+          className={feedbackIconClassName}
+          key={feedback === 'dislike' ? 'downvote-fill' : 'downvote-line'}
         >
-          <span
-            className={feedbackIconClassName}
-            key={feedback === 'dislike' ? 'downvote-fill' : 'downvote-line'}
-          >
-            {feedback === 'dislike' ? (
-              <ThumbsDownFill className="size-3.5" />
-            ) : (
-              <ThumbsDown className="size-3.5" />
-            )}
-          </span>
-        </ActionButton>
-      </>
-    </ConfigProvider>
+          {feedback === 'dislike' ? (
+            <ThumbsDownFill className="size-3.5" />
+          ) : (
+            <ThumbsDown className="size-3.5" />
+          )}
+        </span>
+      </ActionButton>
+    </>
   )
 }
