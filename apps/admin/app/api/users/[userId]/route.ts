@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { requireCurrentUser } from '@/server/auth/service'
 import {
-  deleteAdminUser,
-  updateAdminUserDailyModelQuota,
+  deleteRegisteredUser,
+  updateRegisteredUserDailyModelQuota,
 } from '@/server/user/service'
 
 interface UserRouteContext {
@@ -25,21 +25,9 @@ export async function DELETE(_request: Request, context: UserRouteContext) {
   }
 
   const { userId } = await context.params
-  const result = await deleteAdminUser({
-    currentAdminId: currentAdminUser.id,
+  const result = await deleteRegisteredUser({
     userId,
   })
-
-  if (result.error === 'cannot_delete_self') {
-    return NextResponse.json(
-      {
-        error: '不能删除当前登录的管理员账号',
-      },
-      {
-        status: 400,
-      }
-    )
-  }
 
   if (result.error === 'not_found') {
     return NextResponse.json(
@@ -88,7 +76,7 @@ export async function PATCH(request: Request, context: UserRouteContext) {
   }
 
   const { userId } = await context.params
-  const result = await updateAdminUserDailyModelQuota({
+  const result = await updateRegisteredUserDailyModelQuota({
     userId,
     dailyModelQuota,
   })
