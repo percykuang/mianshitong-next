@@ -10,12 +10,33 @@ model AuthUser {
   id           String        @id @default(cuid())
   email        String        @unique
   passwordHash String
-  role         AuthUserRole  @default(user)
   actor        UserActor?
   sessions     AuthSession[]
   chatSessions ChatSession[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  sessions     AdminSession[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AdminSession {
+  id               String    @id @default(cuid())
+  sessionTokenHash String    @unique
+  adminUserId      String
+  expiresAt        DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  adminUser        AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, expiresAt(sort: Desc)])
+  @@index([expiresAt(sort: Desc)])
 }
 
 model AuthSession {
@@ -46,11 +67,6 @@ enum ChatMessageCompletionStatus {
   interrupted
 }
 
-enum AuthUserRole {
-  user
-  admin
-}
-
 enum UserActorType {
   guest
   registered
@@ -74,35 +90,46 @@ model UserActor {
 }
 
 model ChatSession {
-  id        String        @id @default(cuid())
-  actorId   String
-  userId    String?
-  title     String
-  preview   String        @default("")
-  modelId   String
-  pinned    Boolean       @default(false)
-  pinnedAt  DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  actor     UserActor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  user      AuthUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  messages  ChatMessage[]
+  id           String        @id @default(cuid())
+  actorId      String
+  userId       String?
+  title        String
+  preview      String        @default("")
+  modelId      String
+  pinned       Boolean       @default(false)
+  pinnedAt     DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  actor        UserActor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  user         AuthUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages     ChatMessage[]
+  careerThread CareerThread?
 
   @@index([actorId, pinned, pinnedAt(sort: Desc), updatedAt(sort: Desc)])
   @@index([actorId, updatedAt(sort: Desc)])
   @@index([userId, updatedAt(sort: Desc)])
 }
 
+model CareerThread {
+  id            String      @id @default(cuid())
+  chatSessionId String      @unique
+  state         Json
+  version       Int         @default(1)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+}
+
 model ChatMessage {
-  id               String                      @id @default(cuid())
+  id               String                       @id @default(cuid())
   sessionId        String
   role             ChatMessageRole
   content          String
   completionStatus ChatMessageCompletionStatus?
   feedback         ChatMessageFeedback?
-  createdAt        DateTime                    @default(now())
-  updatedAt        DateTime                    @updatedAt
-  session          ChatSession                 @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+  session          ChatSession                  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, createdAt(sort: Asc)])
 }
@@ -110,7 +137,7 @@ model ChatMessage {
 model ChatReplyUsage {
   id                 String    @id @default(cuid())
   actorId            String
-  assistantMessageId String @unique
+  assistantMessageId String    @unique
   createdAt          DateTime  @default(now())
   actor              UserActor @relation(fields: [actorId], references: [id], onDelete: Cascade)
 
