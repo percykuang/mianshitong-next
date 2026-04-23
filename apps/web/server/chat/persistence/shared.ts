@@ -9,6 +9,9 @@ export { createChatSessionTitle }
 export type { ChatMessageCompletionStatus }
 
 export const chatPrisma = prisma
+export type ChatPrismaTransactionClient = Parameters<
+  Parameters<typeof chatPrisma.$transaction>[0]
+>[0]
 
 function normalizeComparableMessageContent(content: string) {
   return content.trim()

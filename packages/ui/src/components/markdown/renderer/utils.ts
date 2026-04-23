@@ -5,8 +5,12 @@ import {
   isValidElement,
 } from 'react'
 
+import { createLogger } from '@mianshitong/shared'
+
 import { isDevelopmentEnv } from '../../../utils/env'
 import { CodeBlock } from '../code-block'
+
+const logger = createLogger('MarkdownRenderer')
 
 // 一些结构判断和内容预处理，不直接定义大部分视觉样式，但会影响最终怎么渲染。
 
@@ -128,10 +132,7 @@ export function normalizeMarkdownContent(
       : removeEmptyFencedCodeBlocks(normalizedText)
   } catch (error) {
     if (isDevelopmentEnv()) {
-      console.error(
-        '[MarkdownRenderer] failed to normalize markdown content',
-        error
-      )
+      logger.error('failed to normalize markdown content', error)
     }
 
     return coerceMarkdownContent(content).replace(/\r\n?/g, '\n')

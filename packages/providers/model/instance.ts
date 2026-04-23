@@ -23,6 +23,10 @@ function createModelInstance(resolvedConfig: ResolvedModelConfig) {
   })
 }
 
+export function createDirectModelInstance(resolvedConfig: ResolvedModelConfig) {
+  return createModelInstance(resolvedConfig)
+}
+
 // 获取缓存中的模型实例，没有则按当前配置创建并写入缓存。
 export function getProviderRoleModelInstance(
   provider: MainModelProvider,

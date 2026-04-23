@@ -96,9 +96,6 @@ export function createChatReplyActions({
           return
         }
 
-        console.warn(
-          '[chat-store] wait for interrupted reply settlement timed out'
-        )
         unsubscribe()
         resolve()
       }, 8_000)

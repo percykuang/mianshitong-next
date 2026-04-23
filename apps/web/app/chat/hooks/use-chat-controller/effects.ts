@@ -79,9 +79,14 @@ export function useChatSessionSelectionRouteSyncEffect(input: {
       return
     }
 
-    // 地址栏指向了一个本地并不存在的会话时，先回退到新对话状态，
+    // 地址栏指向了一个本地不存在或没有消息的会话时，先回退到新对话状态，
     // 避免 store 进入一个无效的 selectedSessionId。
-    if (!sessions.some((session) => session.id === routeSessionId)) {
+    if (
+      !sessions.some(
+        (session) =>
+          session.id === routeSessionId && session.messages.length > 0
+      )
+    ) {
       handleSelectRouteNewSession()
       return
     }
@@ -102,17 +107,11 @@ export function useChatSessionSelectionRouteSyncEffect(input: {
  * 并优先消费上层显式声明的 push / replace 导航意图。
  */
 export function useChatPathSyncEffect(input: {
-  pathname: string
   selectedSessionId: string | null
   takeRequestedHistoryMode: () => 'push' | 'replace' | null
   applyHistory: (sessionId: string | null, mode: 'push' | 'replace') => void
 }) {
-  const {
-    applyHistory,
-    pathname,
-    selectedSessionId,
-    takeRequestedHistoryMode,
-  } = input
+  const { applyHistory, selectedSessionId, takeRequestedHistoryMode } = input
   const previousSelectedSessionIdRef = useRef<string | null>(selectedSessionId)
   const handleApplyHistory = useEffectEvent(
     (sessionId: string | null, mode: 'push' | 'replace') => {
@@ -135,7 +134,7 @@ export function useChatPathSyncEffect(input: {
 
     // 如果地址栏本来就已经是目标路径，就不重复写 history；
     // 同时把上一次遗留的导航意图消费掉，避免污染下一次同步。
-    if (targetPath === pathname || targetPath === window.location.pathname) {
+    if (targetPath === window.location.pathname) {
       takeRequestedHistoryMode()
       return
     }
@@ -161,5 +160,5 @@ export function useChatPathSyncEffect(input: {
     if (selectedSessionId === null) {
       handleApplyHistory(null, 'replace')
     }
-  }, [pathname, selectedSessionId, takeRequestedHistoryMode])
+  }, [selectedSessionId, takeRequestedHistoryMode])
 }

@@ -5,6 +5,7 @@ import {
   buildPersistedReplySessionState,
   clearPendingReplySidebarSession,
   createNextSession,
+  deletePersistedChatSession,
   getPersistedChatSession,
   streamChatReply,
   streamEditedChatReply,
@@ -60,12 +61,16 @@ export function createChatReplyStreamActions({
 
   async function sendMessage(inputOverride?: string) {
     const initialState = get()
+    // 支持“直接传入内容发送”和“发送当前草稿”两种入口。
     const input = (inputOverride ?? initialState.draft).trim()
 
+    // 空消息不发送；同一时间只允许存在一条进行中的回复。
     if (!input || isReplying(initialState.activeReply)) {
       return
     }
 
+    // 先在前端构造一份 optimistic session，这样用户消息可以立刻出现在界面上，
+    // 不必等待服务端真正创建 / 更新会话后再渲染。
     const optimisticSession = createNextSession({
       input,
       selectedSessionId: initialState.selectedSessionId,
@@ -77,6 +82,8 @@ export function createChatReplyStreamActions({
     const shouldHideSessionFromSidebar =
       initialState.persistenceEnabled && isNewSession
 
+    // 进入“等待首个 chunk”状态，并把 optimistic session 写入 store。
+    // 这里同时清空草稿，让输入框立即回到可输入状态。
     set((state) => ({
       activeReply: {
         assistantMessageId,
@@ -98,6 +105,7 @@ export function createChatReplyStreamActions({
       ),
     }))
 
+    // 用 AbortController 承接“停止生成”操作。
     const controller = new AbortController()
     setActiveAbortController(controller)
 
@@ -107,6 +115,8 @@ export function createChatReplyStreamActions({
         runtimeDebugInfo,
         sessionId: persistedSessionId,
       } = await streamChatReply({
+        // 非持久化入口需要把完整 history 带给服务端；持久化入口则只需发送当前消息，
+        // 服务端会自行从数据库加载完整会话。
         history: optimisticSession.messages.map((message) => ({
           role: message.role,
           content: message.content,
@@ -118,16 +128,19 @@ export function createChatReplyStreamActions({
           : undefined,
         signal: controller.signal,
         onChunk(nextContent) {
+          // 前端按“累计后的完整文本”持续覆盖当前回复内容，驱动流式渲染。
           lifecycle.syncReplyChunk(assistantMessageId, nextContent)
         },
       })
 
+      // 流结束后，把最终文本和本次调用的运行时信息同步进 store。
       lifecycle.syncReplyResult({
         assistantMessageId,
         content,
         runtimeDebugInfo,
       })
 
+      // 把 optimistic assistant 回复提交为完成态；如果开启持久化，再用服务端真实会话回填。
       await finalizeCompletedReply({
         assistantMessageId,
         fallbackSessionId: activeSessionId,
@@ -139,11 +152,14 @@ export function createChatReplyStreamActions({
 
       if (activeReply) {
         if (error instanceof DOMException && error.name === 'AbortError') {
+          // 用户主动停止时，尽量把已经生成出来的部分按“中断回复”落下来。
           await lifecycle.finalizeInterruptedReply({
             activeReply,
             assistantMessageId,
           })
         } else if (initialState.persistenceEnabled && isNewSession) {
+          // 新会话首次发送时如果中途失败，要额外判断服务端是否已经部分落库：
+          // 落了就优先回填真实会话，没落则回滚这次 optimistic 新会话。
           const persistedSession = await getPersistedChatSession(
             activeReply.sessionId
           ).catch(() => null)
@@ -163,6 +179,13 @@ export function createChatReplyStreamActions({
               }),
             }))
           } else {
+            if (initialState.persistenceEnabled) {
+              await deletePersistedChatSession(activeSessionId).catch(
+                () => null
+              )
+            }
+
+            // 服务端没有留下可恢复的数据，就撤销这次新建会话，并把输入还回草稿。
             set((state) => ({
               activeReply:
                 state.activeReply?.assistantMessageId === assistantMessageId
@@ -180,6 +203,7 @@ export function createChatReplyStreamActions({
             }))
           }
         } else {
+          // 其他失败场景交给统一失败收口逻辑处理。
           await lifecycle.finalizeFailedReply({
             activeReply,
             assistantMessageId,
@@ -188,6 +212,7 @@ export function createChatReplyStreamActions({
         }
       }
     } finally {
+      // 无论成功、失败还是中断，都要释放 controller，并清掉当前 activeReply 标记。
       setActiveAbortController(null)
       lifecycle.clearActiveReply(assistantMessageId)
     }

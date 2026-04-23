@@ -27,6 +27,15 @@ function getActorSessionWhere(actorId: string, sessionId: string) {
   }
 }
 
+function getActorNonEmptySessionWhere(actorId: string, sessionId: string) {
+  return {
+    ...getActorSessionWhere(actorId, sessionId),
+    messages: {
+      some: {},
+    },
+  }
+}
+
 function toChatSessionPreviews(
   sessions: PersistedChatSessionWithMessages[]
 ): ChatSessionPreview[] {
@@ -38,7 +47,7 @@ async function findPersistedChatSessionByActor(
   sessionId: string
 ): Promise<PersistedChatSessionWithMessages | null> {
   return prisma.chatSession.findFirst({
-    where: getActorSessionWhere(actorId, sessionId),
+    where: getActorNonEmptySessionWhere(actorId, sessionId),
     include: SESSION_MESSAGES_INCLUDE,
   })
 }
@@ -75,7 +84,12 @@ function buildChatSessionUpdateData(
 
 export async function listChatSessionsByActor(actorId: string) {
   const sessions = await prisma.chatSession.findMany({
-    where: { actorId },
+    where: {
+      actorId,
+      messages: {
+        some: {},
+      },
+    },
     include: SESSION_MESSAGES_INCLUDE,
     orderBy: SESSIONS_ORDER_BY,
   })

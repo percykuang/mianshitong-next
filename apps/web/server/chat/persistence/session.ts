@@ -3,7 +3,11 @@ import type { ChatModelId } from '@mianshitong/providers/model/types'
 import type { ChatActor } from '@/server/chat/actor'
 
 import { CHAT_MESSAGE_ORDER_BY } from './query'
-import { chatPrisma, createChatSessionTitle } from './shared'
+import {
+  type ChatPrismaTransactionClient,
+  chatPrisma,
+  createChatSessionTitle,
+} from './shared'
 
 type FindOrCreateChatSessionResult =
   | {
@@ -74,7 +78,7 @@ export async function persistUserMessageAndLoadConversation(input: {
   normalizedModelId: ChatModelId
   sessionId: string
 }) {
-  return chatPrisma.$transaction(async (tx) => {
+  return chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
     await tx.chatMessage.create({
       data: {
         sessionId: input.sessionId,

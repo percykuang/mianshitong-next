@@ -2,11 +2,7 @@ import { config as loadDotenv } from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import type {
-  ChatModelRuntimeInfo,
-  MainModelProvider,
-  ModelRole,
-} from './types'
+import type { MainModelProvider, ModelRole } from './types'
 
 let envInitialized = false
 
@@ -115,16 +111,6 @@ export function getNumberEnvWithFallback(
       : fallbackValue
 
   return getNumberEnv(name, resolvedFallback)
-}
-
-// 统一输出模型选择日志，方便开发期排查实际命中模型。
-export function logModelSelection(
-  label: string,
-  runtime: ChatModelRuntimeInfo
-) {
-  console.log(
-    `[Model] ${label}: ${runtime.displayTarget} -> ${runtime.actualModel}`
-  )
 }
 
 // 补齐 OpenAI-compatible 接口所需的 /v1 基础路径。

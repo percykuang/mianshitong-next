@@ -1,7 +1,14 @@
 import { getChatModel, getChatModelRuntimeInfo } from '@mianshitong/providers'
+import { createLogger } from '@mianshitong/shared'
 
+import {
+  CAREER_CHAT_POLICY_INSTRUCTION,
+  type CareerWorkflowContextResult,
+  commitCareerThreadState,
+} from '@/server/career'
 import { persistAssistantReply } from '@/server/chat/persistence'
-import { CHAT_REPLY_POLICY_INSTRUCTION } from '@/server/chat/policy'
+
+const logger = createLogger('api/chat')
 
 function normalizeContent(
   content:
@@ -94,18 +101,88 @@ export function createChatResponseStream(input: {
   model: ReturnType<typeof getChatModel>
   persistedSessionId: string
   requestSignal: AbortSignal
+  resolveWorkflowContext?: () => Promise<
+    Pick<
+      CareerWorkflowContextResult,
+      'additionalInstructions' | 'directAnswer' | 'resolveStateCommitAfterReply'
+    >
+  >
 }) {
   const encoder = new TextEncoder()
 
+  const resolveAndCommitStateAfterReply = async (payload: {
+    assistantReply: string
+    resolveStateCommitAfterReply:
+      | CareerWorkflowContextResult['resolveStateCommitAfterReply']
+      | undefined
+  }) => {
+    if (!payload.resolveStateCommitAfterReply) {
+      return
+    }
+
+    const stateCommit = await payload.resolveStateCommitAfterReply(
+      payload.assistantReply
+    )
+
+    if (!stateCommit) {
+      return
+    }
+
+    await commitCareerThreadState(stateCommit)
+  }
+
   return new ReadableStream({
     async start(controller) {
+      let controllerClosed = false
+
+      const closeController = () => {
+        if (controllerClosed) {
+          return
+        }
+
+        closeReadableStreamController(controller)
+        controllerClosed = true
+      }
+
       try {
+        const workflow = input.resolveWorkflowContext
+          ? await input.resolveWorkflowContext()
+          : {
+              additionalInstructions: [],
+              directAnswer: undefined,
+              resolveStateCommitAfterReply: undefined,
+            }
+
+        if (workflow.directAnswer) {
+          if (input.requestSignal.aborted) {
+            return
+          }
+
+          controller.enqueue(encoder.encode(workflow.directAnswer))
+          await persistAssistantReply({
+            actorId: input.actorId,
+            completionStatus: 'completed',
+            content: workflow.directAnswer,
+            sessionId: input.persistedSessionId,
+          })
+          closeController()
+          await resolveAndCommitStateAfterReply({
+            assistantReply: workflow.directAnswer,
+            resolveStateCommitAfterReply: workflow.resolveStateCommitAfterReply,
+          })
+          return
+        }
+
         let assistantContent = ''
+        const systemInstructions = [
+          CAREER_CHAT_POLICY_INSTRUCTION,
+          ...(workflow.additionalInstructions ?? []),
+        ].filter((instruction) => instruction.trim().length > 0)
         const outputStream = await input.model.stream([
-          {
-            role: 'system',
-            content: CHAT_REPLY_POLICY_INSTRUCTION,
-          },
+          ...systemInstructions.map((instruction) => ({
+            role: 'system' as const,
+            content: instruction,
+          })),
           ...input.conversation,
         ])
 
@@ -130,15 +207,20 @@ export function createChatResponseStream(input: {
           content: assistantContent,
           sessionId: input.persistedSessionId,
         })
-
-        closeReadableStreamController(controller)
+        closeController()
+        await resolveAndCommitStateAfterReply({
+          assistantReply: assistantContent,
+          resolveStateCommitAfterReply: workflow.resolveStateCommitAfterReply,
+        })
       } catch (error) {
         if (input.requestSignal.aborted) {
           return
         }
 
-        console.error('[api/chat] model stream failed', error)
-        controller.error(error)
+        logger.error('model stream failed', error)
+        if (!controllerClosed) {
+          controller.error(error)
+        }
       }
     },
   })

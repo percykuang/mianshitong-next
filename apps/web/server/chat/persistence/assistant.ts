@@ -1,13 +1,18 @@
+import { createLogger } from '@mianshitong/shared'
+
 import {
   type InterruptedSessionRecord,
   findInterruptedSessionRecord,
 } from './query'
 import {
   type ChatMessageCompletionStatus,
+  type ChatPrismaTransactionClient,
   chatPrisma,
   isSameAssistantReply,
   shouldRetryAssistantReplyWithoutCompletionStatus,
 } from './shared'
+
+const logger = createLogger('api/chat')
 
 function shouldConsumeChatReplyQuota() {
   return true
@@ -26,7 +31,7 @@ export async function persistAssistantReply(input: {
   const completionStatus = input.completionStatus ?? 'completed'
 
   try {
-    await chatPrisma.$transaction(async (tx) => {
+    await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
       const assistantMessage = await tx.chatMessage.create({
         data: {
           sessionId: input.sessionId,
@@ -62,11 +67,9 @@ export async function persistAssistantReply(input: {
       throw error
     }
 
-    console.warn(
-      '[api/chat] persist assistant reply without completionStatus fallback'
-    )
+    logger.warn('persist assistant reply without completionStatus fallback')
 
-    await chatPrisma.$transaction(async (tx) => {
+    await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
       const assistantMessage = await tx.chatMessage.create({
         data: {
           sessionId: input.sessionId,

@@ -3,11 +3,16 @@ import {
   getChatModel,
   getChatModelRuntimeInfo,
 } from '@mianshitong/providers'
+import { createLogger } from '@mianshitong/shared'
 
 import type {
   ParsedChatRequest,
   ParsedStreamMessageBody,
 } from '@/app/chat/contracts'
+import {
+  type CareerWorkflowContextResult,
+  buildCareerWorkflowContext,
+} from '@/server/career'
 import {
   editUserMessageAndLoadConversation,
   findOrCreateChatSession,
@@ -17,10 +22,18 @@ import {
 import type { ChatActor } from '../actor'
 import { checkChatQuota } from './usage-service'
 
+const logger = createLogger('chat-reply-service')
+
 interface PreparedChatReply {
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
   model: ReturnType<typeof getChatModel>
   persistedSessionId: string
+  resolveWorkflowContext: () => Promise<
+    Pick<
+      CareerWorkflowContextResult,
+      'additionalInstructions' | 'directAnswer' | 'resolveStateCommitAfterReply'
+    >
+  >
   runtime: ReturnType<typeof getChatModelRuntimeInfo>
 }
 
@@ -34,9 +47,36 @@ type PreparedChatReplyResult =
       reply: null
     }
 
+async function buildSafeCareerWorkflowContext(input: {
+  actorId: string
+  chatSessionId: string
+  conversation: Array<{ content: string; role: 'assistant' | 'user' }>
+  resetThreadState?: boolean
+  userInput: string
+}): Promise<
+  Pick<
+    CareerWorkflowContextResult,
+    'additionalInstructions' | 'directAnswer' | 'resolveStateCommitAfterReply'
+  >
+> {
+  try {
+    return await buildCareerWorkflowContext(input)
+  } catch (error) {
+    logger.warn('career workflow failed', error)
+
+    return {
+      additionalInstructions: [],
+      directAnswer: undefined,
+      resolveStateCommitAfterReply: undefined,
+    }
+  }
+}
+
 async function buildPreparedChatReply(input: {
+  actorId: string
   message: string
   normalizedModelId: ChatModelId
+  resetThreadState?: boolean
   sessionId: string
 }): Promise<PreparedChatReply> {
   const model = getChatModel(input.normalizedModelId)
@@ -46,11 +86,18 @@ async function buildPreparedChatReply(input: {
     normalizedModelId: input.normalizedModelId,
     sessionId: input.sessionId,
   })
-
   return {
     conversation,
     model,
     persistedSessionId: input.sessionId,
+    resolveWorkflowContext: async () =>
+      buildSafeCareerWorkflowContext({
+        actorId: input.actorId,
+        chatSessionId: input.sessionId,
+        conversation,
+        resetThreadState: input.resetThreadState,
+        userInput: input.message,
+      }),
     runtime,
   }
 }
@@ -85,6 +132,7 @@ export async function prepareChatReply(
   return {
     error: null,
     reply: await buildPreparedChatReply({
+      actorId: actor.id,
       message: input.message,
       normalizedModelId: input.normalizedModelId,
       sessionId: sessionResult.session.id,
@@ -123,6 +171,7 @@ export async function prepareSessionChatReply(input: {
   return {
     error: null,
     reply: await buildPreparedChatReply({
+      actorId: input.actor.id,
       message: input.body.content,
       normalizedModelId: input.body.normalizedModelId,
       sessionId: sessionResult.session.id,
@@ -175,6 +224,14 @@ export async function prepareEditedChatReply(input: {
       conversation: result.conversation,
       model: getChatModel(result.normalizedModelId),
       persistedSessionId: result.sessionId,
+      resolveWorkflowContext: async () =>
+        buildSafeCareerWorkflowContext({
+          actorId: input.actor.id,
+          chatSessionId: result.sessionId,
+          conversation: result.conversation,
+          resetThreadState: true,
+          userInput: input.content,
+        }),
       runtime: getChatModelRuntimeInfo(result.normalizedModelId),
     },
   }

@@ -1,5 +1,9 @@
 // remark 插件，只处理“已经在列表项里的代码块”缩进，不负责修复错误的 Markdown 结构。
+import { createLogger } from '@mianshitong/shared'
+
 import { isDevelopmentEnv } from '../../../utils/env'
+
+const logger = createLogger('MarkdownRenderer')
 
 interface MarkdownAstNode {
   children?: MarkdownAstNode[]
@@ -85,10 +89,7 @@ export function remarkNormalizeListCodeIndent() {
       })
     } catch (error) {
       if (isDevelopmentEnv()) {
-        console.error(
-          '[MarkdownRenderer] failed to normalize list code block indent',
-          error
-        )
+        logger.error('failed to normalize list code block indent', error)
       }
     }
   }

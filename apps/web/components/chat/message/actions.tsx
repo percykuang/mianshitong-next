@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 
+import { createLogger } from '@mianshitong/shared'
 import {
   Button,
   Check,
@@ -34,6 +35,8 @@ interface ChatMessageActionsProps {
   onFeedbackChange?: (feedback: ChatMessageFeedback | null) => void
   onStartEditUserMessage?: () => void
 }
+
+const logger = createLogger('chat-message-actions')
 
 const actionButtonClassName =
   'border-0! bg-transparent! text-(--mst-color-text-muted) shadow-none! transition-[transform,color,background-color] duration-150 hover:bg-slate-900/4! active:scale-95 dark:hover:bg-white/6!'
@@ -98,7 +101,7 @@ function CopyMessageButton({ content, label }: CopyButtonProps) {
         timeoutRef.current = null
       }, 1500)
     } catch (error) {
-      console.error('[chat-message-actions] copy failed', error)
+      logger.error('copy failed', error)
     }
   }
 

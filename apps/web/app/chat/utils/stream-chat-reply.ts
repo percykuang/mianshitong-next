@@ -112,6 +112,7 @@ export async function streamChatReply({
   onChunk,
   signal,
 }: StreamChatReplyOptions): Promise<StreamChatReplyResult> {
+  // 请求发出前先检查中断状态，避免在已取消的情况下继续进入网络层。
   if (signal.aborted) {
     throw createAbortError()
   }
@@ -119,8 +120,12 @@ export async function streamChatReply({
   let response: Response | null = null
   let lastFetchError: unknown = null
 
+  // 对瞬时网络错误做一次轻量重试，尽量覆盖偶发 fetch 失败，
+  // 但不做更激进的重试策略，避免重复发送带来更复杂的副作用。
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
+      // 持久化会话模式下，只需提交当前消息内容，服务端会自行从数据库补全上下文；
+      // 非持久化模式下，则要把前端维护的 history 一并传给 /api/chat。
       const payload: ChatRequestBody | StreamMessageBody = sessionId
         ? {
             content: message,
@@ -133,6 +138,7 @@ export async function streamChatReply({
             sessionId,
           }
 
+      // 根据是否已有 sessionId，切到不同的服务端入口。
       response = await fetch(
         sessionId
           ? `/api/chat/sessions/${sessionId}/messages/stream`
@@ -148,16 +154,19 @@ export async function streamChatReply({
       )
       break
     } catch (error) {
+      // 如果是用户主动中断，优先抛出统一的 AbortError，交给上层收口。
       if (signal.aborted) {
         throw createAbortError()
       }
 
       lastFetchError = error
 
+      // 只对真正的 fetch 网络错误做重试；业务错误和最后一次失败直接向上抛出。
       if (!isFetchTypeError(error) || attempt === 1) {
         throw error
       }
 
+      // 给浏览器和网络层一个很短的恢复窗口，再尝试一次。
       await waitForRetryDelay()
     }
   }
@@ -166,6 +175,7 @@ export async function streamChatReply({
     throw lastFetchError ?? new Error('请求失败')
   }
 
+  // 统一在这里消费流式响应、累计文本，并通过 onChunk 回推给上层更新 UI。
   return readStreamedChatReply(response, signal, onChunk)
 }
 

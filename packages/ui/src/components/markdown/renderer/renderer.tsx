@@ -1,5 +1,6 @@
 'use client'
 
+import { createLogger } from '@mianshitong/shared'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -7,6 +8,8 @@ import { isDevelopmentEnv } from '../../../utils/env'
 import { markdownElements } from './elements'
 import { remarkNormalizeListCodeIndent } from './remark-list-code-indent'
 import { normalizeMarkdownContent } from './utils'
+
+const logger = createLogger('MarkdownRenderer')
 
 // 入口层。负责把内容喂给 react-markdown，并挂上插件和样式。
 
@@ -32,7 +35,7 @@ export function MarkdownRenderer({
     })
   } catch (error) {
     if (isDevelopmentEnv()) {
-      console.error('[MarkdownRenderer] failed before markdown render', error)
+      logger.error('failed before markdown render', error)
     }
   }
 

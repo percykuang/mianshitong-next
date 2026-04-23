@@ -1,8 +1,12 @@
+import { createLogger } from '@mianshitong/shared'
+
 import { prepareChatReply } from '@/server/chat/services'
 
 import { parseChatRequest } from './request'
 import { createChatResponseStream, createChatStreamHeaders } from './stream'
 import { jsonError, parseJsonBodyOrError, withChatActor } from './utils'
+
+const logger = createLogger('api/chat')
 
 export async function POST(request: Request) {
   const { data: parsedRequest, errorResponse } = await parseJsonBodyOrError(
@@ -30,13 +34,20 @@ export async function POST(request: Request) {
         return jsonError('AI 服务暂时不可用，请稍后再试', 500)
       }
 
-      const { conversation, model, persistedSessionId, runtime } = result.reply
+      const {
+        conversation,
+        model,
+        persistedSessionId,
+        resolveWorkflowContext,
+        runtime,
+      } = result.reply
       const stream = createChatResponseStream({
         actorId: actor.id,
         conversation,
         model,
         persistedSessionId,
         requestSignal: request.signal,
+        resolveWorkflowContext,
       })
 
       return new Response(stream, {
@@ -46,7 +57,7 @@ export async function POST(request: Request) {
         }),
       })
     } catch (error) {
-      console.error('[api/chat] model invoke failed', error)
+      logger.error('model invoke failed', error)
 
       return jsonError('AI 服务暂时不可用，请稍后再试', 500)
     }

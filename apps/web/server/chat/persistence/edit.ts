@@ -4,7 +4,11 @@ import {
   type EditableChatSessionRecord,
   findEditableSessionRecord,
 } from './query'
-import { chatPrisma, createChatSessionTitle } from './shared'
+import {
+  type ChatPrismaTransactionClient,
+  chatPrisma,
+  createChatSessionTitle,
+} from './shared'
 
 export async function editUserMessageAndLoadConversation(input: {
   actorId: string
@@ -60,7 +64,7 @@ export async function editUserMessageAndLoadConversation(input: {
       })
     )
 
-  await chatPrisma.$transaction(async (tx) => {
+  await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
     await tx.chatMessage.update({
       where: {
         id: input.messageId,

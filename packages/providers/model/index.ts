@@ -1,25 +1,16 @@
 import type { ZodTypeAny } from 'zod'
 
+import { getDefaultChatModelId, getDefaultChatModelIdForRole } from './catalog'
 import {
-  getChatModelRole,
-  getDefaultChatModelId,
-  getDefaultChatModelIdForRole,
-} from './catalog'
-import { getChatModelInstance, getProviderRoleModelInstance } from './instance'
-import { resolveChatModelSelection } from './runtime'
+  createDirectModelInstance,
+  getChatModelInstance,
+  getProviderRoleModelInstance,
+} from './instance'
+import { getMainModelProvider, resolveDirectModelSelection } from './runtime'
 import type { ChatModelId, ModelRole } from './types'
-import { logModelSelection } from './utils'
 
-// 获取并记录指定聊天模型对应的实例。
-function getLoggedChatModel(modelId: ChatModelId, label: string) {
-  const selection = resolveChatModelSelection(modelId)
-  logModelSelection(label, selection.runtime)
-  return getChatModelInstance(modelId)
-}
-
-// 获取指定角色在当前主配置下对应的默认聊天模型实例。
-function getDefaultRoleModel(role: ModelRole, label: string) {
-  return getLoggedChatModel(getDefaultChatModelIdForRole(role), label)
+function getDefaultRoleModel(role: ModelRole) {
+  return getChatModelInstance(getDefaultChatModelIdForRole(role))
 }
 
 // 获取固定映射到 DeepSeek chat 角色的模型实例。
@@ -42,19 +33,14 @@ export function getOllamaReasonerModel() {
   return getProviderRoleModelInstance('ollama', 'reasoner')
 }
 
-// 获取聊天场景使用的模型实例，并记录当前选择日志。
+// 获取聊天场景使用的模型实例。
 export function getChatModel(modelId: ChatModelId = getDefaultChatModelId()) {
-  return getLoggedChatModel(
-    modelId,
-    getChatModelRole(modelId) === 'reasoner'
-      ? 'Using reasoning chat model'
-      : 'Using balanced chat model'
-  )
+  return getChatModelInstance(modelId)
 }
 
 // 获取当前主模型配置对应的 chat 模型实例。
 export function getMainModel() {
-  return getDefaultRoleModel('chat', 'Using main model')
+  return getDefaultRoleModel('chat')
 }
 
 // 兼容旧调用方式，返回当前主模型实例。
@@ -64,7 +50,7 @@ export function getModel() {
 
 // 获取当前主模型配置对应的 reasoner 模型实例。
 export function getReasonerModel() {
-  return getDefaultRoleModel('reasoner', 'Using reasoner model')
+  return getDefaultRoleModel('reasoner')
 }
 
 // 基于当前主模型创建支持结构化输出的包装实例。
@@ -73,6 +59,19 @@ export function getStructuredModel<T extends ZodTypeAny>(schema: T) {
     method: 'functionCalling',
     includeRaw: false,
   })
+}
+
+export function getCareerRouterModel() {
+  const selection = resolveDirectModelSelection({
+    defaultModel: 'deepseek-chat',
+    envName: 'CAREER_ROUTER_MODEL',
+    fallbackEnvName:
+      getMainModelProvider() === 'ollama'
+        ? 'OLLAMA_CAREER_ROUTER_MODEL'
+        : 'DEEPSEEK_CAREER_ROUTER_MODEL',
+  })
+
+  return createDirectModelInstance(selection.config)
 }
 
 // 当前主模型 provider 名称，便于外层逻辑判断。

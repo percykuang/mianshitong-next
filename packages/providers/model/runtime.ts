@@ -33,6 +33,12 @@ export interface ResolvedChatModelSelection {
   runtime: ChatModelRuntimeInfo
 }
 
+export interface ResolvedDirectModelSelection {
+  config: ResolvedModelConfig
+  provider: MainModelProvider
+  runtime: Omit<ChatModelRuntimeInfo, 'requestedModelId'>
+}
+
 // 根据环境变量决定当前主模型使用 DeepSeek 还是 Ollama。
 export function getMainModelProvider(): MainModelProvider {
   return process.env.MAIN_MODEL_PROVIDER?.trim().toLowerCase() === 'ollama'
@@ -86,6 +92,34 @@ function resolveProviderRuntimeInfo(
     displayTarget: providerConfig.displayTarget,
     mode: providerConfig.mode,
     provider,
+  }
+}
+
+export function resolveDirectModelSelection(input: {
+  defaultModel: string
+  envName: string
+  fallbackEnvName?: string
+  label?: string
+  provider?: MainModelProvider
+  role?: ModelRole
+}): ResolvedDirectModelSelection {
+  const provider = input.provider ?? getMainModelProvider()
+  const role = input.role ?? 'chat'
+  const baseConfig = resolveProviderModelConfig(provider, role)
+  const model = getStringEnvWithFallback(
+    input.envName,
+    input.defaultModel,
+    input.fallbackEnvName
+  )
+  const config = {
+    ...baseConfig,
+    model,
+  }
+
+  return {
+    config,
+    provider,
+    runtime: resolveProviderRuntimeInfo(provider, config),
   }
 }
 

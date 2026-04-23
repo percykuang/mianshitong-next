@@ -1,6 +1,6 @@
 'use client'
 
-import { isFetchTypeError } from '@mianshitong/shared'
+import { createLogger, isFetchTypeError } from '@mianshitong/shared'
 
 import { type ChatRuntimeDebugInfo } from '@/app/chat/domain'
 
@@ -54,6 +54,8 @@ interface CreateChatReplyLifecycleInput {
   set: ChatStoreSetState
 }
 
+const logger = createLogger('chat-store')
+
 export function createChatReplyLifecycle({
   get,
   set,
@@ -73,8 +75,7 @@ export function createChatReplyLifecycle({
           sessions: state.sessions,
         })
       )
-    } catch (error) {
-      console.warn('[chat-store] hydrate persisted session failed', error)
+    } catch {
       set((state) =>
         buildPersistedReplySessionFailureState({
           optimisticSessionId,
@@ -188,8 +189,7 @@ export function createChatReplyLifecycle({
           sessions: state.sessions,
         }),
       }))
-    } catch (error) {
-      console.warn('[chat-store] persist interrupted reply failed', error)
+    } catch {
       await hydrateSession(
         interruptedSession.id,
         input.activeReply.optimisticSessionId ?? interruptedSession.id
@@ -229,12 +229,8 @@ export function createChatReplyLifecycle({
       return
     }
 
-    if (isFetchTypeError(input.error)) {
-      console.warn(
-        '[chat-store] send message fetch failed, fallback message rendered'
-      )
-    } else {
-      console.error('[chat-store] send message failed', input.error)
+    if (!isFetchTypeError(input.error)) {
+      logger.error('send message failed', input.error)
     }
 
     const fallbackSession = createFallbackReplySession(currentSession)

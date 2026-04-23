@@ -1,5 +1,7 @@
 'use client'
 
+import { createLogger } from '@mianshitong/shared'
+
 import {
   deleteAllPersistedChatSessions,
   deletePersistedChatSession,
@@ -26,6 +28,7 @@ const RESET_EDITING_WITH_PENDING_ANCHOR_STATE = {
   ...RESET_EDITING_STATE,
   pendingEditedMessageAnchorId: null,
 } as const
+const logger = createLogger('chat-store')
 
 interface CreateChatSessionActionsInput {
   feedbackMutationVersionByKey: Map<string, number>
@@ -70,7 +73,7 @@ export function createChatSessionActions({
         try {
           deletedCount = await deleteAllPersistedChatSessions()
         } catch (error) {
-          console.error('[chat-store] delete all sessions failed', error)
+          logger.error('delete all sessions failed', error)
           return null
         }
       }
@@ -101,7 +104,7 @@ export function createChatSessionActions({
         try {
           await deletePersistedChatSession(targetSession.id)
         } catch (error) {
-          console.error('[chat-store] delete session failed', error)
+          logger.error('delete session failed', error)
           return false
         }
       }
@@ -178,7 +181,7 @@ export function createChatSessionActions({
 
         return true
       } catch (error) {
-        console.error('[chat-store] rename session failed', error)
+        logger.error('rename session failed', error)
         return false
       }
     },
@@ -261,7 +264,7 @@ export function createChatSessionActions({
             return
           }
 
-          console.error('[chat-store] update message feedback failed', error)
+          logger.error('update message feedback failed', error)
 
           set((currentState) => ({
             sessions: updateMessageFeedbackInSessions(currentState.sessions, {
@@ -342,7 +345,7 @@ export function createChatSessionActions({
           ),
         }))
       } catch (error) {
-        console.error('[chat-store] toggle pin failed', error)
+        logger.error('toggle pin failed', error)
       }
     },
   }

@@ -1,7 +1,4 @@
-export const CHAT_REPLY_POLICY_INSTRUCTION = [
-  '你是面试通的 AI 面试助手。',
-  '你的任务是围绕求职、面试、简历优化、项目表达、技术追问这些主题，给出清晰、具体、可执行的中文回答。',
-  '',
+export const CAREER_OUTPUT_RULES_PROMPT = [
   '回答要求：',
   '1. 默认使用简体中文。',
   '2. 优先直接回答问题，再给结构化展开。',

@@ -110,21 +110,27 @@ function ChatPageClientShell({
   }
 
   const handleSubmitMessage = async (inputOverride?: string) => {
+    // 兼容“直接传入内容发送”和“读取当前输入框草稿发送”两种入口。
     const input = (inputOverride ?? draft).trim()
 
+    // 空消息不发送；正在生成回复时也禁止再次提交，避免并发请求打乱会话状态。
     if (!input || isReplying) {
       return
     }
 
+    // 发送前先检查当日调用额度，避免进入后续请求链路后再报错。
     if (!(await ensureQuotaAvailable())) {
       return
     }
 
+    // 触发主面板跟随到底部，让新一轮“用户消息 + AI 回复”滚动行为更自然。
     if (!isReplying && input) {
       requestFollow()
     }
 
+    // 真正的发送逻辑在 chat store 里，这里只负责把提交动作转交给 store action。
     await handleSendMessage(inputOverride)
+    // 发送完成后刷新额度展示，确保 UI 上的已用次数与服务端保持一致。
     await refreshUsage()
     focusComposer(composerRef)
   }

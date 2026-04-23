@@ -117,7 +117,6 @@ export function useChatController(): UseChatControllerResult {
   })
   useChatPathSyncEffect({
     applyHistory: navigation.applyHistory,
-    pathname,
     selectedSessionId,
     takeRequestedHistoryMode: navigation.takeRequestedHistoryMode,
   })
