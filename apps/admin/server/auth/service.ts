@@ -2,15 +2,13 @@ import 'server-only'
 
 import { verifyPassword } from './password'
 import { deleteCurrentSession, getCurrentUser } from './session'
+import { scheduleExpiredAdminSessionCleanup } from './session-cleanup'
 import { createAuthSession, findUserByEmail } from './user-repository'
 import { validateCredentials } from './validation'
-
-type AdminUserRole = 'admin' | 'user'
 
 export interface UserSummary {
   email: string
   id: string
-  role: AdminUserRole
 }
 
 export interface AuthSessionCookiePayload {
@@ -30,30 +28,22 @@ type AuthMutationResult =
       error: string
       ok: false
       session?: never
-      status: 400 | 401 | 403
+      status: 400 | 401
       user?: never
     }
 
-function toUserSummary(user: {
-  email: string
-  id: string
-  role: AdminUserRole
-}): UserSummary {
+function toUserSummary(user: { email: string; id: string }): UserSummary {
   return {
     id: user.id,
     email: user.email,
-    role: user.role,
   }
 }
 
-function isAdminRole(role: AdminUserRole) {
-  return role === 'admin'
-}
-
 export async function getCurrentUserProfile() {
+  scheduleExpiredAdminSessionCleanup()
   const user = await getCurrentUser()
 
-  if (!user || !isAdminRole(user.role)) {
+  if (!user) {
     return null
   }
 
@@ -61,9 +51,10 @@ export async function getCurrentUserProfile() {
 }
 
 export async function requireCurrentUser() {
+  scheduleExpiredAdminSessionCleanup()
   const user = await getCurrentUser()
 
-  if (!user || !isAdminRole(user.role)) {
+  if (!user) {
     return null
   }
 
@@ -73,6 +64,7 @@ export async function requireCurrentUser() {
 export async function loginAdminWithCredentials(
   input: unknown
 ): Promise<AuthMutationResult> {
+  scheduleExpiredAdminSessionCleanup()
   const parsed = validateCredentials(input)
 
   if (!parsed.data) {
@@ -103,14 +95,6 @@ export async function loginAdminWithCredentials(
       error: '邮箱或密码错误',
       ok: false,
       status: 401,
-    }
-  }
-
-  if (!isAdminRole(user.role)) {
-    return {
-      error: '当前账号没有后台访问权限',
-      ok: false,
-      status: 403,
     }
   }
 

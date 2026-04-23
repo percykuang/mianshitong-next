@@ -14,6 +14,9 @@ import {
 
 type AdminUserSortBy = 'createdAt' | 'email' | 'sessionCount'
 const MAX_DAILY_MODEL_QUOTA = 100_000
+type PrismaTransactionClient = Parameters<
+  Parameters<typeof prisma.$transaction>[0]
+>[0]
 
 export interface AdminUserListItem {
   createdAtLabel: string
@@ -164,7 +167,7 @@ function isValidDailyModelQuota(value: number) {
   )
 }
 
-export async function updateAdminUserDailyModelQuota(input: {
+export async function updateRegisteredUserDailyModelQuota(input: {
   dailyModelQuota: number
   userId: string
 }) {
@@ -220,16 +223,7 @@ export async function updateAdminUserDailyModelQuota(input: {
   }
 }
 
-export async function deleteAdminUser(input: {
-  currentAdminId: string
-  userId: string
-}) {
-  if (input.currentAdminId === input.userId) {
-    return {
-      error: 'cannot_delete_self' as const,
-    }
-  }
-
+export async function deleteRegisteredUser(input: { userId: string }) {
   const targetUser = await prisma.authUser.findUnique({
     where: {
       id: input.userId,
@@ -245,7 +239,7 @@ export async function deleteAdminUser(input: {
     }
   }
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: PrismaTransactionClient) => {
     await tx.userActor.deleteMany({
       where: {
         authUserId: input.userId,
