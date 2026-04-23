@@ -27,6 +27,8 @@
   "scripts": {
     "dev:web": "pnpm db:generate && pnpm --filter @mianshitong/web dev",
     "dev:admin": "pnpm db:generate && pnpm --filter @mianshitong/admin dev",
+    "start:web": "pnpm db:generate && pnpm build:web && pnpm --filter @mianshitong/web start",
+    "start:admin": "pnpm db:generate && pnpm build:admin && pnpm --filter @mianshitong/admin start",
     "build:web": "pnpm db:generate && pnpm --filter @mianshitong/web build",
     "build:admin": "pnpm db:generate && pnpm --filter @mianshitong/admin build",
     "db:up": "docker compose up -d db",
