@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { updateActorChatMessageFeedback } from '@/server/chat/services'
+import { updateActorChatMessageFeedback } from '@/server/chat'
 
 import {
   jsonError,

@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react'
 
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 import {
   Button,
   Check,
@@ -36,7 +36,7 @@ interface ChatMessageActionsProps {
   onStartEditUserMessage?: () => void
 }
 
-const logger = createLogger('chat-message-actions')
+const logger = createLogger('web.chat.message.actions')
 
 const actionButtonClassName =
   'border-0! bg-transparent! text-(--mst-color-text-muted) shadow-none! transition-[transform,color,background-color] duration-150 hover:bg-slate-900/4! active:scale-95 dark:hover:bg-white/6!'

@@ -51,12 +51,6 @@ export function getProjectedSelectedSession(
   return result
 }
 
-export function getRuntimeDebugInfo(
-  state: Pick<ChatStore, 'runtimeDebugInfoByModelId' | 'selectedModelId'>
-) {
-  return state.runtimeDebugInfoByModelId[state.selectedModelId] ?? null
-}
-
 export function getIsReplying(state: Pick<ChatStore, 'activeReply'>) {
   return isReplying(state.activeReply)
 }

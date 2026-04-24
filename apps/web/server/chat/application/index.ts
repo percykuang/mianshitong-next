@@ -1,13 +1,10 @@
 export {
   getChatPageBootstrapData,
   type ChatPageBootstrapData,
-} from './bootstrap-service'
-export {
-  prepareChatReply,
-  prepareEditedChatReply,
-  prepareSessionChatReply,
-} from './reply-service'
-export { checkChatQuota, getChatUsageSummary } from './usage-service'
+} from './bootstrap-chat-page'
+export { prepareEditedChatReply } from './edit-chat-message'
+export { prepareChatReply, prepareSessionChatReply } from './send-chat-message'
+export { checkChatQuota, getChatUsageSummary } from './resolve-chat-usage'
 export {
   createActorChatSession,
   deleteActorChatSession,
@@ -18,4 +15,4 @@ export {
   persistInterruptedReplyForActor,
   updateActorChatMessageFeedback,
   updateActorChatSession,
-} from './session-service'
+} from './manage-chat-session'

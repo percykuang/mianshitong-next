@@ -4,7 +4,7 @@ import {
   createActorChatSession,
   deleteAllActorChatSessions,
   listActorChatSessions,
-} from '@/server/chat/services'
+} from '@/server/chat'
 
 import { parseJsonBodyOrError, withChatActor } from '../utils'
 import { parseCreateSessionBody } from './requests'

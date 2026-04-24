@@ -1,9 +1,9 @@
 import {
+  type ChatModelId,
   getDefaultChatModelId,
   isChatModelId,
   normalizeChatModelId,
-} from '@mianshitong/providers/model/catalog'
-import type { ChatModelId } from '@mianshitong/providers/model/types'
+} from '@mianshitong/llm'
 import { z } from 'zod'
 
 function getOptionalTrimmedString(value: unknown) {
@@ -67,7 +67,7 @@ export const chatRequestBodySchema = z
   })
   .transform(({ message, modelId, sessionId }) => ({
     message,
-    normalizedModelId: modelId,
+    chatModelId: modelId,
     normalizedSessionId: sessionId,
   }))
 
@@ -137,7 +137,7 @@ export const streamMessageBodySchema = z
   })
   .transform(({ content, modelId }) => ({
     content,
-    normalizedModelId: modelId,
+    chatModelId: modelId,
   }))
 
 export type ChatRequestMessage = z.infer<typeof chatRequestMessageSchema>

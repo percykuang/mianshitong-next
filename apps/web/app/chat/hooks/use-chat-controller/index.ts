@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation'
 import {
   getIsReplying,
   getProjectedSelectedSession,
-  getRuntimeDebugInfo,
   getShowThinkingIndicator,
   getStreamingMessageId,
   useChatStore,
@@ -46,7 +45,6 @@ export function useChatController(): UseChatControllerResult {
   const sessions = useChatStore((state) => state.sessions)
   const selectedSession = useChatStore(getProjectedSelectedSession)
   const isReplying = useChatStore(getIsReplying)
-  const runtimeDebugInfo = useChatStore(getRuntimeDebugInfo)
   const showThinkingIndicator = useChatStore(getShowThinkingIndicator)
   const streamingMessageId = useChatStore(getStreamingMessageId)
   const sidebarSessions = pendingSidebarSessionId
@@ -129,7 +127,6 @@ export function useChatController(): UseChatControllerResult {
       handleSendMessage,
       handleStopReply,
       isReplying,
-      runtimeDebugInfo,
       selectedModelId,
       setDraft,
       setSelectedModelId,

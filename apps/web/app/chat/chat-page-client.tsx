@@ -7,7 +7,6 @@ import { useAppInstance } from '@mianshitong/ui'
 import {
   type ChatModelId,
   type ChatModelOption,
-  type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
 } from '@/app/chat/domain'
 import { ChatMainPane, ChatSidebar } from '@/components'
@@ -21,7 +20,6 @@ interface ChatPageClientProps {
   initialModelOptions: readonly ChatModelOption[]
   initialSelectedSessionId: string | null
   initialSelectedModelId: ChatModelId
-  initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
   persistenceEnabled: boolean
   userEmail: string | null
 }
@@ -37,13 +35,11 @@ export function ChatPageClient({
   initialModelOptions,
   initialSelectedSessionId,
   initialSelectedModelId,
-  initialRuntimeDebugInfoByModelId,
   persistenceEnabled,
   userEmail,
 }: ChatPageClientProps) {
   return (
     <ChatStoreProvider
-      initialRuntimeDebugInfoByModelId={initialRuntimeDebugInfoByModelId}
       initialSelectedModelId={initialSelectedModelId}
       initialSelectedSessionId={initialSelectedSessionId}
       initialSessions={initialSessions}
@@ -66,7 +62,7 @@ function ChatPageClientShell({
   const { refreshUsage, usage, usageError, usageLoading } = useChatUsage()
   const { composer, messages, sidebar } = useChatController()
   const { sidebarOpen, setSidebarOpen } = sidebar
-  const { draft, isReplying, runtimeDebugInfo, selectedModelId } = composer
+  const { draft, isReplying, selectedModelId } = composer
   const {
     composerRef,
     handleSelectPrompt,
@@ -234,7 +230,6 @@ function ChatPageClientShell({
         onSubmit={handleSubmitMessage}
         onSubmitEditUserMessage={handleSubmitEditedMessage}
         onToggleSidebar={toggleSidebar}
-        runtimeDebugInfo={runtimeDebugInfo}
         showThinkingIndicator={showThinkingIndicator}
         selectedModelId={selectedModelId}
         sidebarOpen={sidebarOpen}

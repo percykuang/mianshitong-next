@@ -6,7 +6,6 @@ import {
   type ChatMessageFeedback,
   type ChatModelId,
   type ChatModelOption,
-  type ChatRuntimeDebugInfo,
   type ChatUsageSummary,
   type ConversationMessage,
 } from '../types'
@@ -37,7 +36,6 @@ export interface ChatMainPaneProps {
   onSubmit: () => void
   onSubmitEditUserMessage: () => void
   onToggleSidebar: () => void
-  runtimeDebugInfo: ChatRuntimeDebugInfo | null
   showThinkingIndicator: boolean
   selectedModelId: ChatModelId
   sidebarOpen: boolean

@@ -1,19 +1,12 @@
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
-import {
-  createChatResponseStream,
-  createChatStreamHeaders,
-} from '@/app/api/chat/stream'
-import { prepareEditedChatReply } from '@/server/chat/services'
+import { createChatReplyStreamResponse } from '@/app/api/chat/reply-route'
+import { prepareEditedChatReply } from '@/server/chat'
 
-import {
-  jsonError,
-  parseJsonBodyOrError,
-  withChatActor,
-} from '../../../../../../utils'
+import { parseJsonBodyOrError, withChatActor } from '../../../../../../utils'
 import { parseEditMessageBody } from '../../../../../requests'
 
-const logger = createLogger('api/chat-edit')
+const logger = createLogger('web.api.chat.edit-stream')
 
 interface EditMessageStreamRouteContext {
   params: Promise<{ messageId: string; sessionId: string }>
@@ -32,58 +25,20 @@ export async function POST(
     return errorResponse
   }
 
-  return withChatActor(async (actor) => {
-    try {
-      const { messageId, sessionId } = await context.params
-      const result = await prepareEditedChatReply({
-        actor,
-        content,
-        messageId,
-        sessionId,
-      })
-
-      if (result.error === 'session_not_found') {
-        return jsonError('会话不存在或无权限访问', 404)
-      }
-
-      if (result.error === 'message_not_editable') {
-        return jsonError('当前仅支持编辑最后一条用户消息', 400)
-      }
-
-      if (result.error === 'quota_exceeded') {
-        return jsonError('今日模型配额已用完，请明天再试', 429)
-      }
-
-      if (!result.reply) {
-        return jsonError('AI 服务暂时不可用，请稍后再试', 500)
-      }
-
-      const {
-        conversation,
-        model,
-        persistedSessionId,
-        resolveWorkflowContext,
-        runtime,
-      } = result.reply
-      const stream = createChatResponseStream({
-        actorId: actor.id,
-        conversation,
-        model,
-        persistedSessionId,
-        requestSignal: request.signal,
-        resolveWorkflowContext,
-      })
-
-      return new Response(stream, {
-        headers: createChatStreamHeaders({
-          persistedSessionId,
-          runtime,
-        }),
-      })
-    } catch (error) {
-      logger.error('model invoke failed', error)
-
-      return jsonError('AI 服务暂时不可用，请稍后再试', 500)
-    }
-  })
+  return withChatActor((actor) =>
+    createChatReplyStreamResponse({
+      actor,
+      logger,
+      requestSignal: request.signal,
+      resolveReply: async () => {
+        const { messageId, sessionId } = await context.params
+        return prepareEditedChatReply({
+          actor,
+          content,
+          messageId,
+          sessionId,
+        })
+      },
+    })
+  )
 }

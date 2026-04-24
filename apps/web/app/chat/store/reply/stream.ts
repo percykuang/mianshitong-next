@@ -110,11 +110,7 @@ export function createChatReplyStreamActions({
     setActiveAbortController(controller)
 
     try {
-      const {
-        content,
-        runtimeDebugInfo,
-        sessionId: persistedSessionId,
-      } = await streamChatReply({
+      const { content, sessionId: persistedSessionId } = await streamChatReply({
         // 非持久化入口需要把完整 history 带给服务端；持久化入口则只需发送当前消息，
         // 服务端会自行从数据库加载完整会话。
         history: optimisticSession.messages.map((message) => ({
@@ -137,7 +133,6 @@ export function createChatReplyStreamActions({
       lifecycle.syncReplyResult({
         assistantMessageId,
         content,
-        runtimeDebugInfo,
       })
 
       // 把 optimistic assistant 回复提交为完成态；如果开启持久化，再用服务端真实会话回填。
@@ -270,24 +265,20 @@ export function createChatReplyStreamActions({
     setActiveAbortController(controller)
 
     try {
-      const {
-        content,
-        runtimeDebugInfo,
-        sessionId: persistedSessionId,
-      } = await streamEditedChatReply({
-        content: nextContent,
-        messageId: editingMessageId,
-        onChunk(nextChunkContent) {
-          lifecycle.syncReplyChunk(assistantMessageId, nextChunkContent)
-        },
-        sessionId: selectedSession.id,
-        signal: controller.signal,
-      })
+      const { content, sessionId: persistedSessionId } =
+        await streamEditedChatReply({
+          content: nextContent,
+          messageId: editingMessageId,
+          onChunk(nextChunkContent) {
+            lifecycle.syncReplyChunk(assistantMessageId, nextChunkContent)
+          },
+          sessionId: selectedSession.id,
+          signal: controller.signal,
+        })
 
       lifecycle.syncReplyResult({
         assistantMessageId,
         content,
-        runtimeDebugInfo,
       })
 
       await finalizeCompletedReply({

@@ -1,12 +1,12 @@
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
-import { prepareChatReply } from '@/server/chat/services'
+import { prepareChatReply } from '@/server/chat'
 
+import { createChatReplyStreamResponse } from './reply-route'
 import { parseChatRequest } from './request'
-import { createChatResponseStream, createChatStreamHeaders } from './stream'
-import { jsonError, parseJsonBodyOrError, withChatActor } from './utils'
+import { parseJsonBodyOrError, withChatActor } from './utils'
 
-const logger = createLogger('api/chat')
+const logger = createLogger('web.api.chat')
 
 export async function POST(request: Request) {
   const { data: parsedRequest, errorResponse } = await parseJsonBodyOrError(
@@ -18,48 +18,12 @@ export async function POST(request: Request) {
     return errorResponse
   }
 
-  return withChatActor(async (actor) => {
-    try {
-      const result = await prepareChatReply(actor, parsedRequest)
-
-      if (result.error === 'session_not_found') {
-        return jsonError('会话不存在或无权限访问', 404)
-      }
-
-      if (result.error === 'quota_exceeded') {
-        return jsonError('今日模型配额已用完，请明天再试', 429)
-      }
-
-      if (!result.reply) {
-        return jsonError('AI 服务暂时不可用，请稍后再试', 500)
-      }
-
-      const {
-        conversation,
-        model,
-        persistedSessionId,
-        resolveWorkflowContext,
-        runtime,
-      } = result.reply
-      const stream = createChatResponseStream({
-        actorId: actor.id,
-        conversation,
-        model,
-        persistedSessionId,
-        requestSignal: request.signal,
-        resolveWorkflowContext,
-      })
-
-      return new Response(stream, {
-        headers: createChatStreamHeaders({
-          persistedSessionId,
-          runtime,
-        }),
-      })
-    } catch (error) {
-      logger.error('model invoke failed', error)
-
-      return jsonError('AI 服务暂时不可用，请稍后再试', 500)
-    }
-  })
+  return withChatActor((actor) =>
+    createChatReplyStreamResponse({
+      actor,
+      logger,
+      requestSignal: request.signal,
+      resolveReply: () => prepareChatReply(actor, parsedRequest),
+    })
+  )
 }

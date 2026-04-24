@@ -1,4 +1,4 @@
-import type { ChatModelId } from '@mianshitong/providers/model/types'
+import type { ChatModelId } from '@mianshitong/llm'
 
 import type { ChatActor } from '@/server/chat/actor'
 
@@ -24,7 +24,7 @@ type FindOrCreateChatSessionResult =
 export async function findOrCreateChatSession(input: {
   actor: ChatActor
   message: string
-  normalizedModelId: ChatModelId
+  chatModelId: ChatModelId
   normalizedSessionId: string | null
 }): Promise<FindOrCreateChatSessionResult> {
   if (input.normalizedSessionId !== null) {
@@ -58,7 +58,7 @@ export async function findOrCreateChatSession(input: {
       actorId: input.actor.id,
       ...(input.actor.authUserId ? { userId: input.actor.authUserId } : {}),
       ...(input.normalizedSessionId ? { id: input.normalizedSessionId } : {}),
-      modelId: input.normalizedModelId,
+      modelId: input.chatModelId,
       title: createChatSessionTitle(input.message),
       preview: input.message,
     },
@@ -75,7 +75,7 @@ export async function findOrCreateChatSession(input: {
 
 export async function persistUserMessageAndLoadConversation(input: {
   message: string
-  normalizedModelId: ChatModelId
+  chatModelId: ChatModelId
   sessionId: string
 }) {
   return chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
@@ -92,7 +92,7 @@ export async function persistUserMessageAndLoadConversation(input: {
         id: input.sessionId,
       },
       data: {
-        modelId: input.normalizedModelId,
+        modelId: input.chatModelId,
         preview: input.message,
       },
     })

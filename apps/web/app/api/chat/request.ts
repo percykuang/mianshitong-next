@@ -1,4 +1,9 @@
 import {
+  type SafeParseDataResult,
+  safeParseWithIssueMessage,
+} from '@mianshitong/shared/runtime'
+
+import {
   type ChatRequestBody,
   type ChatRequestMessage,
   type ParsedChatRequest,
@@ -24,18 +29,13 @@ export function toConversation(messages: ChatRequestMessage[]) {
   }))
 }
 
-export function parseChatRequest(
-  body: ChatRequestBody | null
+function toParseChatRequestResult(
+  result: SafeParseDataResult<ParsedChatRequest>
 ): ParseChatRequestResult {
-  const result = chatRequestBodySchema.safeParse(body)
-
-  if (!result.success) {
+  if (result.errorMessage !== null) {
     return {
       data: null,
-      errorResponse: jsonError(
-        result.error.issues[0]?.message ?? '请求参数不合法',
-        400
-      ),
+      errorResponse: jsonError(result.errorMessage, 400),
     }
   }
 
@@ -43,6 +43,14 @@ export function parseChatRequest(
     data: result.data,
     errorResponse: null,
   }
+}
+
+export function parseChatRequest(
+  body: ChatRequestBody | null
+): ParseChatRequestResult {
+  return toParseChatRequestResult(
+    safeParseWithIssueMessage(chatRequestBodySchema, body)
+  )
 }
 
 export type { ChatRequestBody, ChatRequestMessage, ParsedChatRequest }

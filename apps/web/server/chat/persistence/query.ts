@@ -1,6 +1,6 @@
 import { prisma } from '@mianshitong/db'
 
-import { CHAT_MESSAGE_ORDER_BY } from '../session'
+import { CHAT_MESSAGE_ORDER_BY } from '../session/query'
 
 export { CHAT_MESSAGE_ORDER_BY }
 

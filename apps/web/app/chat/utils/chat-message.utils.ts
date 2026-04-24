@@ -1,7 +1,5 @@
 import {
   type ChatMessageCompletionStatus,
-  type ChatModelId,
-  type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
   type ConversationMessage,
   createChatSessionTitle,
@@ -18,32 +16,6 @@ interface BuildOptimisticEditedSessionOptions {
   content: string
   messageId: string
   session: ChatSessionPreview
-}
-
-function normalizeRequestedModelId(value: string | null): ChatModelId {
-  return value === 'reasoning' || value === 'deepseek-reasoner'
-    ? 'reasoning'
-    : 'balanced'
-}
-
-// 从响应头中解析当前实际命中的模型运行时信息。
-export function parseRuntimeDebugInfoFromHeaders(
-  headers: Headers
-): ChatRuntimeDebugInfo {
-  return {
-    actualModel: decodeURIComponent(
-      headers.get('x-mst-chat-actual-model') ?? ''
-    ),
-    displayTarget: decodeURIComponent(
-      headers.get('x-mst-chat-display-target') ?? ''
-    ),
-    mode: headers.get('x-mst-chat-mode') === 'remote' ? 'remote' : 'local',
-    provider:
-      headers.get('x-mst-chat-provider') === 'deepseek' ? 'deepseek' : 'ollama',
-    requestedModelId: normalizeRequestedModelId(
-      headers.get('x-mst-chat-requested-model-id')
-    ),
-  }
 }
 
 // 将流式返回中的助手草稿写入会话，已存在则更新，不存在则追加。

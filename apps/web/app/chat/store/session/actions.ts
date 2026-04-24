@@ -1,6 +1,6 @@
 'use client'
 
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
 import {
   deleteAllPersistedChatSessions,
@@ -28,7 +28,7 @@ const RESET_EDITING_WITH_PENDING_ANCHOR_STATE = {
   ...RESET_EDITING_STATE,
   pendingEditedMessageAnchorId: null,
 } as const
-const logger = createLogger('chat-store')
+const logger = createLogger('web.chat.store.session')
 
 interface CreateChatSessionActionsInput {
   feedbackMutationVersionByKey: Map<string, number>

@@ -1,8 +1,4 @@
-import type {
-  ChatModelId,
-  ChatModelOption,
-  ChatModelRuntimeInfo,
-} from '@mianshitong/providers/model/types'
+import type { ChatModelId, ChatModelOption } from '@mianshitong/llm'
 
 export type ChatMessageCompletionStatus = 'completed' | 'interrupted'
 
@@ -36,4 +32,3 @@ export interface ChatUsageSummary {
 }
 
 export type { ChatModelId, ChatModelOption }
-export type ChatRuntimeDebugInfo = ChatModelRuntimeInfo

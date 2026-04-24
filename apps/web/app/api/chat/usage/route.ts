@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getChatUsageSummary } from '@/server/chat/services'
+import { getChatUsageSummary } from '@/server/chat'
 
 import { withChatActor } from '../utils'
 

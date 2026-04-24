@@ -97,9 +97,11 @@ export function ComposerModelSelect({
                     <div className="truncate text-xs font-medium">
                       {option.label}
                     </div>
-                    <div className="mt-px text-[10px] leading-tight text-(--mst-color-text-muted)">
-                      {option.description}
-                    </div>
+                    {option.description ? (
+                      <div className="mt-px text-[10px] leading-tight text-(--mst-color-text-muted)">
+                        {option.description}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </button>

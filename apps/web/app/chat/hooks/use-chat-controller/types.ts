@@ -3,7 +3,6 @@ import { type Dispatch, type RefObject, type SetStateAction } from 'react'
 import {
   type ChatMessageFeedback,
   type ChatModelId,
-  type ChatRuntimeDebugInfo,
   type ChatSessionPreview,
 } from '@/app/chat/domain'
 
@@ -14,7 +13,6 @@ export interface ChatControllerComposerGroup {
   handleSendMessage: (inputOverride?: string) => Promise<void>
   handleStopReply: () => void
   isReplying: boolean
-  runtimeDebugInfo: ChatRuntimeDebugInfo | null
   selectedModelId: ChatModelId
   setDraft: (value: string) => void
   setSelectedModelId: (value: ChatModelId) => void

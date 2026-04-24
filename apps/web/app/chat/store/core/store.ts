@@ -9,7 +9,6 @@ import { type ChatStore, type ChatStoreInitialState } from './types'
 export {
   getIsReplying,
   getProjectedSelectedSession,
-  getRuntimeDebugInfo,
   getSelectedSession,
   getShowThinkingIndicator,
   getStreamingMessageId,
@@ -39,7 +38,6 @@ export function createChatStore(input: ChatStoreInitialState) {
       pendingSidebarSessionId: null,
       pendingEditedMessageAnchorId: null,
       persistenceEnabled: input.persistenceEnabled,
-      runtimeDebugInfoByModelId: input.initialRuntimeDebugInfoByModelId,
       selectedModelId: input.initialSelectedModelId,
       selectedSessionId: createInitialSelectedSessionId(input),
       sessions: input.initialSessions,

@@ -1,4 +1,4 @@
-import { isFetchTypeError, parseJsonSafely } from '@mianshitong/shared'
+import { isFetchTypeError, parseJsonSafely } from '@mianshitong/shared/runtime'
 
 import type {
   ChatRequestBody,
@@ -6,9 +6,7 @@ import type {
   EditMessageBody,
   StreamMessageBody,
 } from '@/app/chat/contracts'
-import type { ChatModelId, ChatRuntimeDebugInfo } from '@/app/chat/domain'
-
-import { parseRuntimeDebugInfoFromHeaders } from './chat-message.utils'
+import type { ChatModelId } from '@/app/chat/domain'
 
 interface StreamChatReplyOptions {
   history: ChatRequestMessage[]
@@ -21,7 +19,6 @@ interface StreamChatReplyOptions {
 
 interface StreamChatReplyResult {
   content: string
-  runtimeDebugInfo: ChatRuntimeDebugInfo
   sessionId: string | null
 }
 
@@ -64,7 +61,6 @@ async function readStreamedChatReply(
     throw new Error(data?.error || '请求失败')
   }
 
-  const runtimeDebugInfo = parseRuntimeDebugInfoFromHeaders(response.headers)
   const persistedSessionId = normalizePersistedSessionId(
     response.headers.get('x-mst-chat-session-id')
   )
@@ -98,7 +94,6 @@ async function readStreamedChatReply(
 
   return {
     content,
-    runtimeDebugInfo,
     sessionId: persistedSessionId,
   }
 }

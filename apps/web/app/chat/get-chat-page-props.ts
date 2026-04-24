@@ -1,7 +1,7 @@
 import {
   type ChatPageBootstrapData,
   getChatPageBootstrapData,
-} from '@/server/chat/services'
+} from '@/server/chat'
 
 import { normalizeRouteSessionId } from './utils'
 

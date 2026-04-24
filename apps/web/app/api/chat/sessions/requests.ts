@@ -1,4 +1,10 @@
 import {
+  type SafeParseDataResult,
+  type SafeParseSchema,
+  safeParseWithIssueMessage,
+} from '@mianshitong/shared/runtime'
+
+import {
   type CreateSessionBody,
   type EditMessageBody,
   type InterruptMessageBody,
@@ -84,46 +90,48 @@ function getValidationErrorMessage(message: string | undefined) {
   return message ?? '请求参数不合法'
 }
 
-export function parseCreateSessionBody(
-  body: CreateSessionBody | null
-): ParseCreateSessionBodyResult {
-  const result = createSessionBodySchema.safeParse(body)
-
-  if (!result.success) {
+function toParseBodyResult<T>(result: SafeParseDataResult<T>):
+  | {
+      data: T
+      errorResponse: null
+    }
+  | {
+      data: null
+      errorResponse: Response
+    } {
+  if (result.errorMessage !== null) {
     return {
       data: null,
       errorResponse: jsonError(
-        getValidationErrorMessage(result.error.issues[0]?.message),
+        getValidationErrorMessage(result.errorMessage),
         400
       ),
     }
   }
 
   return {
-    data: result.data,
+    data: result.data as T,
     errorResponse: null,
   }
+}
+
+function parseBodyWithSchema<TInput, TOutput>(
+  schema: SafeParseSchema<TInput, TOutput>,
+  body: TInput
+) {
+  return toParseBodyResult(safeParseWithIssueMessage(schema, body))
+}
+
+export function parseCreateSessionBody(
+  body: CreateSessionBody | null
+): ParseCreateSessionBodyResult {
+  return parseBodyWithSchema(createSessionBodySchema, body)
 }
 
 export function parseUpdateSessionBody(
   body: UpdateSessionBody | null
 ): ParseUpdateSessionBodyResult {
-  const result = updateSessionBodySchema.safeParse(body)
-
-  if (!result.success) {
-    return {
-      data: null,
-      errorResponse: jsonError(
-        getValidationErrorMessage(result.error.issues[0]?.message),
-        400
-      ),
-    }
-  }
-
-  return {
-    data: result.data,
-    errorResponse: null,
-  }
+  return parseBodyWithSchema(updateSessionBodySchema, body)
 }
 
 export function parseUpdateMessageFeedbackBody(
@@ -147,64 +155,19 @@ export function parseUpdateMessageFeedbackBody(
 export function parseEditMessageBody(
   body: EditMessageBody | null
 ): ParseEditMessageBodyResult {
-  const result = editMessageBodySchema.safeParse(body)
-
-  if (!result.success) {
-    return {
-      data: null,
-      errorResponse: jsonError(
-        getValidationErrorMessage(result.error.issues[0]?.message),
-        400
-      ),
-    }
-  }
-
-  return {
-    data: result.data,
-    errorResponse: null,
-  }
+  return parseBodyWithSchema(editMessageBodySchema, body)
 }
 
 export function parseInterruptMessageBody(
   body: InterruptMessageBody | null
 ): ParseInterruptMessageBodyResult {
-  const result = interruptMessageBodySchema.safeParse(body)
-
-  if (!result.success) {
-    return {
-      data: null,
-      errorResponse: jsonError(
-        getValidationErrorMessage(result.error.issues[0]?.message),
-        400
-      ),
-    }
-  }
-
-  return {
-    data: result.data,
-    errorResponse: null,
-  }
+  return parseBodyWithSchema(interruptMessageBodySchema, body)
 }
 
 export function parseStreamMessageBody(
   body: StreamMessageBody | null
 ): ParseStreamMessageBodyResult {
-  const result = streamMessageBodySchema.safeParse(body)
-
-  if (!result.success) {
-    return {
-      data: null,
-      errorResponse: jsonError(
-        getValidationErrorMessage(result.error.issues[0]?.message),
-        400
-      ),
-    }
-  }
-
-  return {
-    data: result.data,
-    errorResponse: null,
-  }
+  return parseBodyWithSchema(streamMessageBodySchema, body)
 }
 
 export type {

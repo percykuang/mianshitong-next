@@ -4,9 +4,10 @@ import {
   deleteActorChatSession,
   getActorChatSession,
   updateActorChatSession,
-} from '@/server/chat/services'
+} from '@/server/chat'
 
-import { jsonError, parseJsonBodyOrError, withChatActor } from '../../utils'
+import { chatRouteError } from '../../errors'
+import { parseJsonBodyOrError, withChatActor } from '../../utils'
 import { parseUpdateSessionBody } from '../requests'
 
 interface SessionRouteContext {
@@ -19,7 +20,7 @@ export async function GET(_: Request, context: SessionRouteContext) {
     const session = await getActorChatSession(actor.id, sessionId)
 
     if (!session) {
-      return jsonError('会话不存在或无权限访问', 404)
+      return chatRouteError('session_not_found')
     }
 
     return NextResponse.json({ session })
@@ -45,7 +46,7 @@ export async function PATCH(request: Request, context: SessionRouteContext) {
     )
 
     if (!session) {
-      return jsonError('会话不存在或无权限访问', 404)
+      return chatRouteError('session_not_found')
     }
 
     return NextResponse.json({ session })
@@ -58,7 +59,7 @@ export async function DELETE(_: Request, context: SessionRouteContext) {
     const isDeleted = await deleteActorChatSession(actor.id, sessionId)
 
     if (!isDeleted) {
-      return jsonError('会话不存在或无权限访问', 404)
+      return chatRouteError('session_not_found')
     }
 
     return NextResponse.json({ ok: true })

@@ -4,7 +4,6 @@ export { ChatStoreProvider, useChatStore, useChatStoreApi } from './provider'
 export {
   getIsReplying,
   getProjectedSelectedSession,
-  getRuntimeDebugInfo,
   getShowThinkingIndicator,
   getStreamingMessageId,
   isReplying,

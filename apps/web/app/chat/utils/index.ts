@@ -5,7 +5,6 @@ export {
   finalizeReplyToSession,
   finalizeAssistantMessageInSession,
   projectAssistantReplyOntoSession,
-  parseRuntimeDebugInfoFromHeaders,
 } from './chat-message.utils'
 export {
   buildChatPath,

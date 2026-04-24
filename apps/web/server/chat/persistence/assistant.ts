@@ -1,4 +1,4 @@
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
 import {
   type InterruptedSessionRecord,
@@ -12,7 +12,7 @@ import {
   shouldRetryAssistantReplyWithoutCompletionStatus,
 } from './shared'
 
-const logger = createLogger('api/chat')
+const logger = createLogger('web.chat.persistence.assistant')
 
 function shouldConsumeChatReplyQuota() {
   return true

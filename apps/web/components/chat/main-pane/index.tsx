@@ -29,7 +29,6 @@ export function ChatMainPane({
   onSubmit,
   onSubmitEditUserMessage,
   onToggleSidebar,
-  runtimeDebugInfo,
   showThinkingIndicator,
   selectedModelId,
   sidebarOpen,
@@ -60,7 +59,6 @@ export function ChatMainPane({
       <div className="overscroll-behavior-contain relative flex h-dvh min-w-0 touch-pan-y flex-col bg-white dark:bg-(--mst-color-bg-page)">
         <ChatMainPaneHeader
           onToggleSidebar={onToggleSidebar}
-          runtimeDebugInfo={runtimeDebugInfo}
           sidebarOpen={sidebarOpen}
         />
 

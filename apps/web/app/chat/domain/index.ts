@@ -4,7 +4,6 @@ export type {
   ChatMessageFeedback,
   ChatModelId,
   ChatModelOption,
-  ChatRuntimeDebugInfo,
   ChatSessionPreview,
   ChatUsageSummary,
   ConversationMessage,

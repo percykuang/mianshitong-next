@@ -1,4 +1,4 @@
-import { normalizeChatModelId } from '@mianshitong/providers/model/catalog'
+import { normalizeChatModelId } from '@mianshitong/llm'
 
 import {
   type EditableChatSessionRecord,
@@ -100,7 +100,7 @@ export async function editUserMessageAndLoadConversation(input: {
   return {
     conversation,
     error: null,
-    normalizedModelId: normalizeChatModelId(session.modelId),
+    chatModelId: normalizeChatModelId(session.modelId),
     sessionId: session.id,
   }
 }

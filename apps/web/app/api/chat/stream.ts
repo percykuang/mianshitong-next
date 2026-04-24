@@ -1,66 +1,14 @@
-import { getChatModel, getChatModelRuntimeInfo } from '@mianshitong/providers'
-import { createLogger } from '@mianshitong/shared'
+import { getChatModel, normalizeModelChunkText } from '@mianshitong/llm'
+import { createLogger } from '@mianshitong/shared/runtime'
 
 import {
   CAREER_CHAT_POLICY_INSTRUCTION,
   type CareerWorkflowContextResult,
   commitCareerThreadState,
 } from '@/server/career'
-import { persistAssistantReply } from '@/server/chat/persistence'
+import { persistAssistantReply } from '@/server/chat'
 
-const logger = createLogger('api/chat')
-
-function normalizeContent(
-  content:
-    | string
-    | Array<string | { text?: string; type?: string }>
-    | null
-    | undefined
-) {
-  if (typeof content === 'string') {
-    return content
-  }
-
-  if (!Array.isArray(content)) {
-    return ''
-  }
-
-  return content
-    .map((part) => {
-      if (typeof part === 'string') {
-        return part
-      }
-
-      if (typeof part?.text === 'string') {
-        return part.text
-      }
-
-      return ''
-    })
-    .join('')
-}
-
-function normalizeChunkText(
-  chunk:
-    | {
-        content?:
-          | string
-          | Array<string | { text?: string; type?: string }>
-          | null
-          | undefined
-        text?: string
-      }
-    | null
-    | undefined
-) {
-  const normalizedContent = normalizeContent(chunk?.content)
-
-  if (normalizedContent) {
-    return normalizedContent
-  }
-
-  return typeof chunk?.text === 'string' ? chunk.text : ''
-}
+const logger = createLogger('web.api.chat.stream')
 
 function closeReadableStreamController(
   controller: ReadableStreamDefaultController
@@ -77,20 +25,10 @@ function closeReadableStreamController(
   }
 }
 
-export function createChatStreamHeaders(input: {
-  persistedSessionId: string
-  runtime: ReturnType<typeof getChatModelRuntimeInfo>
-}) {
+export function createChatStreamHeaders(input: { persistedSessionId: string }) {
   return {
     'Content-Type': 'text/plain; charset=utf-8',
     'X-Content-Type-Options': 'nosniff',
-    'x-mst-chat-actual-model': encodeURIComponent(input.runtime.actualModel),
-    'x-mst-chat-display-target': encodeURIComponent(
-      input.runtime.displayTarget
-    ),
-    'x-mst-chat-mode': input.runtime.mode,
-    'x-mst-chat-provider': input.runtime.provider,
-    'x-mst-chat-requested-model-id': input.runtime.requestedModelId,
     'x-mst-chat-session-id': input.persistedSessionId,
   }
 }
@@ -191,7 +129,7 @@ export function createChatResponseStream(input: {
             return
           }
 
-          const text = normalizeChunkText(chunk)
+          const text = normalizeModelChunkText(chunk)
 
           if (!text) {
             continue

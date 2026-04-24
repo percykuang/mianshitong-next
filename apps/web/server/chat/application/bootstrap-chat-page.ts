@@ -1,34 +1,20 @@
 import {
   type ChatModelId,
   getChatModelOptions,
-  getChatModelRuntimeInfo,
   getDefaultChatModelId,
-} from '@mianshitong/providers'
+} from '@mianshitong/llm'
 
-import type {
-  ChatModelOption,
-  ChatRuntimeDebugInfo,
-  ChatSessionPreview,
-} from '@/app/chat/domain'
+import type { ChatModelOption, ChatSessionPreview } from '@/app/chat/domain'
 
-import { loadCurrentActorChatSessions } from './session-service'
+import { loadCurrentActorChatSessions } from './manage-chat-session'
 
 export interface ChatPageBootstrapData {
   initialModelOptions: readonly ChatModelOption[]
-  initialRuntimeDebugInfoByModelId: Record<ChatModelId, ChatRuntimeDebugInfo>
   initialSelectedModelId: ChatModelId
   initialSelectedSessionId: string | null
   initialSessions: ChatSessionPreview[]
   persistenceEnabled: boolean
   userEmail: string | null
-}
-
-function buildRuntimeDebugInfoByModelId(
-  modelOptions: readonly ChatModelOption[]
-): Record<ChatModelId, ChatRuntimeDebugInfo> {
-  return Object.fromEntries(
-    modelOptions.map((model) => [model.id, getChatModelRuntimeInfo(model.id)])
-  ) as Record<ChatModelId, ChatRuntimeDebugInfo>
 }
 
 export async function getChatPageBootstrapData(
@@ -42,8 +28,6 @@ export async function getChatPageBootstrapData(
   return {
     initialSessions: sessions,
     initialModelOptions,
-    initialRuntimeDebugInfoByModelId:
-      buildRuntimeDebugInfoByModelId(initialModelOptions),
     initialSelectedModelId: getDefaultChatModelId(),
     initialSelectedSessionId,
     persistenceEnabled: true,

@@ -1,12 +1,9 @@
 import { NextResponse } from 'next/server'
 
-import { persistInterruptedReplyForActor } from '@/server/chat/services'
+import { persistInterruptedReplyForActor } from '@/server/chat'
 
-import {
-  jsonError,
-  parseJsonBodyOrError,
-  withChatActor,
-} from '../../../../utils'
+import { chatRouteError } from '../../../../errors'
+import { parseJsonBodyOrError, withChatActor } from '../../../../utils'
 import { parseInterruptMessageBody } from '../../../requests'
 
 interface InterruptedMessageRouteContext {
@@ -35,11 +32,11 @@ export async function POST(
     })
 
     if (result.error === 'session_not_found') {
-      return jsonError('会话不存在或无权限访问', 404)
+      return chatRouteError('session_not_found')
     }
 
     if (result.error === 'message_count_mismatch') {
-      return jsonError('会话状态已变更，请刷新后重试', 409)
+      return chatRouteError('session_conflict')
     }
 
     return NextResponse.json({ session: result.session })

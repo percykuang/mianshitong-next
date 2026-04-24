@@ -1,8 +1,6 @@
 'use client'
 
-import { createLogger, isFetchTypeError } from '@mianshitong/shared'
-
-import { type ChatRuntimeDebugInfo } from '@/app/chat/domain'
+import { createLogger, isFetchTypeError } from '@mianshitong/shared/runtime'
 
 import {
   buildPersistedReplySessionFailureState,
@@ -45,7 +43,6 @@ export interface ChatReplyLifecycle {
   syncReplyResult: (input: {
     assistantMessageId: string
     content: string
-    runtimeDebugInfo: ChatRuntimeDebugInfo
   }) => void
 }
 
@@ -54,7 +51,7 @@ interface CreateChatReplyLifecycleInput {
   set: ChatStoreSetState
 }
 
-const logger = createLogger('chat-store')
+const logger = createLogger('web.chat.store.reply')
 
 export function createChatReplyLifecycle({
   get,
@@ -114,7 +111,6 @@ export function createChatReplyLifecycle({
   const syncReplyResult = (input: {
     assistantMessageId: string
     content: string
-    runtimeDebugInfo: ChatRuntimeDebugInfo
   }) => {
     set((state) => ({
       activeReply:
@@ -125,10 +121,6 @@ export function createChatReplyLifecycle({
               status: 'streaming',
             }
           : state.activeReply,
-      runtimeDebugInfoByModelId: {
-        ...state.runtimeDebugInfoByModelId,
-        [input.runtimeDebugInfo.requestedModelId]: input.runtimeDebugInfo,
-      },
     }))
   }
 
