@@ -23,6 +23,7 @@ const allowedScopes = [
   'repo',
   'db',
   'shared',
+  'llm',
 ]
 
 // commitlint 的规则数组格式通常是：
