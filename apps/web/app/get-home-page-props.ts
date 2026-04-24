@@ -1,4 +1,4 @@
-import { getCurrentAuthUserProfile } from '@/server/auth/services'
+import { getCurrentAuthUserProfile } from '@/server/auth'
 
 import { HOME_PAGE_CONTENT } from './home-page.data'
 

@@ -1,4 +1,7 @@
-import { DEFAULT_THEME_MODE, THEME_COOKIE_KEY } from '@mianshitong/shared'
+import {
+  DEFAULT_THEME_MODE,
+  THEME_COOKIE_KEY,
+} from '@mianshitong/shared/constants'
 import { createThemeVariablesStyleText } from '@mianshitong/tokens'
 import { AppUiProvider, AppUiRegistry } from '@mianshitong/ui'
 import type { Metadata } from 'next'
