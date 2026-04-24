@@ -3,7 +3,7 @@
 import { forwardRef } from 'react'
 
 import { Eye, EyeOff } from '@mianshitong/icons'
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 import { Input as AntInput } from 'antd'
 import type { InputRef } from 'antd'
 import type { PasswordProps as AntPasswordProps } from 'antd/es/input/Password'

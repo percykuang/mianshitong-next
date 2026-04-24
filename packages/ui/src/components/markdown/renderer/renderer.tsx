@@ -1,6 +1,6 @@
 'use client'
 
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -9,7 +9,7 @@ import { markdownElements } from './elements'
 import { remarkNormalizeListCodeIndent } from './remark-list-code-indent'
 import { normalizeMarkdownContent } from './utils'
 
-const logger = createLogger('MarkdownRenderer')
+const logger = createLogger('ui.markdown.renderer')
 
 // 入口层。负责把内容喂给 react-markdown，并挂上插件和样式。
 

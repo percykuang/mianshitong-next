@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 
 export interface FormFieldProps extends HTMLAttributes<HTMLDivElement> {
   label?: ReactNode

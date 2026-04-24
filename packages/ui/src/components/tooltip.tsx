@@ -2,7 +2,7 @@
 
 import { type ReactNode, useInsertionEffect } from 'react'
 
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 import { Tooltip as AntTooltip } from 'antd'
 import type { TooltipProps as AntTooltipProps } from 'antd'
 

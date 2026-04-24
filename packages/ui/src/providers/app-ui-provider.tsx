@@ -15,7 +15,7 @@ import {
   DEFAULT_THEME_MODE,
   THEME_COOKIE_KEY,
   THEME_STORAGE_KEY,
-} from '@mianshitong/shared'
+} from '@mianshitong/shared/constants'
 import {
   type ThemeMode as MianshitongThemeMode,
   createAntdTheme,

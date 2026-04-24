@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react'
 
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 
 export interface PageHeaderProps extends Omit<
   HTMLAttributes<HTMLDivElement>,

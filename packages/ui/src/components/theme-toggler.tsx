@@ -1,7 +1,7 @@
 'use client'
 
 import { Moon, Sun } from '@mianshitong/icons'
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 
 import { useThemeMode } from '../providers/app-ui-provider'
 

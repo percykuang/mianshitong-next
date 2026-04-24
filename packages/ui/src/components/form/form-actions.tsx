@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from 'react'
 
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 
 export type FormActionsProps = HTMLAttributes<HTMLDivElement>
 

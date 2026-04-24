@@ -1,5 +1,5 @@
 import { MianshitongLogoMark } from '@mianshitong/icons'
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 import Link from 'next/link'
 
 export interface AppBrandProps {

@@ -1,5 +1,6 @@
 'use client'
 
+import { InFlightTaskCache, LruCache } from '@mianshitong/shared/runtime'
 import {
   type BundledLanguage,
   bundledLanguages,
@@ -12,8 +13,10 @@ const LIGHT_THEME = 'github-light'
 const DARK_THEME = 'github-dark'
 const MAX_HIGHLIGHT_CACHE_ENTRIES = 300
 
-const highlightHtmlCache = new Map<string, string | null>()
-const highlightInFlightCache = new Map<string, Promise<string | null>>()
+const highlightHtmlCache = new LruCache<string, string | null>(
+  MAX_HIGHLIGHT_CACHE_ENTRIES
+)
+const highlightInFlightCache = new InFlightTaskCache<string, string | null>()
 
 function isBundledLanguage(language: string): language is BundledLanguage {
   return language in bundledLanguages
@@ -42,21 +45,7 @@ export function getCachedHighlightHtml(cacheKey: string) {
 }
 
 function cacheHighlightHtml(cacheKey: string, html: string | null) {
-  if (highlightHtmlCache.has(cacheKey)) {
-    highlightHtmlCache.delete(cacheKey)
-  }
-
   highlightHtmlCache.set(cacheKey, html)
-
-  if (highlightHtmlCache.size <= MAX_HIGHLIGHT_CACHE_ENTRIES) {
-    return
-  }
-
-  const oldestCacheKey = highlightHtmlCache.keys().next().value
-
-  if (typeof oldestCacheKey === 'string') {
-    highlightHtmlCache.delete(oldestCacheKey)
-  }
 }
 
 export async function highlightCodeBlock(
@@ -70,13 +59,7 @@ export async function highlightCodeBlock(
     return highlightHtmlCache.get(cacheKey) ?? null
   }
 
-  const inFlightHighlight = highlightInFlightCache.get(cacheKey)
-
-  if (inFlightHighlight) {
-    return inFlightHighlight
-  }
-
-  const highlightTask = (async () => {
+  const html = await highlightInFlightCache.getOrCreate(cacheKey, async () => {
     const resolvedLanguage = resolveShikiLanguage(language)
 
     if (!resolvedLanguage) {
@@ -87,15 +70,8 @@ export async function highlightCodeBlock(
       lang: resolvedLanguage,
       theme: themeMode === 'dark' ? DARK_THEME : LIGHT_THEME,
     })
-  })()
+  })
 
-  highlightInFlightCache.set(cacheKey, highlightTask)
-
-  try {
-    const html = await highlightTask
-    cacheHighlightHtml(cacheKey, html)
-    return html
-  } finally {
-    highlightInFlightCache.delete(cacheKey)
-  }
+  cacheHighlightHtml(cacheKey, html)
+  return html
 }

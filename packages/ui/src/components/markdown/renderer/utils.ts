@@ -5,12 +5,12 @@ import {
   isValidElement,
 } from 'react'
 
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
 import { isDevelopmentEnv } from '../../../utils/env'
 import { CodeBlock } from '../code-block'
 
-const logger = createLogger('MarkdownRenderer')
+const logger = createLogger('ui.markdown.renderer')
 
 // 一些结构判断和内容预处理，不直接定义大部分视觉样式，但会影响最终怎么渲染。
 

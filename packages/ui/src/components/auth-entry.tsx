@@ -1,5 +1,5 @@
 import { Loader, Logout, User } from '@mianshitong/icons'
-import { cn } from '@mianshitong/shared'
+import { cn } from '@mianshitong/shared/ui'
 import Link from 'next/link'
 
 import { Tooltip } from './tooltip'
