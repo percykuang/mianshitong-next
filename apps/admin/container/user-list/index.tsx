@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Modal, Table, useAppInstance } from '@mianshitong/ui'
 import { useRouter } from 'next/navigation'
 
-import type { AdminUserListResult } from '@/server/user/service'
+import type { AdminUserListResult } from '@/server/user'
 import { Title } from '@/ui'
 
 import { buildUsersHref } from './build-users-href'

@@ -9,7 +9,7 @@ import {
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { getAdminSessionDetail } from '@/server/session/service'
+import { getAdminSessionDetail } from '@/server'
 import { resolveAdminInternalPath } from '@/utils/redirect'
 
 import { SessionMessagesCard } from './session-messages-card'

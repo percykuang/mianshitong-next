@@ -2,7 +2,7 @@
 
 import { Button, Drawer, FormField, Input, Select } from '@mianshitong/ui'
 
-import type { AdminSessionFilters } from '@/server/session/service'
+import type { AdminSessionFilters } from '@/server/session'
 
 const USER_TYPE_OPTIONS = [
   {

@@ -6,7 +6,7 @@ import { scheduleExpiredAdminSessionCleanup } from './session-cleanup'
 import { createAuthSession, findUserByEmail } from './user-repository'
 import { validateCredentials } from './validation'
 
-export interface UserSummary {
+export interface AuthUserSummary {
   email: string
   id: string
 }
@@ -22,7 +22,7 @@ type AuthMutationResult =
       ok: true
       session: AuthSessionCookiePayload
       status: 200
-      user: UserSummary
+      user: AuthUserSummary
     }
   | {
       error: string
@@ -32,14 +32,17 @@ type AuthMutationResult =
       user?: never
     }
 
-function toUserSummary(user: { email: string; id: string }): UserSummary {
+function toAuthUserSummary(user: {
+  email: string
+  id: string
+}): AuthUserSummary {
   return {
     id: user.id,
     email: user.email,
   }
 }
 
-export async function getCurrentUserProfile() {
+export async function getCurrentAuthUserProfile() {
   scheduleExpiredAdminSessionCleanup()
   const user = await getCurrentUser()
 
@@ -47,7 +50,7 @@ export async function getCurrentUserProfile() {
     return null
   }
 
-  return toUserSummary(user)
+  return toAuthUserSummary(user)
 }
 
 export async function requireCurrentUser() {
@@ -105,7 +108,7 @@ export async function loginAdminWithCredentials(
     ok: true,
     session,
     status: 200,
-    user: toUserSummary(user),
+    user: toAuthUserSummary(user),
   }
 }
 

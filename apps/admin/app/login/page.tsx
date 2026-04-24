@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { LoginScreen } from '@/container'
-import { getCurrentUserProfile } from '@/server/auth/service'
+import { getCurrentAuthUserProfile } from '@/server'
 import { resolveRedirect } from '@/utils'
 
 interface LoginPageProps {
@@ -11,7 +11,7 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const currentAdminUser = await getCurrentUserProfile()
+  const currentAdminUser = await getCurrentAuthUserProfile()
   const resolvedSearchParams = await searchParams
   const nextPath = resolveRedirect(resolvedSearchParams.redirect)
 

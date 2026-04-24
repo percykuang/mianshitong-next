@@ -5,7 +5,7 @@ import { useEffect, useReducer } from 'react'
 import { useDebouncedValue } from '@mianshitong/hooks'
 import { useRouter } from 'next/navigation'
 
-import type { AdminSessionFilters } from '@/server/session/service'
+import type { AdminSessionFilters } from '@/server/session'
 
 import { buildSessionsHref } from './build-sessions-href'
 

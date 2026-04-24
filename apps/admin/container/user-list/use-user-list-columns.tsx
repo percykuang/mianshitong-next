@@ -2,7 +2,7 @@
 
 import { type TableColumnsType, Tag, TypographyText } from '@mianshitong/ui'
 
-import type { AdminUserListResult } from '@/server/user/service'
+import type { AdminUserListResult } from '@/server/user'
 
 import { UserActionsDropdown } from './user-actions-dropdown'
 

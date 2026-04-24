@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
 
-import { getCurrentUserProfile } from '@/server/auth/service'
+import { getCurrentAuthUserProfile } from '@/server'
 
 export default async function AdminIndexPage() {
-  const currentAdminUser = await getCurrentUserProfile()
+  const currentAdminUser = await getCurrentAuthUserProfile()
 
   redirect(currentAdminUser ? '/users' : '/login')
 }

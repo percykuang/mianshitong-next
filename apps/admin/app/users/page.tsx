@@ -1,5 +1,5 @@
 import { UserList } from '@/container'
-import { listAdminUsers, parseAdminUserListQuery } from '@/server/user/service'
+import { listAdminUsers, parseAdminUserListQuery } from '@/server'
 
 interface AdminUsersPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>

@@ -2,7 +2,7 @@
 
 import { FormField, Input, Modal, TypographyText } from '@mianshitong/ui'
 
-import type { AdminUserListResult } from '@/server/user/service'
+import type { AdminUserListResult } from '@/server/user'
 
 type AdminUserItem = AdminUserListResult['items'][number]
 

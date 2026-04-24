@@ -1,8 +1,5 @@
 import { SessionList } from '@/container'
-import {
-  listAdminSessions,
-  parseAdminSessionFilters,
-} from '@/server/session/service'
+import { listAdminSessions, parseAdminSessionFilters } from '@/server'
 
 interface AdminSessionsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>

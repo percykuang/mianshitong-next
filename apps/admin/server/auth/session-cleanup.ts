@@ -1,10 +1,10 @@
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 import 'server-only'
 
 import { deleteExpiredSessions } from './user-repository'
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60
-const logger = createLogger('admin-auth')
+const logger = createLogger('admin.auth.cleanup')
 
 let activeCleanupPromise: Promise<void> | null = null
 let nextCleanupAt = 0

@@ -11,7 +11,7 @@ import {
   TypographyText,
 } from '@mianshitong/ui'
 
-import type { AdminSessionMessageDetail } from '@/server/session/service'
+import type { AdminSessionMessageDetail } from '@/server/session'
 
 const PREVIEW_MESSAGE_COUNT = 3
 const PREVIEW_CONTAINER_MAX_HEIGHT_CLASS = 'max-h-[520px]'

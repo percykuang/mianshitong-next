@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import type {
   AdminSessionFilters,
   AdminSessionListResult,
-} from '@/server/session/service'
+} from '@/server/session'
 
 import { buildSessionsHref } from './build-sessions-href'
 

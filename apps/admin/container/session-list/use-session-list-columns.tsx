@@ -5,7 +5,7 @@ import { type TableColumnsType, Tag, TypographyText } from '@mianshitong/ui'
 import type {
   AdminSessionFilters,
   AdminSessionListResult,
-} from '@/server/session/service'
+} from '@/server/session'
 
 import { SessionActionsDropdown } from './session-actions-dropdown'
 
