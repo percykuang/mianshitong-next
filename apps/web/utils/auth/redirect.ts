@@ -1,3 +1,5 @@
+import { buildPathWithSearchParams } from '@mianshitong/shared/runtime'
+
 const AUTH_PAGE_PATHS = ['/login', '/register'] as const
 
 export const DEFAULT_AUTH_REDIRECT = '/chat'
@@ -52,9 +54,7 @@ export function createAuthPageHref(
     return authPath
   }
 
-  const params = new URLSearchParams({
+  return buildPathWithSearchParams(authPath, {
     redirect: redirectTarget,
   })
-
-  return `${authPath}?${params.toString()}`
 }

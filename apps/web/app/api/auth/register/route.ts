@@ -1,8 +1,10 @@
-import { parseJsonSafely } from '@mianshitong/shared'
+import { parseJsonSafely } from '@mianshitong/shared/runtime'
 import { NextResponse } from 'next/server'
 
-import { registerWithCredentials } from '@/server/auth/services'
-import { replaceAuthSessionCookie } from '@/server/auth/session'
+import {
+  registerWithCredentials,
+  replaceAuthSessionCookie,
+} from '@/server/auth'
 
 export async function POST(request: Request) {
   const body = await parseJsonSafely(request)

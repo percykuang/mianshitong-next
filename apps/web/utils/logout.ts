@@ -1,4 +1,4 @@
-import { parseJsonSafely } from '@mianshitong/shared'
+import { parseJsonSafely } from '@mianshitong/shared/runtime'
 
 interface LogoutErrorPayload {
   error?: string

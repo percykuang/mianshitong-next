@@ -5,4 +5,9 @@ export {
   registerWithCredentials,
   type AuthSessionCookiePayload,
   type AuthUserSummary,
-} from './auth-service'
+} from './application'
+export {
+  clearAuthSessionCookie,
+  replaceAuthSessionCookie,
+  setAuthSessionCookie,
+} from './session'
