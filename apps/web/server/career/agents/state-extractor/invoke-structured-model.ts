@@ -1,50 +1,21 @@
-import { getCareerRouterModel } from '@mianshitong/providers'
-import { withTaskRetry } from '@mianshitong/shared/utils'
+import {
+  extractJsonObjectFromModelText,
+  getJsonChatModel,
+  normalizeModelTextContent,
+} from '@mianshitong/llm'
+import {
+  safeJsonParse,
+  safeJsonStringify,
+  withTaskRetry,
+} from '@mianshitong/shared/runtime'
 import type { ZodTypeAny } from 'zod'
 
-function normalizeContent(
-  content:
+interface InvokedModelMessage {
+  content?:
     | string
     | Array<string | { text?: string; type?: string }>
     | null
     | undefined
-) {
-  if (typeof content === 'string') {
-    return content
-  }
-
-  if (!Array.isArray(content)) {
-    return ''
-  }
-
-  return content
-    .map((part) => {
-      if (typeof part === 'string') {
-        return part
-      }
-
-      return typeof part?.text === 'string' ? part.text : ''
-    })
-    .join('')
-}
-
-function extractJsonObject(text: string) {
-  const trimmed = text.trim()
-
-  if (!trimmed) {
-    return null
-  }
-
-  const fencedMatch = /```(?:json)?\s*([\s\S]*?)```/i.exec(trimmed)
-  const candidate = fencedMatch?.[1]?.trim() ?? trimmed
-  const startIndex = candidate.indexOf('{')
-  const endIndex = candidate.lastIndexOf('}')
-
-  if (startIndex === -1 || endIndex === -1 || endIndex <= startIndex) {
-    return null
-  }
-
-  return candidate.slice(startIndex, endIndex + 1)
 }
 
 export async function invokeCareerStructuredModel<T extends ZodTypeAny>(input: {
@@ -54,55 +25,46 @@ export async function invokeCareerStructuredModel<T extends ZodTypeAny>(input: {
   systemPrompt: string
   userPayload: unknown
 }) {
-  try {
-    const result = await withTaskRetry(
-      () =>
-        getCareerRouterModel()
-          .withStructuredOutput(input.schema, {
-            method: 'functionCalling',
-            includeRaw: false,
-          })
-          .invoke([
-            {
-              role: 'system',
-              content: input.systemPrompt,
-            },
-            {
-              role: 'user',
-              content: JSON.stringify(input.userPayload, null, 2),
-            },
-          ]),
-      {
-        maxRetries: 1,
-      }
-    )
+  const model = getJsonChatModel()
+  const userPayloadJson = safeJsonStringify(input.userPayload, 2)
 
-    return input.schema.parse(result)
-  } catch {
-    // Fall back to plain JSON prompting when structured output is unavailable.
+  if (userPayloadJson.error) {
+    throw new Error(`${input.label} payload is not JSON serializable.`, {
+      cause: userPayloadJson.error,
+    })
   }
 
-  const rawResult = await withTaskRetry(
+  const rawResult = (await withTaskRetry(
     () =>
-      getCareerRouterModel().invoke([
+      model.invoke([
         {
           role: 'system',
           content: [input.systemPrompt, input.jsonFallbackPrompt].join('\n\n'),
         },
         {
           role: 'user',
-          content: JSON.stringify(input.userPayload, null, 2),
+          content: userPayloadJson.data,
         },
       ]),
     {
       maxRetries: 1,
     }
+  )) as InvokedModelMessage
+  const jsonText = extractJsonObjectFromModelText(
+    normalizeModelTextContent(rawResult.content)
   )
-  const jsonText = extractJsonObject(normalizeContent(rawResult.content))
 
   if (!jsonText) {
     throw new Error(`${input.label} JSON fallback returned no JSON object.`)
   }
 
-  return input.schema.parse(JSON.parse(jsonText))
+  const parsedJson = safeJsonParse(jsonText)
+
+  if (parsedJson.error) {
+    throw new Error(`${input.label} JSON fallback returned invalid JSON.`, {
+      cause: parsedJson.error,
+    })
+  }
+
+  return input.schema.parse(parsedJson.data)
 }

@@ -1,7 +1,4 @@
-import {
-  getChatModelOptions,
-  getDefaultChatModelId,
-} from '@mianshitong/providers'
+import { getChatModelOptions, getDefaultChatModelId } from '@mianshitong/llm'
 
 export async function GET() {
   return Response.json({

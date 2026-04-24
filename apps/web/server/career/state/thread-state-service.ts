@@ -1,5 +1,5 @@
 import { prisma } from '@mianshitong/db'
-import { createLogger } from '@mianshitong/shared'
+import { createLogger } from '@mianshitong/shared/runtime'
 
 import type { CareerThreadState } from '../shared'
 import { createEmptyCareerThreadState } from './thread-state'
@@ -22,7 +22,7 @@ const careerThreadClient = (
     careerThread: CareerThreadDelegate
   }
 ).careerThread
-const logger = createLogger('career-thread')
+const logger = createLogger('web.career.thread-state')
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)

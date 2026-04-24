@@ -10,34 +10,66 @@ const taskIntentSchema = z.enum([
   'self_intro',
 ])
 
+function optionalFromNull<T extends z.ZodTypeAny>(schema: T) {
+  return z.preprocess(
+    (value) => (value === null ? undefined : value),
+    schema.optional()
+  )
+}
+
+function stringWithDefault(defaultValue: string) {
+  return z.preprocess(
+    (value) =>
+      typeof value === 'string' && value.trim() ? value : defaultValue,
+    z.string().trim().min(1)
+  )
+}
+
+function emptyOptionsObjectToNull(value: unknown) {
+  if (!value || typeof value !== 'object' || !('options' in value)) {
+    return value
+  }
+
+  const options = value.options
+  return Array.isArray(options) && options.length === 0 ? null : value
+}
+
 const flowPatchSchema = z.object({
-  lastAssistantAction: z.string().trim().optional(),
-  lastAssistantOffer: z
-    .object({
-      options: z.array(z.string().trim().min(1)).min(1),
-      type: z.string().trim().min(1),
-    })
-    .nullable()
-    .optional(),
-  lastUserAction: z.string().trim().optional(),
-  pendingDecision: z
-    .object({
-      kind: z.string().trim().min(1),
-      options: z.array(z.string().trim().min(1)).min(1),
-    })
-    .nullable()
-    .optional(),
-  phase: z.string().trim().optional(),
-  slots: z.record(z.unknown()).optional(),
-  status: z.enum(['active', 'cancelled', 'completed', 'paused']).optional(),
-  summary: z.string().trim().optional(),
+  lastAssistantAction: optionalFromNull(z.string().trim()),
+  lastAssistantOffer: z.preprocess(
+    emptyOptionsObjectToNull,
+    z
+      .object({
+        options: z.array(z.string().trim().min(1)).min(1),
+        type: z.string().trim().min(1),
+      })
+      .nullable()
+      .optional()
+  ),
+  lastUserAction: optionalFromNull(z.string().trim()),
+  pendingDecision: z.preprocess(
+    emptyOptionsObjectToNull,
+    z
+      .object({
+        kind: z.string().trim().min(1),
+        options: z.array(z.string().trim().min(1)).min(1),
+      })
+      .nullable()
+      .optional()
+  ),
+  phase: optionalFromNull(z.string().trim()),
+  slots: optionalFromNull(z.record(z.unknown())),
+  status: optionalFromNull(
+    z.enum(['active', 'cancelled', 'completed', 'paused'])
+  ),
+  summary: optionalFromNull(z.string().trim()),
 })
 
 export const stateExtractorSchema = z.object({
   confidence: z.number().min(0).max(1),
-  flowId: z.string().trim().optional(),
-  flowPatch: flowPatchSchema.optional(),
-  intent: taskIntentSchema.optional(),
+  flowId: optionalFromNull(z.string().trim()),
+  flowPatch: optionalFromNull(flowPatchSchema),
+  intent: optionalFromNull(taskIntentSchema),
   mode: z.enum([
     'activate_existing_flow',
     'clear_active_flow',
@@ -46,7 +78,7 @@ export const stateExtractorSchema = z.object({
     'no_state_change',
     'start_new_flow',
   ]),
-  reason: z.string().trim().min(1),
+  reason: stringWithDefault('模型未提供原因'),
 })
 
 export type StateExtractorResult = z.infer<typeof stateExtractorSchema>
@@ -80,4 +112,6 @@ JSON 必须符合下面结构：
     "status": "active"
   }
 }
+
+如果没有待选择项或上一轮选项，请把 pendingDecision / lastAssistantOffer 输出为 null，不要输出空 options 数组。
 `.trim()

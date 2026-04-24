@@ -1,4 +1,13 @@
-export * from './flow'
-export * from './intent'
-export * from './message'
-export * from './thread-state'
+export type {
+  CareerAssistantOffer,
+  CareerFlowState,
+  CareerFlowStatus,
+  CareerPendingDecision,
+} from './flow'
+export type { CareerIntent } from './intent'
+export type { CareerMessage, CareerMessageRole } from './message'
+export type {
+  CareerArtifactRef,
+  CareerStateCommit,
+  CareerThreadState,
+} from './thread-state'
