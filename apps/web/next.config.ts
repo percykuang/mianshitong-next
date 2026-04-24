@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     '@mianshitong/db',
     '@mianshitong/icons',
+    '@mianshitong/llm',
     '@mianshitong/tokens',
     '@mianshitong/ui',
   ],

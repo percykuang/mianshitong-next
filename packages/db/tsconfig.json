@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "../../tsconfig.server.json",
   "compilerOptions": {
-    "composite": false,
-    "types": ["node"]
+    "composite": false
   },
   "include": ["src/**/*.ts", "prisma.config.ts"]
 }
