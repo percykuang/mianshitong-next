@@ -32,11 +32,13 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 ARG APP=web
 ENV NODE_ENV=production
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 COPY . .
 RUN mkdir -p apps/${APP}/public && pnpm db:generate && pnpm --filter @mianshitong/${APP} build
 
 FROM deps AS migrator
 ENV NODE_ENV=production
+ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build?schema=public
 COPY . .
 RUN pnpm db:generate
 CMD ["pnpm", "--filter", "@mianshitong/db", "exec", "prisma", "migrate", "deploy"]
