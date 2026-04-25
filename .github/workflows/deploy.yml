@@ -2,9 +2,13 @@ name: deploy
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows:
+      - ci
     branches:
       - main
+    types:
+      - completed
 
 concurrency:
   group: production-deploy
@@ -16,6 +20,7 @@ permissions:
 
 jobs:
   build-and-deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: production
