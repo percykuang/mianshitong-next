@@ -19,7 +19,10 @@
     "antd",
     "anticon",
     "apps",
+    "Buildx",
+    "Caddyfile",
     "checkpointer",
+    "commitlint",
     "Consolas",
     "cssinjs",
     "cuid",
@@ -49,7 +52,9 @@
     "Segoe",
     "shiki",
     "Sider",
+    "stylelintignore",
     "trivago",
-    "turbopack"
+    "turbopack",
+    "zstd"
   ]
 }

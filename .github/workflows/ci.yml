@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: mianshitong_next
+          POSTGRES_PASSWORD: mianshitong_next
+          POSTGRES_DB: mianshitong_next
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mianshitong_next -d mianshitong_next"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: development
+      DATABASE_URL: postgresql://mianshitong_next:mianshitong_next@127.0.0.1:5432/mianshitong_next?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
+      - run: pnpm check

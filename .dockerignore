@@ -1,0 +1,17 @@
+.git
+.github
+.husky
+.cache
+.pnpm-store
+.playwright-mcp
+node_modules
+**/node_modules
+**/.next
+**/.next-playwright
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+.DS_Store

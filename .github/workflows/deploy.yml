@@ -1,0 +1,123 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}
+      IMAGE_TAG: ${{ github.sha }}
+      PROD_DEPLOY_PATH_SECRET: PROD_DEPLOY_PATH
+      PROD_SSH_HOST_SECRET: PROD_SSH_HOST
+      PROD_SSH_PORT_SECRET: PROD_SSH_PORT
+      PROD_SSH_PRIVATE_KEY_SECRET: PROD_SSH_PRIVATE_KEY
+      PROD_SSH_USER_SECRET: PROD_SSH_USER
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            APP=web
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-web:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-web:main-latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Build and push admin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: |
+            APP=admin
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-admin:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-admin:main-latest
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,mode=max,scope=admin
+
+      - name: Build and push migrate image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: migrator
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-migrate:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-migrate:main-latest
+          cache-from: type=gha,scope=migrate
+          cache-to: type=gha,mode=max,scope=migrate
+
+      - name: Configure SSH
+        env:
+          PROD_SSH_HOST: ${{ secrets[env.PROD_SSH_HOST_SECRET] }}
+          PROD_SSH_PORT: ${{ secrets[env.PROD_SSH_PORT_SECRET] }}
+          PROD_SSH_PRIVATE_KEY: ${{ secrets[env.PROD_SSH_PRIVATE_KEY_SECRET] }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$PROD_SSH_PORT" "$PROD_SSH_HOST" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Login GHCR on server
+        env:
+          PROD_SSH_HOST: ${{ secrets[env.PROD_SSH_HOST_SECRET] }}
+          PROD_SSH_PORT: ${{ secrets[env.PROD_SSH_PORT_SECRET] }}
+          PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
+          GHCR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "$GHCR_PASSWORD" | ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
+            "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+
+      - name: Sync deploy files to server
+        env:
+          PROD_SSH_HOST: ${{ secrets[env.PROD_SSH_HOST_SECRET] }}
+          PROD_SSH_PORT: ${{ secrets[env.PROD_SSH_PORT_SECRET] }}
+          PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
+          PROD_DEPLOY_PATH: ${{ secrets[env.PROD_DEPLOY_PATH_SECRET] }}
+        run: |
+          ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" "mkdir -p '$PROD_DEPLOY_PATH/scripts'"
+          scp -P "$PROD_SSH_PORT" deploy/compose.prod.yml deploy/Caddyfile "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/"
+          scp -P "$PROD_SSH_PORT" deploy/scripts/deploy.sh deploy/scripts/rollback.sh "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/scripts/"
+
+      - name: Trigger remote deploy
+        env:
+          PROD_SSH_HOST: ${{ secrets[env.PROD_SSH_HOST_SECRET] }}
+          PROD_SSH_PORT: ${{ secrets[env.PROD_SSH_PORT_SECRET] }}
+          PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
+          PROD_DEPLOY_PATH: ${{ secrets[env.PROD_DEPLOY_PATH_SECRET] }}
+        run: |
+          ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
+            "cd '$PROD_DEPLOY_PATH' && IMAGE_NAMESPACE='${{ env.IMAGE_NAMESPACE }}' IMAGE_TAG='${{ env.IMAGE_TAG }}' bash scripts/deploy.sh"
