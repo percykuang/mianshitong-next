@@ -18,22 +18,39 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAMESPACE: ghcr.io/${{ github.repository_owner }}
       IMAGE_TAG: ${{ github.sha }}
       PROD_DEPLOY_PATH_SECRET: PROD_DEPLOY_PATH
       PROD_SSH_HOST_SECRET: PROD_SSH_HOST
       PROD_SSH_PORT_SECRET: PROD_SSH_PORT
       PROD_SSH_PRIVATE_KEY_SECRET: PROD_SSH_PRIVATE_KEY
       PROD_SSH_USER_SECRET: PROD_SSH_USER
+      REGISTRY_HOST_SECRET: REGISTRY_HOST
+      REGISTRY_NAMESPACE_SECRET: REGISTRY_NAMESPACE
+      REGISTRY_PASSWORD_SECRET: REGISTRY_PASSWORD
+      REGISTRY_USERNAME_SECRET: REGISTRY_USERNAME
     steps:
       - uses: actions/checkout@v4
 
-      - name: Login to GHCR
+      - name: Compute image metadata
+        id: vars
+        env:
+          REGISTRY_HOST: ${{ secrets[env.REGISTRY_HOST_SECRET] }}
+          REGISTRY_NAMESPACE: ${{ secrets[env.REGISTRY_NAMESPACE_SECRET] }}
+        run: |
+          if [[ -z "$REGISTRY_HOST" || -z "$REGISTRY_NAMESPACE" ]]; then
+            echo "REGISTRY_HOST and REGISTRY_NAMESPACE secrets are required." >&2
+            exit 1
+          fi
+
+          echo "registry_host=${REGISTRY_HOST}" >> "$GITHUB_OUTPUT"
+          echo "image_prefix=${REGISTRY_HOST}/${REGISTRY_NAMESPACE}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to image registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ steps.vars.outputs.registry_host }}
+          username: ${{ secrets[env.REGISTRY_USERNAME_SECRET] }}
+          password: ${{ secrets[env.REGISTRY_PASSWORD_SECRET] }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -47,8 +64,8 @@ jobs:
             APP=web
           push: true
           tags: |
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-web:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-web:main-latest
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-web:${{ env.IMAGE_TAG }}
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-web:main-latest
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
@@ -61,8 +78,8 @@ jobs:
             APP=admin
           push: true
           tags: |
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-admin:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-admin:main-latest
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-admin:${{ env.IMAGE_TAG }}
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-admin:main-latest
           cache-from: type=gha,scope=admin
           cache-to: type=gha,mode=max,scope=admin
 
@@ -74,8 +91,8 @@ jobs:
           target: migrator
           push: true
           tags: |
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-migrate:${{ env.IMAGE_TAG }}
-            ${{ env.IMAGE_NAMESPACE }}/mianshitong-next-migrate:main-latest
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-migrate:${{ env.IMAGE_TAG }}
+            ${{ steps.vars.outputs.image_prefix }}/mianshitong-next-migrate:main-latest
           cache-from: type=gha,scope=migrate
           cache-to: type=gha,mode=max,scope=migrate
 
@@ -91,15 +108,17 @@ jobs:
           ssh-keyscan -p "$PROD_SSH_PORT" "$PROD_SSH_HOST" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Login GHCR on server
+      - name: Login image registry on server
         env:
           PROD_SSH_HOST: ${{ secrets[env.PROD_SSH_HOST_SECRET] }}
           PROD_SSH_PORT: ${{ secrets[env.PROD_SSH_PORT_SECRET] }}
           PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
-          GHCR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_HOST: ${{ secrets[env.REGISTRY_HOST_SECRET] }}
+          REGISTRY_PASSWORD: ${{ secrets[env.REGISTRY_PASSWORD_SECRET] }}
+          REGISTRY_USERNAME: ${{ secrets[env.REGISTRY_USERNAME_SECRET] }}
         run: |
-          printf '%s\n' "$GHCR_PASSWORD" | ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
-            "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+          printf '%s\n' "$REGISTRY_PASSWORD" | ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
+            "docker login '$REGISTRY_HOST' -u '$REGISTRY_USERNAME' --password-stdin"
 
       - name: Sync deploy files to server
         env:
@@ -120,4 +139,4 @@ jobs:
           PROD_DEPLOY_PATH: ${{ secrets[env.PROD_DEPLOY_PATH_SECRET] }}
         run: |
           ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
-            "cd '$PROD_DEPLOY_PATH' && IMAGE_NAMESPACE='${{ env.IMAGE_NAMESPACE }}' IMAGE_TAG='${{ env.IMAGE_TAG }}' bash scripts/deploy.sh"
+            "cd '$PROD_DEPLOY_PATH' && IMAGE_NAMESPACE='${{ steps.vars.outputs.image_prefix }}' IMAGE_TAG='${{ env.IMAGE_TAG }}' bash scripts/deploy.sh"
