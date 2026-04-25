@@ -1,5 +1,5 @@
-import { mkdir } from 'node:fs/promises'
 import { spawnSync } from 'node:child_process'
+import { mkdir } from 'node:fs/promises'
 
 // 统一收口 Stylelint 的执行参数，避免把长命令直接堆在 package.json 里。
 const cacheDir = '.cache/stylelint'
