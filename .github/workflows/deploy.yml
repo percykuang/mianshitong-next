@@ -103,8 +103,8 @@ jobs:
           PROD_SSH_PRIVATE_KEY: ${{ secrets[env.PROD_SSH_PRIVATE_KEY_SECRET] }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$PROD_SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p "$PROD_SSH_PORT" "$PROD_SSH_HOST" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -117,7 +117,7 @@ jobs:
           REGISTRY_PASSWORD: ${{ secrets[env.REGISTRY_PASSWORD_SECRET] }}
           REGISTRY_USERNAME: ${{ secrets[env.REGISTRY_USERNAME_SECRET] }}
         run: |
-          printf '%s\n' "$REGISTRY_PASSWORD" | ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
+          printf '%s\n' "$REGISTRY_PASSWORD" | ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
             "docker login '$REGISTRY_HOST' -u '$REGISTRY_USERNAME' --password-stdin"
 
       - name: Sync deploy files to server
@@ -127,9 +127,9 @@ jobs:
           PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
           PROD_DEPLOY_PATH: ${{ secrets[env.PROD_DEPLOY_PATH_SECRET] }}
         run: |
-          ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" "mkdir -p '$PROD_DEPLOY_PATH/scripts'"
-          scp -P "$PROD_SSH_PORT" deploy/compose.prod.yml deploy/Caddyfile "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/"
-          scp -P "$PROD_SSH_PORT" deploy/scripts/deploy.sh deploy/scripts/rollback.sh "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/scripts/"
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" "mkdir -p '$PROD_DEPLOY_PATH/scripts'"
+          scp -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -P "$PROD_SSH_PORT" deploy/compose.prod.yml deploy/Caddyfile "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/"
+          scp -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -P "$PROD_SSH_PORT" deploy/scripts/deploy.sh deploy/scripts/rollback.sh "$PROD_SSH_USER@$PROD_SSH_HOST:$PROD_DEPLOY_PATH/scripts/"
 
       - name: Trigger remote deploy
         env:
@@ -138,5 +138,5 @@ jobs:
           PROD_SSH_USER: ${{ secrets[env.PROD_SSH_USER_SECRET] }}
           PROD_DEPLOY_PATH: ${{ secrets[env.PROD_DEPLOY_PATH_SECRET] }}
         run: |
-          ssh -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -p "$PROD_SSH_PORT" "$PROD_SSH_USER@$PROD_SSH_HOST" \
             "cd '$PROD_DEPLOY_PATH' && IMAGE_NAMESPACE='${{ steps.vars.outputs.image_prefix }}' IMAGE_TAG='${{ env.IMAGE_TAG }}' bash scripts/deploy.sh"
