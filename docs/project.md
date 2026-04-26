@@ -81,7 +81,7 @@ OLLAMA_API_KEY=ollama
 
 DEEPSEEK_API_KEY="your-deepseek-api-key"
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-# DEEPSEEK_MODEL=deepseek-chat
+# DEEPSEEK_MODEL=deepseek-v4-flash
 ```
 
 `OLLAMA_MODEL` / `DEEPSEEK_MODEL` 是可选覆盖项；不配置时会使用 `packages/llm/src/environment-catalog.ts` 中的默认模型。

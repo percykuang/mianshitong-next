@@ -30,7 +30,9 @@ interface ProviderConfig {
 interface ModelConnectionConfig {
   apiKey: string | undefined
   baseURL: string
+  jsonModelKwargs?: Record<string, unknown>
   model: string
+  modelKwargs?: Record<string, unknown>
 }
 
 const DEFAULT_OLLAMA_BASE_URL = 'http://127.0.0.1:11434'
@@ -59,13 +61,21 @@ const PROVIDER_CONFIG_BY_NAME: Record<ModelProvider, ProviderConfig> = {
 function buildModelClientCacheKey(input: {
   baseURL: string
   model: string
+  modelKwargs?: Record<string, unknown>
   provider: ModelProvider
 }) {
-  return [input.provider, input.baseURL, input.model].join(':')
+  return [
+    input.provider,
+    input.baseURL,
+    input.model,
+    JSON.stringify(input.modelKwargs ?? {}),
+  ].join(':')
 }
 
 function resolveModelConnection(input: {
   defaultModel: string
+  jsonModelKwargs?: Record<string, unknown>
+  modelKwargs?: Record<string, unknown>
   provider: ModelProvider
 }): ModelConnectionConfig {
   const providerConfig = PROVIDER_CONFIG_BY_NAME[input.provider]
@@ -78,7 +88,9 @@ function resolveModelConnection(input: {
     baseURL: providerConfig.normalizeBaseUrl
       ? providerConfig.normalizeBaseUrl(rawBaseUrl)
       : rawBaseUrl,
+    jsonModelKwargs: input.jsonModelKwargs ?? input.modelKwargs,
     model: readEnvString(providerConfig.modelEnv) ?? input.defaultModel,
+    modelKwargs: input.modelKwargs,
   }
 }
 
@@ -92,15 +104,21 @@ function resolveChatModelConfig(modelId: ChatModelId) {
     supportsJsonOutput: providerConfig.supportsJsonOutput,
     connection: resolveModelConnection({
       defaultModel: modelCatalogItem.model,
+      jsonModelKwargs: modelCatalogItem.jsonModelKwargs,
+      modelKwargs: modelCatalogItem.modelKwargs,
       provider: modelCatalogItem.provider,
     }),
   }
 }
 
-function createModelClient(connection: ModelConnectionConfig) {
+function createModelClient(
+  connection: ModelConnectionConfig,
+  modelKwargs = connection.modelKwargs
+) {
   return new ChatOpenAI({
     model: connection.model,
     apiKey: connection.apiKey,
+    modelKwargs,
     configuration: {
       baseURL: connection.baseURL,
     },
@@ -109,16 +127,18 @@ function createModelClient(connection: ModelConnectionConfig) {
 
 function getOrCreateModelClient(input: {
   connection: ModelConnectionConfig
+  modelKwargs?: Record<string, unknown>
   provider: ModelProvider
 }) {
   const cacheKey = buildModelClientCacheKey({
     provider: input.provider,
     baseURL: input.connection.baseURL,
     model: input.connection.model,
+    modelKwargs: input.modelKwargs ?? input.connection.modelKwargs,
   })
 
   return modelClientCache.getOrCreate(cacheKey, () =>
-    createModelClient(input.connection)
+    createModelClient(input.connection, input.modelKwargs)
   )
 }
 
@@ -138,23 +158,27 @@ export function getJsonChatModel(
   modelId: ChatModelId = getDefaultChatModelId()
 ) {
   const plan = resolveChatModelConfig(modelId)
-  const model = getOrCreateModelClient({
-    connection: plan.connection,
-    provider: plan.provider,
-  })
 
   if (!plan.supportsJsonOutput) {
-    return model
+    return getOrCreateModelClient({
+      connection: plan.connection,
+      provider: plan.provider,
+    })
   }
 
   const cacheKey = `${buildModelClientCacheKey({
     provider: plan.provider,
     baseURL: plan.connection.baseURL,
     model: plan.connection.model,
+    modelKwargs: plan.connection.jsonModelKwargs,
   })}:json_object`
 
   return jsonModelClientCache.getOrCreate(cacheKey, () =>
-    model.withConfig({
+    getOrCreateModelClient({
+      connection: plan.connection,
+      modelKwargs: plan.connection.jsonModelKwargs,
+      provider: plan.provider,
+    }).withConfig({
       response_format: {
         type: 'json_object',
       },

@@ -62,7 +62,9 @@ packages/llm/src/environment-catalog.ts
 {
   id: string
   label: string
+  jsonModelKwargs?: Record<string, unknown>
   model: string
+  modelKwargs?: Record<string, unknown>
   provider: 'ollama' | 'deepseek'
   description?: string
 }
@@ -73,6 +75,8 @@ packages/llm/src/environment-catalog.ts
 - `id` 是业务层稳定使用的模型 ID。
 - `model` 是 provider 实际模型名。
 - `provider` 决定连接配置来源。
+- `modelKwargs` 是 provider 专用请求体扩展参数，例如 DeepSeek V4 的 thinking 配置。
+- `jsonModelKwargs` 是结构化输出专用扩展参数；未配置时复用 `modelKwargs`。
 
 ## 环境变量
 
@@ -107,12 +111,13 @@ getJsonChatModel()
 
 策略：
 
-- DeepSeek：启用 JSON Output，即 `response_format: { type: 'json_object' }`
+- DeepSeek：启用 JSON Output，即 `response_format: { type: 'json_object' }`，并默认使用 `jsonModelKwargs` 关闭 thinking，降低结构化输出波动。
 - Ollama：不强行开启 JSON Output，继续依赖 prompt 约束 + JSON 提取 + Zod 校验
 
 原因：
 
 - DeepSeek API 对 JSON Output 支持更稳定。
+- DeepSeek V4 thinking 更适合面向用户的深度回复，不适合作为内部 JSON 抽取默认行为。
 - 本地 Ollama 的 OpenAI-compatible JSON 行为受版本和模型影响较大，不强行依赖。
 
 ## 小模型容错

@@ -9,6 +9,8 @@ export interface ChatModelOption {
 }
 
 export interface ChatModelCatalogItem extends ChatModelOption {
+  jsonModelKwargs?: Record<string, unknown>
   model: string
+  modelKwargs?: Record<string, unknown>
   provider: ModelProvider
 }

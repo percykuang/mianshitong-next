@@ -39,9 +39,9 @@ llm/
 - `provider`
   - 模型提供方，表示请求最终发给谁，例如 `deepseek`、`ollama`
 - `model`
-  - 具体模型名，例如 `deepseek-chat`、`qwen3:4b`
+  - 具体模型名，例如 `deepseek-v4-flash`、`qwen3:4b`
 - `modelId`
-  - 面向业务层暴露的稳定聊天模型 ID，例如 `qwen3-4b`、`deepseek-chat`
+  - 面向业务层暴露的稳定聊天模型 ID，例如 `qwen3-4b`、`deepseek-v4-flash`
 
 ## 选择链路
 
@@ -69,5 +69,5 @@ llm/
 3. 根入口只暴露稳定 API，不再暴露底层目录结构。
 4. 模型目录提供默认值，环境变量只负责覆盖当前 provider 的连接地址、密钥和模型名。
 5. `temperature`、`maxTokens` 等生成参数默认交给模型提供方处理，项目内不维护额外环境变量开关。
-6. 当前仅对 `deepseek` provider 启用 JSON Output；`ollama` 默认继续使用提示词 JSON 和安全解析，避免依赖本地 Ollama 版本差异。
+6. 当前仅对 `deepseek` provider 启用 JSON Output；DeepSeek V4 的结构化输出会使用 JSON 专用参数关闭 thinking，`ollama` 默认继续使用提示词 JSON 和安全解析，避免依赖本地 Ollama 版本差异。
 7. 不再维护旧模型 ID alias；外部传入未知模型 ID 时统一回退到当前环境默认模型。
