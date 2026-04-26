@@ -44,6 +44,7 @@ export interface ChatControllerSidebarGroup {
   handleRenameSession: (sessionId: string) => void
   handleSelectSession: (sessionId: string) => void
   handleTogglePinSession: (sessionId: string) => void
+  generatingTitleSessionIds: string[]
   selectedSessionId: string | null
   sessions: ChatSessionPreview[]
   setSidebarOpen: Dispatch<SetStateAction<boolean>>
@@ -73,6 +74,7 @@ export interface ChatSessionStateLike {
   handleStartEditUserMessage: (messageId: string, content: string) => void
   handleTogglePinSession: (sessionId: string) => Promise<void>
   hasConversationMessages: boolean
+  generatingTitleSessionIds: string[]
   pendingEditedMessageAnchorId: string | null
   selectedSession: ChatSessionPreview | null
   selectedSessionId: string | null

@@ -18,12 +18,12 @@ model AuthUser {
 }
 
 model AdminUser {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String         @id @default(cuid())
+  email        String         @unique
   passwordHash String
   sessions     AdminSession[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model AdminSession {
@@ -67,6 +67,12 @@ enum ChatMessageCompletionStatus {
   interrupted
 }
 
+enum ChatSessionTitleSource {
+  fallback
+  ai
+  manual
+}
+
 enum UserActorType {
   guest
   registered
@@ -90,18 +96,19 @@ model UserActor {
 }
 
 model ChatSession {
-  id           String        @id @default(cuid())
+  id           String                 @id @default(cuid())
   actorId      String
   userId       String?
   title        String
-  preview      String        @default("")
+  titleSource  ChatSessionTitleSource @default(fallback)
+  preview      String                 @default("")
   modelId      String
-  pinned       Boolean       @default(false)
+  pinned       Boolean                @default(false)
   pinnedAt     DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  actor        UserActor     @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  user         AuthUser?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  actor        UserActor              @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  user         AuthUser?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   messages     ChatMessage[]
   careerThread CareerThread?
 

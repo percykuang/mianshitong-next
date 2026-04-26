@@ -35,6 +35,7 @@ export function createChatStore(input: ChatStoreInitialState) {
       draft: '',
       editingMessageId: null,
       editingValue: '',
+      generatingTitleSessionIds: [],
       pendingSidebarSessionId: null,
       pendingEditedMessageAnchorId: null,
       persistenceEnabled: input.persistenceEnabled,

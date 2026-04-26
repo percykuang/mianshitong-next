@@ -6,11 +6,18 @@ import {
   clearPendingReplySidebarSession,
   createNextSession,
   deletePersistedChatSession,
+  generatePersistedChatSessionTitle,
   getPersistedChatSession,
   streamChatReply,
   streamEditedChatReply,
 } from '../../utils'
-import { getSessionById, replaceSession, upsertSession } from '../core/helpers'
+import {
+  addUniqueSessionId,
+  getSessionById,
+  removeSessionId,
+  replaceSession,
+  upsertSession,
+} from '../core/helpers'
 import { isReplying } from '../core/selectors'
 import { type ChatStoreGetState, type ChatStoreSetState } from '../core/types'
 import { type ChatReplyLifecycle } from './lifecycle'
@@ -59,7 +66,42 @@ export function createChatReplyStreamActions({
     }
   }
 
+  const generateSessionTitle = async (sessionId: string) => {
+    if (!get().persistenceEnabled) {
+      return
+    }
+
+    set((state) => ({
+      generatingTitleSessionIds: addUniqueSessionId(
+        state.generatingTitleSessionIds,
+        sessionId
+      ),
+    }))
+
+    try {
+      const updatedSession = await generatePersistedChatSessionTitle(sessionId)
+
+      set((state) => ({
+        sessions: replaceSession(
+          state.sessions,
+          updatedSession.id,
+          updatedSession
+        ),
+      }))
+    } catch {
+      // 标题生成只是会话列表增强能力，失败时保留 fallback 标题即可。
+    } finally {
+      set((state) => ({
+        generatingTitleSessionIds: removeSessionId(
+          state.generatingTitleSessionIds,
+          sessionId
+        ),
+      }))
+    }
+  }
+
   async function sendMessage(inputOverride?: string) {
+    let titleGenerationRequested = false
     const initialState = get()
     // 支持“直接传入内容发送”和“发送当前草稿”两种入口。
     const input = (inputOverride ?? initialState.draft).trim()
@@ -79,8 +121,7 @@ export function createChatReplyStreamActions({
     const activeSessionId = optimisticSession.id
     const assistantMessageId = `assistant-${Date.now()}`
     const isNewSession = initialState.selectedSessionId === null
-    const shouldHideSessionFromSidebar =
-      initialState.persistenceEnabled && isNewSession
+    const shouldGenerateTitle = initialState.persistenceEnabled && isNewSession
 
     // 进入“等待首个 chunk”状态，并把 optimistic session 写入 store。
     // 这里同时清空草稿，让输入框立即回到可输入状态。
@@ -94,9 +135,10 @@ export function createChatReplyStreamActions({
         status: 'awaiting-first-chunk',
       },
       draft: '',
-      pendingSidebarSessionId: shouldHideSessionFromSidebar
-        ? activeSessionId
-        : state.pendingSidebarSessionId,
+      generatingTitleSessionIds: shouldGenerateTitle
+        ? addUniqueSessionId(state.generatingTitleSessionIds, activeSessionId)
+        : state.generatingTitleSessionIds,
+      pendingSidebarSessionId: state.pendingSidebarSessionId,
       selectedSessionId: activeSessionId,
       sessions: upsertSession(
         state.sessions,
@@ -142,6 +184,11 @@ export function createChatReplyStreamActions({
         persistedSessionId,
         persistenceEnabled: initialState.persistenceEnabled,
       })
+
+      if (shouldGenerateTitle) {
+        titleGenerationRequested = true
+        void generateSessionTitle(persistedSessionId ?? activeSessionId)
+      }
     } catch (error) {
       const activeReply = getMatchingActiveReply(assistantMessageId)
 
@@ -207,6 +254,15 @@ export function createChatReplyStreamActions({
         }
       }
     } finally {
+      if (shouldGenerateTitle && !titleGenerationRequested) {
+        set((state) => ({
+          generatingTitleSessionIds: removeSessionId(
+            state.generatingTitleSessionIds,
+            activeSessionId
+          ),
+        }))
+      }
+
       // 无论成功、失败还是中断，都要释放 controller，并清掉当前 activeReply 标记。
       setActiveAbortController(null)
       lifecycle.clearActiveReply(assistantMessageId)
@@ -288,6 +344,10 @@ export function createChatReplyStreamActions({
         persistenceEnabled: state.persistenceEnabled,
       })
 
+      if (state.persistenceEnabled) {
+        void generateSessionTitle(persistedSessionId ?? selectedSession.id)
+      }
+
       return true
     } catch (error) {
       const activeReply = getMatchingActiveReply(assistantMessageId)
@@ -315,6 +375,7 @@ export function createChatReplyStreamActions({
   }
 
   return {
+    generateSessionTitle,
     sendMessage,
     submitEditedMessage,
   }

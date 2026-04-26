@@ -134,7 +134,19 @@ export function createChatReplyLifecycle({
       input.activeReply.sessionId
     )
 
-    if (!currentSession || !input.activeReply.latestContent.trim()) {
+    if (!input.activeReply.latestContent.trim()) {
+      if (currentState.persistenceEnabled) {
+        await hydrateSession(
+          input.activeReply.sessionId,
+          input.activeReply.optimisticSessionId ?? input.activeReply.sessionId
+        )
+      }
+
+      clearActiveReply(input.assistantMessageId)
+      return
+    }
+
+    if (!currentSession) {
       return
     }
 

@@ -37,6 +37,16 @@ export function getLastEditableUserMessageId(
   )
 }
 
+export function addUniqueSessionId(sessionIds: string[], sessionId: string) {
+  return sessionIds.includes(sessionId)
+    ? sessionIds
+    : [...sessionIds, sessionId]
+}
+
+export function removeSessionId(sessionIds: string[], sessionId: string) {
+  return sessionIds.filter((currentSessionId) => currentSessionId !== sessionId)
+}
+
 export function projectReplyOntoSession(
   session: ChatSessionPreview,
   activeReply: ActiveReply | null

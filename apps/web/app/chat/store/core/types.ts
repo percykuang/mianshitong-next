@@ -34,6 +34,7 @@ export interface ChatStoreState {
   draft: string
   editingMessageId: string | null
   editingValue: string
+  generatingTitleSessionIds: string[]
   pendingSidebarSessionId: string | null
   pendingEditedMessageAnchorId: string | null
   persistenceEnabled: boolean
@@ -47,6 +48,7 @@ export interface ChatStoreActions {
   deleteAllSessions: () => Promise<number | null>
   deleteSession: (sessionId: string) => Promise<boolean>
   dispose: () => void
+  generateSessionTitle: (sessionId: string) => Promise<void>
   interruptAndNewSession: () => Promise<void>
   interruptAndSelectSession: (sessionId: string) => Promise<void>
   newSession: () => void

@@ -4,11 +4,7 @@ import {
   type EditableChatSessionRecord,
   findEditableSessionRecord,
 } from './query'
-import {
-  type ChatPrismaTransactionClient,
-  chatPrisma,
-  createChatSessionTitle,
-} from './shared'
+import { type ChatPrismaTransactionClient, chatPrisma } from './shared'
 
 export async function editUserMessageAndLoadConversation(input: {
   actorId: string
@@ -48,10 +44,6 @@ export async function editUserMessageAndLoadConversation(input: {
   const trailingMessageIds = session.messages
     .slice(targetIndex + 1)
     .map((message: EditableChatSessionRecord['messages'][number]) => message.id)
-  const firstUserMessageIndex = session.messages.findIndex(
-    (message: EditableChatSessionRecord['messages'][number]) =>
-      message.role === 'user'
-  )
   const conversation = session.messages
     .slice(0, targetIndex + 1)
     .map(
@@ -90,9 +82,6 @@ export async function editUserMessageAndLoadConversation(input: {
       },
       data: {
         preview: input.message,
-        ...(targetIndex === firstUserMessageIndex
-          ? { title: createChatSessionTitle(input.message) }
-          : {}),
       },
     })
   })

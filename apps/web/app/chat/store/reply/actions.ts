@@ -27,6 +27,7 @@ export function createChatReplyActions({
 }: CreateChatReplyActionsInput): Pick<
   ChatStoreActions,
   | 'dispose'
+  | 'generateSessionTitle'
   | 'interruptAndNewSession'
   | 'interruptAndSelectSession'
   | 'selectPrompt'
@@ -123,6 +124,8 @@ export function createChatReplyActions({
       getActiveAbortController()?.abort()
       setActiveAbortController(null)
     },
+
+    generateSessionTitle: streamActions.generateSessionTitle,
 
     async interruptAndNewSession() {
       const requestVersion = ++navigationRequestVersion

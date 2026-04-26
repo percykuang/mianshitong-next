@@ -2,7 +2,6 @@ import {
   type ChatMessageCompletionStatus,
   type ChatSessionPreview,
   type ConversationMessage,
-  createChatSessionTitle,
   formatChatTimestamp,
 } from '@/app/chat/domain'
 
@@ -149,16 +148,9 @@ export function buildOptimisticEditedSession({
     return null
   }
 
-  const firstUserMessageIndex = session.messages.findIndex(
-    (message) => message.role === 'user'
-  )
-
   return {
     ...session,
-    title:
-      targetIndex === firstUserMessageIndex
-        ? createChatSessionTitle(normalizedContent)
-        : session.title,
+    title: session.title,
     preview: normalizedContent,
     updatedAt: Date.now(),
     messages: [

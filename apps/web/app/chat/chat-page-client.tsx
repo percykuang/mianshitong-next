@@ -201,6 +201,7 @@ function ChatPageClientShell({
         onRenameSession={sidebar.handleRenameSession}
         onSelectSession={sidebar.handleSelectSession}
         onTogglePinSession={sidebar.handleTogglePinSession}
+        generatingTitleSessionIds={sidebar.generatingTitleSessionIds}
         selectedSessionId={sidebar.selectedSessionId}
         sessions={sidebar.sessions}
         sidebarOpen={sidebarOpen}

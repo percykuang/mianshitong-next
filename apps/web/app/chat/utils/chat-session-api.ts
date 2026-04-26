@@ -103,6 +103,17 @@ export async function updatePersistedChatSession(
   return payload.session
 }
 
+export async function generatePersistedChatSessionTitle(sessionId: string) {
+  const response = await fetch(`/api/chat/sessions/${sessionId}/title`, {
+    method: 'POST',
+  })
+
+  await ensureSuccessResponse(response)
+
+  const payload = (await response.json()) as SessionResponse
+  return payload.session
+}
+
 export async function deletePersistedChatSession(sessionId: string) {
   const response = await fetch(`/api/chat/sessions/${sessionId}`, {
     method: 'DELETE',

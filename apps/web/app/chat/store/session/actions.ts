@@ -11,7 +11,11 @@ import {
   updatePersistedChatSession,
   upsertSession,
 } from '../../utils'
-import { getLastEditableUserMessageId, getSessionById } from '../core/helpers'
+import {
+  getLastEditableUserMessageId,
+  getSessionById,
+  removeSessionId,
+} from '../core/helpers'
 import { isReplying } from '../core/selectors'
 import {
   type ChatStoreActions,
@@ -83,6 +87,7 @@ export function createChatSessionActions({
         ...RESET_EDITING_STATE,
         pendingSidebarSessionId: null,
         pendingEditedMessageAnchorId: null,
+        generatingTitleSessionIds: [],
         selectedSessionId: null,
         sessions: [],
       })
@@ -116,6 +121,10 @@ export function createChatSessionActions({
             ? null
             : currentState.pendingSidebarSessionId,
         pendingEditedMessageAnchorId: null,
+        generatingTitleSessionIds: removeSessionId(
+          currentState.generatingTitleSessionIds,
+          targetSession.id
+        ),
         selectedSessionId:
           currentState.selectedSessionId === targetSession.id
             ? null
@@ -154,6 +163,10 @@ export function createChatSessionActions({
 
       if (!state.persistenceEnabled) {
         set((currentState) => ({
+          generatingTitleSessionIds: removeSessionId(
+            currentState.generatingTitleSessionIds,
+            targetSession.id
+          ),
           sessions: replaceSession(currentState.sessions, targetSession.id, {
             ...targetSession,
             title: nextTitle,
@@ -172,6 +185,10 @@ export function createChatSessionActions({
         )
 
         set((currentState) => ({
+          generatingTitleSessionIds: removeSessionId(
+            currentState.generatingTitleSessionIds,
+            targetSession.id
+          ),
           sessions: replaceSession(
             currentState.sessions,
             targetSession.id,

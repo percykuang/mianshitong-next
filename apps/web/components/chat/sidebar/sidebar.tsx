@@ -15,6 +15,7 @@ export function ChatSidebar({
   onRenameSession,
   onSelectSession,
   onTogglePinSession,
+  generatingTitleSessionIds,
   sessions,
   selectedSessionId,
   sidebarOpen,
@@ -27,6 +28,7 @@ export function ChatSidebar({
   onRenameSession: (sessionId: string) => void
   onSelectSession: (sessionId: string) => void
   onTogglePinSession: (sessionId: string) => void
+  generatingTitleSessionIds: string[]
   sessions: ChatSessionPreview[]
   selectedSessionId: string | null
   sidebarOpen: boolean
@@ -111,6 +113,7 @@ export function ChatSidebar({
               onSelect={() => onSelectSession(session.id)}
               onTogglePin={() => onTogglePinSession(session.id)}
               session={session}
+              titleGenerating={generatingTitleSessionIds.includes(session.id)}
             />
           ))}
         </div>

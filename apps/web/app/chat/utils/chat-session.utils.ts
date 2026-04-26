@@ -1,7 +1,7 @@
 import {
   type ChatSessionPreview,
   type ConversationMessage,
-  createChatSessionTitle,
+  DEFAULT_CHAT_SESSION_TITLE,
   formatChatTimestamp,
 } from '@/app/chat/domain'
 
@@ -77,7 +77,7 @@ export function createNextSession({
     createdAt: baseSession?.createdAt ?? now,
     id: nextSessionId,
     pinnedAt: baseSession?.pinnedAt,
-    title: baseSession?.title ?? createChatSessionTitle(input),
+    title: baseSession?.title ?? DEFAULT_CHAT_SESSION_TITLE,
     preview: input,
     pinned: baseSession?.pinned,
     updatedAt: now,

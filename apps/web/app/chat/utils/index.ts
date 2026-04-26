@@ -15,6 +15,7 @@ export {
   createPersistedChatSession,
   deleteAllPersistedChatSessions,
   deletePersistedChatSession,
+  generatePersistedChatSessionTitle,
   getPersistedChatSession,
   listPersistedChatSessions,
   persistInterruptedChatReply,

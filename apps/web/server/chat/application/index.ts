@@ -3,6 +3,7 @@ export {
   type ChatPageBootstrapData,
 } from './bootstrap-chat-page'
 export { prepareEditedChatReply } from './edit-chat-message'
+export { generateActorChatSessionTitle } from './generate-chat-session-title'
 export { prepareChatReply, prepareSessionChatReply } from './send-chat-message'
 export { checkChatQuota, getChatUsageSummary } from './resolve-chat-usage'
 export {

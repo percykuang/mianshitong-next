@@ -2,6 +2,7 @@ export {
   createActorChatSession,
   deleteActorChatSession,
   deleteAllActorChatSessions,
+  generateActorChatSessionTitle,
   getActorChatSession,
   getChatPageBootstrapData,
   getChatUsageSummary,

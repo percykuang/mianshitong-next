@@ -25,6 +25,7 @@ interface UseChatControllerSidebarActionsOptions {
     | 'handleRenameSession'
     | 'handleSelectSession'
     | 'handleTogglePinSession'
+    | 'generatingTitleSessionIds'
     | 'selectedSessionId'
     | 'sessions'
   >
@@ -137,6 +138,7 @@ export function useChatControllerSidebarActions({
       void sessionState.handleInterruptAndSelectSession(sessionId)
     },
     handleTogglePinSession: sessionState.handleTogglePinSession,
+    generatingTitleSessionIds: sessionState.generatingTitleSessionIds,
     selectedSessionId: sessionState.selectedSessionId,
     sessions,
     setSidebarOpen,

@@ -2,7 +2,17 @@
 
 import { useRef, useState } from 'react'
 
-import { MoreHorizontal, Pencil, Pin, Popover, Trash } from '@mianshitong/ui'
+import {
+  Loader,
+  MoreHorizontal,
+  Pencil,
+  Pin,
+  Popover,
+  Tooltip,
+  Trash,
+} from '@mianshitong/ui'
+
+import { DEFAULT_CHAT_SESSION_TITLE } from '@/app/chat/domain'
 
 import { type ChatSessionPreview } from '../types'
 
@@ -13,6 +23,7 @@ interface ChatSidebarSessionItemProps {
   onSelect: () => void
   onTogglePin: () => void
   session: ChatSessionPreview
+  titleGenerating: boolean
 }
 
 export function ChatSidebarSessionItem({
@@ -22,9 +33,12 @@ export function ChatSidebarSessionItem({
   onSelect,
   onTogglePin,
   session,
+  titleGenerating,
 }: ChatSidebarSessionItemProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const showTitleGenerating =
+    titleGenerating && session.title === DEFAULT_CHAT_SESSION_TITLE
 
   const closeMenuThenRun = (action: () => void) => {
     setMenuOpen(false)
@@ -50,6 +64,24 @@ export function ChatSidebarSessionItem({
         <span className="block min-w-0 flex-1 truncate text-sm leading-6 font-medium">
           {session.title}
         </span>
+        {showTitleGenerating ? (
+          <Tooltip
+            align={{ offset: [0, 6] }}
+            autoAdjustOverflow={false}
+            arrow={false}
+            placement="bottom"
+            title="正在生成标题"
+            variant="surface"
+            zIndex={1200}
+          >
+            <span
+              aria-label="正在生成标题"
+              className="ml-1 inline-flex size-4 shrink-0 items-center justify-center text-(--mst-color-text-muted)"
+            >
+              <Loader className="size-3 animate-spin" />
+            </span>
+          </Tooltip>
+        ) : null}
       </button>
 
       <div

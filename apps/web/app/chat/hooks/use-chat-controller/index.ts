@@ -34,6 +34,9 @@ export function useChatController(): UseChatControllerResult {
   const draft = useChatStore((state) => state.draft)
   const editingMessageId = useChatStore((state) => state.editingMessageId)
   const editingValue = useChatStore((state) => state.editingValue)
+  const generatingTitleSessionIds = useChatStore(
+    (state) => state.generatingTitleSessionIds
+  )
   const pendingEditedMessageAnchorId = useChatStore(
     (state) => state.pendingEditedMessageAnchorId
   )
@@ -89,6 +92,7 @@ export function useChatController(): UseChatControllerResult {
     handleStartEditUserMessage,
     handleTogglePinSession: useChatStore((state) => state.togglePinSession),
     hasConversationMessages: Boolean(selectedSession?.messages.length),
+    generatingTitleSessionIds,
     pendingEditedMessageAnchorId,
     selectedSession,
     selectedSessionId,

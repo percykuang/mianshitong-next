@@ -59,7 +59,7 @@ export async function findOrCreateChatSession(input: {
       ...(input.actor.authUserId ? { userId: input.actor.authUserId } : {}),
       ...(input.normalizedSessionId ? { id: input.normalizedSessionId } : {}),
       modelId: input.chatModelId,
-      title: createChatSessionTitle(input.message),
+      title: createChatSessionTitle(),
       preview: input.message,
     },
     select: {

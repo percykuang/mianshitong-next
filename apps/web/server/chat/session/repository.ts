@@ -1,6 +1,9 @@
 import { prisma } from '@mianshitong/db'
 
-import type { ChatSessionPreview } from '@/app/chat/domain'
+import {
+  type ChatSessionPreview,
+  DEFAULT_CHAT_SESSION_TITLE,
+} from '@/app/chat/domain'
 
 import { toChatSessionPreview } from './presenter'
 import {
@@ -11,13 +14,16 @@ import {
   type PersistedChatSessionWithMessages,
   SESSIONS_ORDER_BY,
   SESSION_MESSAGES_INCLUDE,
+  SESSION_MESSAGES_ORDER_BY,
 } from './query'
 
 type ChatMessageFeedbackValue = 'dislike' | 'like' | null
 
 function normalizeSessionTitle(title: string | undefined) {
   const normalizedTitle = title?.trim() ?? ''
-  return normalizedTitle ? normalizedTitle.slice(0, 80) : '新的面试对话'
+  return normalizedTitle
+    ? normalizedTitle.slice(0, 80)
+    : DEFAULT_CHAT_SESSION_TITLE
 }
 
 function getActorSessionWhere(actorId: string, sessionId: string) {
@@ -71,7 +77,10 @@ function buildChatSessionUpdateData(
 
   return {
     ...(typeof input.title === 'string'
-      ? { title: normalizeSessionTitle(input.title) }
+      ? {
+          title: normalizeSessionTitle(input.title),
+          titleSource: 'manual' as const,
+        }
       : {}),
     ...(typeof input.pinned === 'boolean'
       ? {
@@ -118,11 +127,14 @@ interface CreateChatSessionInput {
 }
 
 export async function createChatSession(input: CreateChatSessionInput) {
+  const hasManualTitle =
+    typeof input.title === 'string' && input.title.trim().length > 0
   const session = await prisma.chatSession.create({
     data: {
       actorId: input.actorId,
       modelId: input.modelId,
       title: normalizeSessionTitle(input.title),
+      titleSource: hasManualTitle ? 'manual' : 'fallback',
       preview: '',
       ...(input.userId ? { userId: input.userId } : {}),
     },
@@ -212,4 +224,60 @@ export async function updateChatMessageFeedbackByActor(
   })
 
   return findChatSessionByActor(actorId, sessionId)
+}
+
+export async function getChatSessionTitleGenerationContextByActor(
+  actorId: string,
+  sessionId: string
+) {
+  return prisma.chatSession.findFirst({
+    where: {
+      ...getActorSessionWhere(actorId, sessionId),
+      title: DEFAULT_CHAT_SESSION_TITLE,
+      titleSource: 'fallback',
+      messages: {
+        some: {
+          role: 'assistant',
+          completionStatus: 'completed',
+        },
+      },
+    },
+    select: {
+      id: true,
+      modelId: true,
+      messages: {
+        orderBy: SESSION_MESSAGES_ORDER_BY,
+        select: {
+          role: true,
+          content: true,
+          completionStatus: true,
+        },
+        take: 6,
+      },
+    },
+  })
+}
+
+export async function updateGeneratedChatSessionTitleByActor(input: {
+  actorId: string
+  sessionId: string
+  title: string
+}) {
+  const result = await prisma.chatSession.updateMany({
+    where: {
+      ...getActorSessionWhere(input.actorId, input.sessionId),
+      title: DEFAULT_CHAT_SESSION_TITLE,
+      titleSource: 'fallback',
+    },
+    data: {
+      title: normalizeSessionTitle(input.title),
+      titleSource: 'ai',
+    },
+  })
+
+  if (result.count === 0) {
+    return null
+  }
+
+  return findChatSessionByActor(input.actorId, input.sessionId)
 }

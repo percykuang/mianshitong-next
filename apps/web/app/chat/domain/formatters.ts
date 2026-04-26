@@ -6,6 +6,8 @@ export function formatChatTimestamp(date = new Date()) {
   }).format(date)
 }
 
-export function createChatSessionTitle(input: string) {
-  return input.trim().slice(0, 18) || '新的面试对话'
+export const DEFAULT_CHAT_SESSION_TITLE = '新会话'
+
+export function createChatSessionTitle() {
+  return DEFAULT_CHAT_SESSION_TITLE
 }
