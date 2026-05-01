@@ -13,6 +13,7 @@
     "@mianshitong/db": "workspace:*",
     "@mianshitong/hooks": "workspace:*",
     "@mianshitong/icons": "workspace:*",
+    "@mianshitong/llm": "workspace:*",
     "@mianshitong/shared": "workspace:*",
     "@mianshitong/tokens": "workspace:*",
     "@mianshitong/ui": "workspace:*",

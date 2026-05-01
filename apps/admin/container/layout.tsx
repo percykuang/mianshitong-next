@@ -10,6 +10,7 @@ import {
   AuthEntry,
   MessageSquare,
   NavMenu,
+  Sparkles,
   User,
 } from '@mianshitong/ui'
 import Link from 'next/link'
@@ -23,6 +24,11 @@ const NAV_ITEMS = [
     href: '/sessions',
     label: '会话',
     icon: <MessageSquare className="size-4" />,
+  },
+  {
+    href: '/models',
+    label: '模型',
+    icon: <Sparkles className="size-4" />,
   },
 ] as const
 

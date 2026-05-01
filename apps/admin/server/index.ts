@@ -29,3 +29,11 @@ export {
   type AdminUserListQuery,
   type AdminUserListResult,
 } from './user'
+export {
+  createAdminChatModel,
+  deleteAdminChatModel,
+  listAdminChatModels,
+  updateAdminChatModel,
+  type AdminChatModelListItem,
+  type AdminChatModelListResult,
+} from './model'
