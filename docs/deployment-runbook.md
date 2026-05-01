@@ -66,10 +66,7 @@ POSTGRES_PASSWORD=<strong-password>
 POSTGRES_DB=mianshitong_next
 DATABASE_URL=postgresql://mianshitong_next:<strong-password>@db:5432/mianshitong_next?schema=public
 
-APP_ENV=production
-
-DEEPSEEK_API_KEY=<deepseek-api-key>
-DEEPSEEK_BASE_URL=https://api.deepseek.com
+MODEL_CONFIG_SECRET=<stable-random-secret>
 ```
 
 注意：

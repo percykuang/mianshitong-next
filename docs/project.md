@@ -1,6 +1,6 @@
 # 面试通 Next
 
-面试通 Next 是面试通的新一代实现，用于替代旧版 `mianshitong`。项目采用 pnpm workspace 管理 Web 主站、Admin 后台和共享 packages，支持本地 Ollama 调试、生产 DeepSeek 调用，以及基于 Docker + GitHub Actions 的自动部署。
+面试通 Next 是面试通的新一代实现，用于替代旧版 `mianshitong`。项目采用 pnpm workspace 管理 Web 主站、Admin 后台和共享 packages，支持通过后台统一维护模型配置，以及基于 Docker + GitHub Actions 的自动部署。
 
 ## 项目结构
 
@@ -67,24 +67,19 @@ pnpm dev:admin
 
 ## LLM 配置
 
-本地默认使用 `APP_ENV=development` 下的 Ollama 模型目录；生产默认使用 `APP_ENV=production` 下的 DeepSeek 模型目录。
-
 常用变量：
 
 ```env
-APP_ENV=development
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
 
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_API_KEY=ollama
-# OLLAMA_MODEL=qwen3:1.7b
-
-DEEPSEEK_API_KEY="your-deepseek-api-key"
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-# DEEPSEEK_MODEL=deepseek-v4-flash
+MODEL_CONFIG_SECRET="replace-with-a-long-random-secret"
 ```
 
-`OLLAMA_MODEL` / `DEEPSEEK_MODEL` 是可选覆盖项；不配置时会使用 `packages/llm/src/environment-catalog.ts` 中的默认模型。
+说明：
+
+- `MODEL_CONFIG_SECRET` 用于加密后台保存的模型 API Key，生产环境必须配置且保持稳定。
+- Web 端模型列表和服务端模型调用只使用后台维护的数据库配置。
+- 当后台还没有任何启用模型时，聊天页会进入“未配置模型”状态并禁用发送。
 
 ## 常用命令
 
@@ -154,5 +149,5 @@ docker compose \
 ## 安全提醒
 
 - 不要提交 `.env.production`、`.env.prod`、API Key、数据库密码或私钥。
-- 泄露过的 `DEEPSEEK_API_KEY`、数据库密码、SSH 私钥应及时轮换。
+- 泄露过的数据库密码、SSH 私钥和模型平台 API Key 应及时轮换。
 - 生产部署前建议备份旧项目数据库和 Docker volume。
