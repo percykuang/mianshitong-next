@@ -1,10 +1,10 @@
 import type { Runnable } from '@langchain/core/runnables'
 import { ChatOpenAI } from '@langchain/openai'
 import { KeyedCache } from '@mianshitong/shared/runtime'
+import { createHash } from 'node:crypto'
 
 import { getChatModelCatalogItem, getDefaultChatModelId } from './catalog'
-import { normalizeOpenAICompatibleBaseUrl, readEnvString } from './env'
-import type { ChatModelId, ModelProvider } from './types'
+import type { ModelProvider } from './types'
 
 const modelClientCache = new KeyedCache<string, ChatOpenAI>()
 const jsonModelClientCache = new KeyedCache<
@@ -18,12 +18,6 @@ const jsonModelClientCache = new KeyedCache<
 export type ChatModelClient = ChatOpenAI
 
 interface ProviderConfig {
-  apiKeyEnv: string
-  baseUrlEnv: string
-  defaultApiKey?: string
-  defaultBaseUrl: string
-  modelEnv: string
-  normalizeBaseUrl?: (baseUrl: string) => string
   supportsJsonOutput: boolean
 }
 
@@ -35,30 +29,24 @@ interface ModelConnectionConfig {
   modelKwargs?: Record<string, unknown>
 }
 
-const DEFAULT_OLLAMA_BASE_URL = 'http://127.0.0.1:11434'
-const DEFAULT_OLLAMA_API_KEY = 'ollama'
-const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
-
 const PROVIDER_CONFIG_BY_NAME: Record<ModelProvider, ProviderConfig> = {
   deepseek: {
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    baseUrlEnv: 'DEEPSEEK_BASE_URL',
-    defaultBaseUrl: DEFAULT_DEEPSEEK_BASE_URL,
-    modelEnv: 'DEEPSEEK_MODEL',
     supportsJsonOutput: true,
   },
   ollama: {
-    apiKeyEnv: 'OLLAMA_API_KEY',
-    baseUrlEnv: 'OLLAMA_BASE_URL',
-    defaultApiKey: DEFAULT_OLLAMA_API_KEY,
-    defaultBaseUrl: DEFAULT_OLLAMA_BASE_URL,
-    modelEnv: 'OLLAMA_MODEL',
-    normalizeBaseUrl: normalizeOpenAICompatibleBaseUrl,
+    supportsJsonOutput: false,
+  },
+  'openai-compatible': {
     supportsJsonOutput: false,
   },
 }
 
+function createEmptyModelCatalogError() {
+  return new Error('model_catalog_empty')
+}
+
 function buildModelClientCacheKey(input: {
+  apiKey?: string
   baseURL: string
   model: string
   modelKwargs?: Record<string, unknown>
@@ -67,47 +55,36 @@ function buildModelClientCacheKey(input: {
   return [
     input.provider,
     input.baseURL,
+    createHash('sha256')
+      .update(input.apiKey ?? '')
+      .digest('hex'),
     input.model,
     JSON.stringify(input.modelKwargs ?? {}),
   ].join(':')
 }
 
-function resolveModelConnection(input: {
-  defaultModel: string
-  jsonModelKwargs?: Record<string, unknown>
-  modelKwargs?: Record<string, unknown>
-  provider: ModelProvider
-}): ModelConnectionConfig {
-  const providerConfig = PROVIDER_CONFIG_BY_NAME[input.provider]
-  const rawBaseUrl =
-    readEnvString(providerConfig.baseUrlEnv) ?? providerConfig.defaultBaseUrl
+async function resolveChatModelConfig(modelId: string) {
+  const modelCatalogItem = await getChatModelCatalogItem(modelId)
 
-  return {
-    apiKey:
-      readEnvString(providerConfig.apiKeyEnv) ?? providerConfig.defaultApiKey,
-    baseURL: providerConfig.normalizeBaseUrl
-      ? providerConfig.normalizeBaseUrl(rawBaseUrl)
-      : rawBaseUrl,
-    jsonModelKwargs: input.jsonModelKwargs ?? input.modelKwargs,
-    model: readEnvString(providerConfig.modelEnv) ?? input.defaultModel,
-    modelKwargs: input.modelKwargs,
+  if (!modelCatalogItem) {
+    throw createEmptyModelCatalogError()
   }
-}
 
-function resolveChatModelConfig(modelId: ChatModelId) {
-  const modelCatalogItem = getChatModelCatalogItem(modelId)
   const providerConfig = PROVIDER_CONFIG_BY_NAME[modelCatalogItem.provider]
 
   return {
     modelId: modelCatalogItem.id,
     provider: modelCatalogItem.provider,
-    supportsJsonOutput: providerConfig.supportsJsonOutput,
-    connection: resolveModelConnection({
-      defaultModel: modelCatalogItem.model,
-      jsonModelKwargs: modelCatalogItem.jsonModelKwargs,
+    supportsJsonOutput:
+      modelCatalogItem.supportsJsonOutput ?? providerConfig.supportsJsonOutput,
+    connection: {
+      apiKey: modelCatalogItem.apiKey,
+      baseURL: modelCatalogItem.baseUrl ?? '',
+      jsonModelKwargs:
+        modelCatalogItem.jsonModelKwargs ?? modelCatalogItem.modelKwargs,
+      model: modelCatalogItem.model,
       modelKwargs: modelCatalogItem.modelKwargs,
-      provider: modelCatalogItem.provider,
-    }),
+    },
   }
 }
 
@@ -133,6 +110,7 @@ function getOrCreateModelClient(input: {
   const cacheKey = buildModelClientCacheKey({
     provider: input.provider,
     baseURL: input.connection.baseURL,
+    apiKey: input.connection.apiKey,
     model: input.connection.model,
     modelKwargs: input.modelKwargs ?? input.connection.modelKwargs,
   })
@@ -146,18 +124,22 @@ function getOrCreateModelClient(input: {
  * 按业务层使用的聊天模型 ID 获取模型客户端。
  * 当前项目使用同一模型同时负责普通聊天与结构化输出。
  */
-export function getChatModel(modelId: ChatModelId = getDefaultChatModelId()) {
-  const plan = resolveChatModelConfig(modelId)
+export async function getChatModel(modelId?: string) {
+  const plan = resolveChatModelConfig(
+    modelId ?? (await getDefaultChatModelId())
+  )
+  const resolvedPlan = await plan
+
   return getOrCreateModelClient({
-    connection: plan.connection,
-    provider: plan.provider,
+    connection: resolvedPlan.connection,
+    provider: resolvedPlan.provider,
   })
 }
 
-export function getJsonChatModel(
-  modelId: ChatModelId = getDefaultChatModelId()
-) {
-  const plan = resolveChatModelConfig(modelId)
+export async function getJsonChatModel(modelId?: string) {
+  const plan = await resolveChatModelConfig(
+    modelId ?? (await getDefaultChatModelId())
+  )
 
   if (!plan.supportsJsonOutput) {
     return getOrCreateModelClient({
@@ -169,6 +151,7 @@ export function getJsonChatModel(
   const cacheKey = `${buildModelClientCacheKey({
     provider: plan.provider,
     baseURL: plan.connection.baseURL,
+    apiKey: plan.connection.apiKey,
     model: plan.connection.model,
     modelKwargs: plan.connection.jsonModelKwargs,
   })}:json_object`

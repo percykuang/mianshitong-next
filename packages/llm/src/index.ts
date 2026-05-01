@@ -1,10 +1,15 @@
 export {
   getChatModelOptions,
   getDefaultChatModelId,
-  isChatModelId,
   normalizeChatModelId,
 } from './catalog'
 export { getChatModel, getJsonChatModel, type ChatModelClient } from './client'
+export {
+  createStoredChatModelConfig,
+  deleteStoredChatModelConfig,
+  listStoredChatModelConfigSummaries,
+  updateStoredChatModelConfig,
+} from './model-config-store'
 export {
   extractJsonObjectFromModelText,
   normalizeModelChunkText,
@@ -13,4 +18,9 @@ export {
   type ModelTextContent,
   type ModelTextPart,
 } from './output'
-export type { ChatModelId, ChatModelOption, ModelProvider } from './types'
+export type {
+  ChatModelOption,
+  ModelProvider,
+  StoredChatModelConfigInput,
+  StoredChatModelConfigSummary,
+} from './types'

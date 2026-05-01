@@ -68,6 +68,9 @@ importers:
       '@mianshitong/icons':
         specifier: workspace:*
         version: link:../../packages/icons
+      '@mianshitong/llm':
+        specifier: workspace:*
+        version: link:../../packages/llm
       '@mianshitong/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -249,9 +252,15 @@ importers:
       '@langchain/openai':
         specifier: ^1.4.4
         version: 1.4.4(@langchain/core@1.1.40(openai@6.34.0(zod@3.25.76)))
+      '@mianshitong/db':
+        specifier: workspace:*
+        version: link:../db
       '@mianshitong/shared':
         specifier: workspace:*
         version: link:../shared
+      '@prisma/client':
+        specifier: 7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3))(typescript@5.9.3)
       dotenv:
         specifier: ^16.6.1
         version: 16.6.1

@@ -2,8 +2,6 @@ import { config as loadDotenv } from 'dotenv'
 import fs from 'node:fs'
 import path from 'node:path'
 
-export type AppEnv = 'development' | 'production'
-
 let envInitialized = false
 
 function resolveWorkspaceRoot(startDir: string) {
@@ -70,16 +68,6 @@ initializeEnv()
 export function readEnvString(name: string) {
   const value = process.env[name]?.trim()
   return value ? value : undefined
-}
-
-export function getAppEnv(): AppEnv {
-  const rawAppEnv = readEnvString('APP_ENV')
-
-  if (rawAppEnv === 'development' || rawAppEnv === 'production') {
-    return rawAppEnv
-  }
-
-  return process.env.NODE_ENV === 'production' ? 'production' : 'development'
 }
 
 export function normalizeOpenAICompatibleBaseUrl(baseUrl: string) {

@@ -16,6 +16,8 @@
   "dependencies": {
     "@langchain/core": "^1.1.40",
     "@langchain/openai": "^1.4.4",
+    "@prisma/client": "7.6.0",
+    "@mianshitong/db": "workspace:*",
     "@mianshitong/shared": "workspace:*",
     "dotenv": "^16.6.1"
   }

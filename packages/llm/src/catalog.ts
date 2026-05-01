@@ -1,64 +1,26 @@
-import { getChatModelCatalogForCurrentEnv } from './environment-catalog'
-import type {
-  AcceptedChatModelId,
-  ChatModelCatalogItem,
-  ChatModelId,
-  ChatModelOption,
-} from './types'
+import {
+  getRuntimeChatModelCatalogItem,
+  getRuntimeChatModelOptions,
+  getRuntimeDefaultChatModelId,
+  normalizeRuntimeChatModelId,
+} from './model-config-store'
 
-function findChatModelById(
-  modelCatalog: readonly ChatModelCatalogItem[],
-  modelId: string
-) {
-  return modelCatalog.find((model) => model.id === modelId)
+export async function getChatModelOptions() {
+  return getRuntimeChatModelOptions()
 }
 
-export function getChatModelOptions(): ChatModelOption[] {
-  return getChatModelCatalogForCurrentEnv().map(
-    ({ id, label, description }) => ({
-      id,
-      label,
-      description,
-    })
-  )
+export async function getDefaultChatModelId(): Promise<string> {
+  return getRuntimeDefaultChatModelId()
 }
 
-export function getDefaultChatModelId(): ChatModelId {
-  return getChatModelCatalogForCurrentEnv()[0]?.id ?? ''
-}
-
-export function isChatModelId(value: string): value is AcceptedChatModelId {
-  return !!findChatModelById(getChatModelCatalogForCurrentEnv(), value)
-}
-
-export function normalizeChatModelId(
+export async function normalizeChatModelId(
   value: string | null | undefined
-): ChatModelId {
-  if (!value) {
-    return getDefaultChatModelId()
-  }
-
-  const matchedModel = findChatModelById(
-    getChatModelCatalogForCurrentEnv(),
-    value
-  )
-
-  return matchedModel?.id ?? getDefaultChatModelId()
+): Promise<string> {
+  return normalizeRuntimeChatModelId(value)
 }
 
-export function getChatModelCatalogItem(
+export async function getChatModelCatalogItem(
   modelId: string | null | undefined
-): ChatModelCatalogItem {
-  const chatModelId = normalizeChatModelId(modelId)
-  const modelCatalog = getChatModelCatalogForCurrentEnv()
-
-  return (
-    findChatModelById(modelCatalog, chatModelId) ??
-    modelCatalog[0] ?? {
-      id: '',
-      label: '',
-      model: '',
-      provider: 'ollama',
-    }
-  )
+) {
+  return getRuntimeChatModelCatalogItem(modelId)
 }
