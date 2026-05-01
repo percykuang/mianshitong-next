@@ -4,7 +4,6 @@ import type { StoreApi } from 'zustand'
 
 import {
   type ChatMessageFeedback,
-  type ChatModelId,
   type ChatSessionPreview,
 } from '@/app/chat/domain'
 
@@ -23,7 +22,7 @@ export interface ActiveReply {
 }
 
 export interface ChatStoreInitialState {
-  initialSelectedModelId: ChatModelId
+  initialSelectedModelId: string
   initialSelectedSessionId: string | null
   initialSessions: ChatSessionPreview[]
   persistenceEnabled: boolean
@@ -38,7 +37,7 @@ export interface ChatStoreState {
   pendingSidebarSessionId: string | null
   pendingEditedMessageAnchorId: string | null
   persistenceEnabled: boolean
-  selectedModelId: ChatModelId
+  selectedModelId: string
   selectedSessionId: string | null
   sessions: ChatSessionPreview[]
 }
@@ -61,7 +60,7 @@ export interface ChatStoreActions {
     messageId: string,
     feedback: ChatMessageFeedback | null
   ) => void
-  setSelectedModelId: (value: ChatModelId) => void
+  setSelectedModelId: (value: string) => void
   setEditingValue: (value: string) => void
   startEditUserMessage: (messageId: string, content: string) => void
   stopReply: () => void

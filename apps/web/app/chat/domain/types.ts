@@ -1,4 +1,8 @@
-import type { ChatModelId, ChatModelOption } from '@mianshitong/llm'
+import type {
+  ChatModelCatalogState,
+  ChatModelCatalogStatus,
+  ChatModelOption,
+} from '@/chat/shared/model-catalog'
 
 export type ChatMessageCompletionStatus = 'completed' | 'interrupted'
 
@@ -31,4 +35,5 @@ export interface ChatUsageSummary {
   max: number
 }
 
-export type { ChatModelId, ChatModelOption }
+export type { ChatModelOption }
+export type { ChatModelCatalogState, ChatModelCatalogStatus }

@@ -18,6 +18,7 @@ import {
   updateChatMessageFeedbackByActor,
   updateChatSessionByActor,
 } from '../session'
+import { resolveUsableChatModelId } from './model-catalog'
 
 export async function listActorChatSessions(actorId: string) {
   return listChatSessionsByActor(actorId)
@@ -49,12 +50,24 @@ export async function createActorChatSession(
   actor: Pick<ChatActor, 'authUserId' | 'id'>,
   input: ParsedCreateSessionBody
 ) {
-  return createChatSession({
-    actorId: actor.id,
-    userId: actor.authUserId,
-    title: input.title,
-    modelId: input.modelId,
-  })
+  const modelId = await resolveUsableChatModelId(input.modelId)
+
+  if (modelId.error) {
+    return {
+      error: modelId.error,
+      session: null,
+    }
+  }
+
+  return {
+    error: null,
+    session: await createChatSession({
+      actorId: actor.id,
+      userId: actor.authUserId,
+      title: input.title,
+      modelId: modelId.modelId,
+    }),
+  }
 }
 
 export async function updateActorChatSession(

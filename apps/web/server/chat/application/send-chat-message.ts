@@ -1,5 +1,3 @@
-import type { ChatModelId } from '@mianshitong/llm'
-
 import type {
   ParsedChatRequest,
   ParsedStreamMessageBody,
@@ -7,6 +5,10 @@ import type {
 import { findOrCreateChatSession } from '@/server/chat/persistence'
 
 import type { ChatActor } from '../actor'
+import {
+  resolveUsableChatModelId,
+  toChatModelCatalogRuntimeError,
+} from './model-catalog'
 import {
   type PreparedChatReplyResult,
   buildPreparedChatReply,
@@ -16,7 +18,7 @@ import { checkChatQuota } from './resolve-chat-usage'
 async function prepareReplyForMessage(input: {
   actor: ChatActor
   message: string
-  chatModelId: ChatModelId
+  chatModelId: string
   normalizedSessionId: string | null
 }): Promise<PreparedChatReplyResult> {
   const quota = await checkChatQuota(input.actor)
@@ -28,10 +30,21 @@ async function prepareReplyForMessage(input: {
     }
   }
 
+  const normalizedChatModelId = await resolveUsableChatModelId(
+    input.chatModelId
+  )
+
+  if (normalizedChatModelId.error) {
+    return {
+      error: normalizedChatModelId.error,
+      reply: null,
+    }
+  }
+
   const sessionResult = await findOrCreateChatSession({
     actor: input.actor,
     message: input.message,
-    chatModelId: input.chatModelId,
+    chatModelId: normalizedChatModelId.modelId,
     normalizedSessionId: input.normalizedSessionId,
   })
 
@@ -42,14 +55,21 @@ async function prepareReplyForMessage(input: {
     }
   }
 
-  return {
-    error: null,
-    reply: await buildPreparedChatReply({
-      actorId: input.actor.id,
-      message: input.message,
-      chatModelId: input.chatModelId,
-      sessionId: sessionResult.session.id,
-    }),
+  try {
+    return {
+      error: null,
+      reply: await buildPreparedChatReply({
+        actorId: input.actor.id,
+        message: input.message,
+        chatModelId: normalizedChatModelId.modelId,
+        sessionId: sessionResult.session.id,
+      }),
+    }
+  } catch (error) {
+    return {
+      error: toChatModelCatalogRuntimeError(error),
+      reply: null,
+    }
   }
 }
 

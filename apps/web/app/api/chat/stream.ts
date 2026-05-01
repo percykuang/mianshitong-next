@@ -1,4 +1,4 @@
-import { getChatModel, normalizeModelChunkText } from '@mianshitong/llm'
+import { type ChatModelClient, normalizeModelChunkText } from '@mianshitong/llm'
 import { createLogger } from '@mianshitong/shared/runtime'
 
 import {
@@ -36,7 +36,7 @@ export function createChatStreamHeaders(input: { persistedSessionId: string }) {
 export function createChatResponseStream(input: {
   actorId: string
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
-  model: ReturnType<typeof getChatModel>
+  model: ChatModelClient
   persistedSessionId: string
   requestSignal: AbortSignal
   resolveWorkflowContext?: () => Promise<

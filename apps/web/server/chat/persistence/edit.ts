@@ -1,5 +1,4 @@
-import { normalizeChatModelId } from '@mianshitong/llm'
-
+import { resolveUsableChatModelId } from '../application/model-catalog'
 import {
   type EditableChatSessionRecord,
   findEditableSessionRecord,
@@ -86,10 +85,18 @@ export async function editUserMessageAndLoadConversation(input: {
     })
   })
 
+  const chatModelId = await resolveUsableChatModelId(session.modelId)
+
+  if (chatModelId.error) {
+    return {
+      error: chatModelId.error,
+    }
+  }
+
   return {
     conversation,
     error: null,
-    chatModelId: normalizeChatModelId(session.modelId),
+    chatModelId: chatModelId.modelId,
     sessionId: session.id,
   }
 }

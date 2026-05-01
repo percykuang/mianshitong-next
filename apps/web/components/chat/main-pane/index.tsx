@@ -1,5 +1,7 @@
 'use client'
 
+import { Info, Loader } from '@mianshitong/ui'
+
 import { ChatComposer } from '../composer'
 import { ChatMainPaneConversation } from './conversation'
 import { ChatMainPaneHeader } from './header'
@@ -14,6 +16,7 @@ export function ChatMainPane({
   isReplying,
   editingMessageId,
   editingValue,
+  modelCatalog,
   pendingEditedMessageAnchorId,
   modelOptions,
   messages,
@@ -23,6 +26,7 @@ export function ChatMainPane({
   onDraftChange,
   onEditingValueChange,
   onMessageFeedbackChange,
+  onRetryModelCatalog,
   onSelectPrompt,
   onStartEditUserMessage,
   onStop,
@@ -49,6 +53,13 @@ export function ChatMainPane({
       onEditedMessageAnchorApplied,
       pendingEditedMessageAnchorId,
     })
+  const showModelCatalogNotice =
+    modelOptions.length === 0 || selectedModelId.trim().length === 0
+  const composerDisabledReason = showModelCatalogNotice
+    ? modelCatalog.status === 'loading'
+      ? '正在加载模型配置...'
+      : modelCatalog.message || '当前系统还没有可用模型。'
+    : ''
 
   return (
     <main
@@ -69,10 +80,12 @@ export function ChatMainPane({
           hasConversationMessages={hasConversationMessages}
           isPinnedToBottom={isPinnedToBottom}
           isReplying={isReplying}
+          modelCatalog={modelCatalog}
           messages={messages}
           onCancelEditUserMessage={onCancelEditUserMessage}
           onEditingValueChange={onEditingValueChange}
           onMessageFeedbackChange={onMessageFeedbackChange}
+          onRetryModelCatalog={onRetryModelCatalog}
           onScrollToBottom={scrollToBottom}
           onStartEditUserMessage={onStartEditUserMessage}
           onSubmitEditUserMessage={onSubmitEditUserMessage}
@@ -82,7 +95,35 @@ export function ChatMainPane({
         />
 
         <div className="sticky bottom-0 z-10 mx-auto w-full max-w-4xl px-2 pb-3 md:px-4 md:pb-4">
+          {showModelCatalogNotice ? (
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-(--mst-color-border-default) bg-white/92 px-3 py-2 text-sm text-(--mst-color-text-secondary) shadow-(--mst-shadow-sm) backdrop-blur-sm dark:bg-slate-950/84">
+              <div className="flex min-w-0 items-center gap-2">
+                {modelCatalog.status === 'loading' ? (
+                  <Loader className="size-4 shrink-0 animate-spin text-(--mst-color-primary)" />
+                ) : (
+                  <Info className="size-4 shrink-0 text-(--mst-color-primary)" />
+                )}
+                <span className="min-w-0 truncate">
+                  {composerDisabledReason}
+                </span>
+              </div>
+
+              {modelCatalog.status === 'empty' ||
+              modelCatalog.status === 'error' ? (
+                <button
+                  className="shrink-0 cursor-pointer text-sm font-medium text-(--mst-color-primary) transition-opacity duration-200 hover:opacity-80"
+                  onClick={onRetryModelCatalog}
+                  type="button"
+                >
+                  重新加载
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
           <ChatComposer
+            disabled={showModelCatalogNotice}
+            disabledReason={composerDisabledReason}
             draft={draft}
             isReplying={isReplying}
             modelOptions={modelOptions}
@@ -92,7 +133,9 @@ export function ChatMainPane({
             onStop={onStop}
             onSubmit={onSubmit}
             selectedModelId={selectedModelId}
-            showQuickPrompts={!hasConversationMessages && !isReplying}
+            showQuickPrompts={
+              !showModelCatalogNotice && !hasConversationMessages && !isReplying
+            }
             textareaRef={textareaRef}
             usage={usage}
             usageError={usageError}

@@ -1,4 +1,4 @@
-import { type ChatModelId, getChatModel } from '@mianshitong/llm'
+import { type ChatModelClient, getChatModel } from '@mianshitong/llm'
 import { createLogger } from '@mianshitong/shared/runtime'
 
 import {
@@ -11,7 +11,7 @@ const logger = createLogger('web.chat.reply')
 
 export interface PreparedChatReply {
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
-  model: ReturnType<typeof getChatModel>
+  model: ChatModelClient
   persistedSessionId: string
   resolveWorkflowContext: () => Promise<
     Pick<
@@ -27,7 +27,11 @@ export type PreparedChatReplyResult =
       reply: PreparedChatReply
     }
   | {
-      error: 'quota_exceeded' | 'session_not_found'
+      error:
+        | 'model_catalog_empty'
+        | 'model_catalog_unavailable'
+        | 'quota_exceeded'
+        | 'session_not_found'
       reply: null
     }
 
@@ -59,11 +63,11 @@ export async function buildSafeCareerWorkflowContext(input: {
 export async function buildPreparedChatReply(input: {
   actorId: string
   message: string
-  chatModelId: ChatModelId
+  chatModelId: string
   resetThreadState?: boolean
   sessionId: string
 }): Promise<PreparedChatReply> {
-  const model = getChatModel(input.chatModelId)
+  const model = await getChatModel(input.chatModelId)
   const conversation = await persistUserMessageAndLoadConversation({
     message: input.message,
     chatModelId: input.chatModelId,

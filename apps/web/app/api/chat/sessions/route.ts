@@ -6,6 +6,7 @@ import {
   listActorChatSessions,
 } from '@/server/chat'
 
+import { chatRouteError } from '../errors'
 import { parseJsonBodyOrError, withChatActor } from '../utils'
 import { parseCreateSessionBody } from './requests'
 
@@ -28,9 +29,13 @@ export async function POST(request: Request) {
   }
 
   return withChatActor(async (actor) => {
-    const session = await createActorChatSession(actor, parsedBody)
+    const result = await createActorChatSession(actor, parsedBody)
 
-    return NextResponse.json({ session }, { status: 201 })
+    if (result.error) {
+      return chatRouteError(result.error)
+    }
+
+    return NextResponse.json({ session: result.session }, { status: 201 })
   })
 }
 

@@ -5,8 +5,7 @@ import { type RefObject, useEffect, useRef, useState } from 'react'
 import { useAppInstance } from '@mianshitong/ui'
 
 import {
-  type ChatModelId,
-  type ChatModelOption,
+  type ChatModelCatalogState,
   type ChatSessionPreview,
 } from '@/app/chat/domain'
 import { ChatMainPane, ChatSidebar } from '@/components'
@@ -16,12 +15,56 @@ import { useChatUsage } from './hooks/use-chat-usage'
 import { ChatStoreProvider } from './store/provider'
 
 interface ChatPageClientProps {
+  initialModelCatalog: ChatModelCatalogState
   initialSessions: ChatSessionPreview[]
-  initialModelOptions: readonly ChatModelOption[]
   initialSelectedSessionId: string | null
-  initialSelectedModelId: ChatModelId
   persistenceEnabled: boolean
   userEmail: string | null
+}
+
+function isResolvedModelCatalogState(
+  value: unknown
+): value is Extract<
+  ChatModelCatalogState,
+  { status: 'empty' | 'error' | 'ready' }
+> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'status' in value &&
+    (value.status === 'ready' ||
+      value.status === 'empty' ||
+      value.status === 'error') &&
+    'message' in value &&
+    typeof value.message === 'string' &&
+    'selectedModelId' in value &&
+    typeof value.selectedModelId === 'string' &&
+    'models' in value &&
+    Array.isArray(value.models)
+  )
+}
+
+function createLoadingModelCatalogState(
+  currentValue: ChatModelCatalogState
+): ChatModelCatalogState {
+  return {
+    ...currentValue,
+    message: '正在加载模型配置...',
+    status: 'loading',
+  }
+}
+
+async function fetchModelCatalogState() {
+  const response = await fetch('/api/models', {
+    cache: 'no-store',
+  })
+  const payload = (await response.json().catch(() => null)) as unknown
+
+  if (!isResolvedModelCatalogState(payload)) {
+    throw new Error('invalid_model_catalog_response')
+  }
+
+  return payload
 }
 
 function focusComposer(composerRef: RefObject<HTMLTextAreaElement | null>) {
@@ -31,22 +74,21 @@ function focusComposer(composerRef: RefObject<HTMLTextAreaElement | null>) {
 }
 
 export function ChatPageClient({
+  initialModelCatalog,
   initialSessions,
-  initialModelOptions,
   initialSelectedSessionId,
-  initialSelectedModelId,
   persistenceEnabled,
   userEmail,
 }: ChatPageClientProps) {
   return (
     <ChatStoreProvider
-      initialSelectedModelId={initialSelectedModelId}
+      initialSelectedModelId={initialModelCatalog.selectedModelId}
       initialSelectedSessionId={initialSelectedSessionId}
       initialSessions={initialSessions}
       persistenceEnabled={persistenceEnabled}
     >
       <ChatPageClientShell
-        initialModelOptions={initialModelOptions}
+        initialModelCatalog={initialModelCatalog}
         userEmail={userEmail}
       />
     </ChatStoreProvider>
@@ -54,10 +96,11 @@ export function ChatPageClient({
 }
 
 function ChatPageClientShell({
-  initialModelOptions,
+  initialModelCatalog,
   userEmail,
-}: Pick<ChatPageClientProps, 'initialModelOptions' | 'userEmail'>) {
+}: Pick<ChatPageClientProps, 'initialModelCatalog' | 'userEmail'>) {
   const [followRequestKey, setFollowRequestKey] = useState(0)
+  const [modelCatalog, setModelCatalog] = useState(initialModelCatalog)
   const { message } = useAppInstance()
   const { refreshUsage, usage, usageError, usageLoading } = useChatUsage()
   const { composer, messages, sidebar } = useChatController()
@@ -89,10 +132,72 @@ function ChatPageClientShell({
   const conversationMessages = selectedSession?.messages ?? []
   const selectedSessionId = selectedSession?.id ?? null
   const previousSelectedSessionIdRef = useRef<string | null>(selectedSessionId)
+  const resolvedSelectedModelId =
+    selectedModelId ||
+    modelCatalog.selectedModelId ||
+    modelCatalog.models[0]?.id ||
+    ''
+  const canUseChatModels =
+    modelCatalog.models.length > 0 && resolvedSelectedModelId.trim().length > 0
 
   const requestFollow = () => {
     setFollowRequestKey((value) => value + 1)
   }
+
+  const handleRetryModelCatalog = async () => {
+    setModelCatalog((currentValue) =>
+      createLoadingModelCatalogState(currentValue)
+    )
+
+    try {
+      const nextModelCatalog = await fetchModelCatalogState()
+      const shouldKeepCurrentModel = nextModelCatalog.models.some(
+        (model) => model.id === selectedModelId
+      )
+      const nextSelectedModelId =
+        nextModelCatalog.selectedModelId || nextModelCatalog.models[0]?.id || ''
+
+      setModelCatalog(nextModelCatalog)
+      setSelectedModelId(
+        nextModelCatalog.models.length > 0
+          ? shouldKeepCurrentModel
+            ? selectedModelId
+            : nextSelectedModelId
+          : ''
+      )
+    } catch {
+      setModelCatalog({
+        message: '模型服务暂时不可用，请稍后重试。',
+        models: [],
+        selectedModelId: '',
+        status: 'error',
+      })
+      setSelectedModelId('')
+    }
+  }
+
+  useEffect(() => {
+    if (!canUseChatModels) {
+      return
+    }
+
+    const hasMatchedSelectedModel = modelCatalog.models.some(
+      (model) => model.id === selectedModelId
+    )
+
+    if (
+      !hasMatchedSelectedModel &&
+      resolvedSelectedModelId !== selectedModelId
+    ) {
+      setSelectedModelId(resolvedSelectedModelId)
+    }
+  }, [
+    canUseChatModels,
+    modelCatalog.models,
+    resolvedSelectedModelId,
+    selectedModelId,
+    setSelectedModelId,
+  ])
 
   const ensureQuotaAvailable = async () => {
     const currentUsage = usage ?? (await refreshUsage())
@@ -110,7 +215,7 @@ function ChatPageClientShell({
     const input = (inputOverride ?? draft).trim()
 
     // 空消息不发送；正在生成回复时也禁止再次提交，避免并发请求打乱会话状态。
-    if (!input || isReplying) {
+    if (!input || isReplying || !canUseChatModels) {
       return
     }
 
@@ -132,7 +237,7 @@ function ChatPageClientShell({
   }
 
   const handleSubmitPrompt = async (prompt: string) => {
-    if (isReplying || !(await ensureQuotaAvailable())) {
+    if (isReplying || !canUseChatModels || !(await ensureQuotaAvailable())) {
       return
     }
 
@@ -143,7 +248,7 @@ function ChatPageClientShell({
   }
 
   const handleSubmitEditedMessage = async () => {
-    if (!(await ensureQuotaAvailable())) {
+    if (!canUseChatModels || !(await ensureQuotaAvailable())) {
       return
     }
 
@@ -167,10 +272,18 @@ function ChatPageClientShell({
   }
 
   useEffect(() => {
+    if (!canUseChatModels) {
+      return
+    }
+
     focusComposer(composerRef)
-  }, [composerRef])
+  }, [canUseChatModels, composerRef])
 
   useEffect(() => {
+    if (!canUseChatModels) {
+      return
+    }
+
     // 只有真正发生“切换会话 / 新建会话”时才需要再次回焦；
     // 首次渲染或 selectedSessionId 没变化时，直接跳过，避免重复抢焦点。
     if (previousSelectedSessionIdRef.current === selectedSessionId) {
@@ -180,7 +293,7 @@ function ChatPageClientShell({
     previousSelectedSessionIdRef.current = selectedSessionId
 
     focusComposer(composerRef)
-  }, [composerRef, selectedSessionId])
+  }, [canUseChatModels, composerRef, selectedSessionId])
 
   return (
     <div className="group/sidebar-wrapper relative flex h-dvh w-full overflow-hidden bg-white text-(--mst-color-text-primary) antialiased dark:bg-(--mst-color-bg-page)">
@@ -214,10 +327,11 @@ function ChatPageClientShell({
         followRequestKey={followRequestKey}
         hasConversationMessages={hasConversationMessages}
         isReplying={isReplying}
+        modelCatalog={modelCatalog}
         onEditedMessageAnchorApplied={consumePendingEditedMessageAnchor}
         editingMessageId={editingMessageId}
         editingValue={editingValue}
-        modelOptions={initialModelOptions}
+        modelOptions={modelCatalog.models}
         messages={conversationMessages}
         pendingEditedMessageAnchorId={pendingEditedMessageAnchorId}
         onCancelEditUserMessage={handleCancelEditUserMessage}
@@ -225,6 +339,7 @@ function ChatPageClientShell({
         onDraftChange={setDraft}
         onEditingValueChange={setEditingValue}
         onMessageFeedbackChange={handleSetMessageFeedback}
+        onRetryModelCatalog={handleRetryModelCatalog}
         onSelectPrompt={handleSubmitPrompt}
         onStartEditUserMessage={handleStartEditUserMessage}
         onStop={handleStopReply}
@@ -232,7 +347,7 @@ function ChatPageClientShell({
         onSubmitEditUserMessage={handleSubmitEditedMessage}
         onToggleSidebar={toggleSidebar}
         showThinkingIndicator={showThinkingIndicator}
-        selectedModelId={selectedModelId}
+        selectedModelId={resolvedSelectedModelId}
         sidebarOpen={sidebarOpen}
         streamingMessageId={streamingMessageId}
         textareaRef={composerRef}

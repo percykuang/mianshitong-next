@@ -2,6 +2,8 @@ import { jsonError } from './utils'
 
 export type ChatRouteErrorCode =
   | 'message_not_editable'
+  | 'model_catalog_empty'
+  | 'model_catalog_unavailable'
   | 'quota_exceeded'
   | 'session_conflict'
   | 'session_not_found'
@@ -16,6 +18,14 @@ const CHAT_ROUTE_ERROR_BY_CODE: Record<
   message_not_editable: {
     message: '当前仅支持编辑最后一条用户消息',
     status: 400,
+  },
+  model_catalog_empty: {
+    message: '当前系统还没有可用模型，请联系管理员完成配置',
+    status: 503,
+  },
+  model_catalog_unavailable: {
+    message: '模型服务暂时不可用，请稍后重试',
+    status: 503,
   },
   quota_exceeded: {
     message: '今日模型配额已用完，请明天再试',

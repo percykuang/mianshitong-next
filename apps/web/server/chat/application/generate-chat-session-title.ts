@@ -80,7 +80,7 @@ async function generateTitle(input: {
   modelId: string
   userMessage: TitleSourceMessage
 }) {
-  const model = getChatModel(input.modelId)
+  const model = await getChatModel(input.modelId)
   const response = await model.invoke([
     {
       role: 'system',

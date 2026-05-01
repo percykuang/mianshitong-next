@@ -4,7 +4,7 @@ import { type RefObject } from 'react'
 
 import {
   type ChatMessageFeedback,
-  type ChatModelId,
+  type ChatModelCatalogState,
   type ChatModelOption,
   type ChatUsageSummary,
   type ConversationMessage,
@@ -18,18 +18,20 @@ export interface ChatMainPaneProps {
   isReplying: boolean
   editingMessageId: string | null
   editingValue: string
+  modelCatalog: ChatModelCatalogState
   pendingEditedMessageAnchorId: string | null
   modelOptions: readonly ChatModelOption[]
   messages: ConversationMessage[]
   onEditedMessageAnchorApplied: () => void
   onCancelEditUserMessage: () => void
-  onModelChange: (value: ChatModelId) => void
+  onModelChange: (value: string) => void
   onDraftChange: (value: string) => void
   onEditingValueChange: (value: string) => void
   onMessageFeedbackChange: (
     messageId: string,
     feedback: ChatMessageFeedback | null
   ) => void
+  onRetryModelCatalog: () => void
   onSelectPrompt: (prompt: string) => void
   onStartEditUserMessage: (messageId: string, content: string) => void
   onStop: () => void
@@ -37,7 +39,7 @@ export interface ChatMainPaneProps {
   onSubmitEditUserMessage: () => void
   onToggleSidebar: () => void
   showThinkingIndicator: boolean
-  selectedModelId: ChatModelId
+  selectedModelId: string
   sidebarOpen: boolean
   streamingMessageId: string | null
   textareaRef: RefObject<HTMLTextAreaElement | null>

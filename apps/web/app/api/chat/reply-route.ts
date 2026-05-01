@@ -8,7 +8,13 @@ interface ChatReplyActor {
 }
 
 interface ChatReplyResult {
-  error: 'message_not_editable' | 'quota_exceeded' | 'session_not_found' | null
+  error:
+    | 'message_not_editable'
+    | 'model_catalog_empty'
+    | 'model_catalog_unavailable'
+    | 'quota_exceeded'
+    | 'session_not_found'
+    | null
   reply: {
     conversation: Array<{ content: string; role: 'assistant' | 'user' }>
     model: Parameters<typeof createChatResponseStream>[0]['model']

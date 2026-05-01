@@ -1,5 +1,3 @@
-import type { ChatModelId } from '@mianshitong/llm'
-
 import type { ChatActor } from '@/server/chat/actor'
 
 import { CHAT_MESSAGE_ORDER_BY } from './query'
@@ -24,7 +22,7 @@ type FindOrCreateChatSessionResult =
 export async function findOrCreateChatSession(input: {
   actor: ChatActor
   message: string
-  chatModelId: ChatModelId
+  chatModelId: string
   normalizedSessionId: string | null
 }): Promise<FindOrCreateChatSessionResult> {
   if (input.normalizedSessionId !== null) {
@@ -75,7 +73,7 @@ export async function findOrCreateChatSession(input: {
 
 export async function persistUserMessageAndLoadConversation(input: {
   message: string
-  chatModelId: ChatModelId
+  chatModelId: string
   sessionId: string
 }) {
   return chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {

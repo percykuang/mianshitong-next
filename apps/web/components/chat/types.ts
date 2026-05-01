@@ -1,7 +1,8 @@
 export type {
   ChatMessageCompletionStatus,
   ChatMessageFeedback,
-  ChatModelId,
+  ChatModelCatalogState,
+  ChatModelCatalogStatus,
   ChatModelOption,
   ChatSessionPreview,
   ChatUsageSummary,

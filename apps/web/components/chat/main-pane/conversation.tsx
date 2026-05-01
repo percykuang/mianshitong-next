@@ -12,10 +12,12 @@ interface ChatMainPaneConversationProps {
   hasConversationMessages: ChatMainPaneProps['hasConversationMessages']
   isPinnedToBottom: boolean
   isReplying: ChatMainPaneProps['isReplying']
+  modelCatalog: ChatMainPaneProps['modelCatalog']
   messages: ChatMainPaneProps['messages']
   onCancelEditUserMessage: ChatMainPaneProps['onCancelEditUserMessage']
   onEditingValueChange: ChatMainPaneProps['onEditingValueChange']
   onMessageFeedbackChange: ChatMainPaneProps['onMessageFeedbackChange']
+  onRetryModelCatalog: ChatMainPaneProps['onRetryModelCatalog']
   onStartEditUserMessage: ChatMainPaneProps['onStartEditUserMessage']
   onSubmitEditUserMessage: ChatMainPaneProps['onSubmitEditUserMessage']
   onScrollToBottom: () => void
@@ -31,10 +33,12 @@ export function ChatMainPaneConversation({
   hasConversationMessages,
   isPinnedToBottom,
   isReplying,
+  modelCatalog,
   messages,
   onCancelEditUserMessage,
   onEditingValueChange,
   onMessageFeedbackChange,
+  onRetryModelCatalog,
   onStartEditUserMessage,
   onSubmitEditUserMessage,
   onScrollToBottom,
@@ -45,6 +49,8 @@ export function ChatMainPaneConversation({
   const showEmptyState = !hasConversationMessages && !isReplying
   const showScrollToBottomButton = hasConversationMessages && !isPinnedToBottom
   const messageKeyPrefix = activeSessionId ?? 'empty'
+  const emptyStateStatus =
+    modelCatalog.status === 'ready' ? 'default' : modelCatalog.status
   const lastEditableUserMessageId =
     [...messages].reverse().find((message) => message.role === 'user')?.id ??
     null
@@ -57,7 +63,17 @@ export function ChatMainPaneConversation({
         ref={scrollContainerRef}
       >
         <div className="mx-auto flex w-full max-w-4xl min-w-0 flex-col gap-6 px-3 py-4 md:px-6 md:pt-6 md:pb-4">
-          {showEmptyState ? <ChatEmptyState /> : null}
+          {showEmptyState ? (
+            <ChatEmptyState
+              message={modelCatalog.message}
+              onRetry={
+                emptyStateStatus === 'empty' || emptyStateStatus === 'error'
+                  ? onRetryModelCatalog
+                  : undefined
+              }
+              status={emptyStateStatus}
+            />
+          ) : null}
 
           {messages.map((message, index) => (
             <ChatMessageCard

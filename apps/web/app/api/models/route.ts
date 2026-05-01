@@ -1,8 +1,9 @@
-import { getChatModelOptions, getDefaultChatModelId } from '@mianshitong/llm'
+import { getResolvedChatModelCatalogState } from '@/server/chat'
 
 export async function GET() {
-  return Response.json({
-    defaultModelId: getDefaultChatModelId(),
-    models: getChatModelOptions(),
+  const modelCatalog = await getResolvedChatModelCatalogState()
+
+  return Response.json(modelCatalog, {
+    status: modelCatalog.status === 'error' ? 503 : 200,
   })
 }

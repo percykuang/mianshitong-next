@@ -25,7 +25,7 @@ export async function invokeCareerStructuredModel<T extends ZodTypeAny>(input: {
   systemPrompt: string
   userPayload: unknown
 }) {
-  const model = getJsonChatModel()
+  const model = await getJsonChatModel()
   const userPayloadJson = safeJsonStringify(input.userPayload, 2)
 
   if (userPayloadJson.error) {

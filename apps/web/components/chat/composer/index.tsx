@@ -5,15 +5,13 @@ import type { KeyboardEvent, MouseEvent, RefObject } from 'react'
 import { Send } from '@mianshitong/ui'
 
 import { quickPrompts } from '../constants'
-import {
-  type ChatModelId,
-  type ChatModelOption,
-  type ChatUsageSummary,
-} from '../types'
+import { type ChatModelOption, type ChatUsageSummary } from '../types'
 import { ComposerModelSelect } from './model-select'
 import { ComposerUsage } from './usage'
 
 export function ChatComposer({
+  disabled = false,
+  disabledReason = '',
   draft,
   isReplying,
   modelOptions,
@@ -29,21 +27,26 @@ export function ChatComposer({
   usageError,
   usageLoading,
 }: {
+  disabled?: boolean
+  disabledReason?: string
   draft: string
   isReplying: boolean
   modelOptions: readonly ChatModelOption[]
-  onModelChange: (value: ChatModelId) => void
+  onModelChange: (value: string) => void
   onDraftChange: (value: string) => void
   onSelectPrompt: (prompt: string) => void
   onStop: () => void
   onSubmit: () => void
-  selectedModelId: ChatModelId
+  selectedModelId: string
   showQuickPrompts: boolean
   textareaRef: RefObject<HTMLTextAreaElement | null>
   usage: ChatUsageSummary | null
   usageError: boolean
   usageLoading: boolean
 }) {
+  const isInteractionDisabled = disabled || isReplying
+  const placeholder = disabledReason || '发消息...'
+
   const handleTextareaKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (
       event.key !== 'Enter' ||
@@ -81,7 +84,7 @@ export function ChatComposer({
           {quickPrompts.map((prompt) => (
             <button
               className="flex h-auto w-full cursor-pointer justify-center rounded-full border border-(--mst-color-border-default) bg-white/88 p-3 text-left text-sm leading-relaxed font-medium whitespace-normal text-(--mst-color-text-secondary) shadow-[0_1px_2px_rgb(15_23_42/0.03)] transition-[background-color,border-color,color,box-shadow] duration-200 hover:border-[rgb(15_23_42/0.08)] hover:bg-slate-900/4 hover:text-(--mst-color-text-primary) hover:shadow-[0_2px_6px_rgb(15_23_42/0.06),inset_0_1px_0_rgb(255_255_255/0.72)] disabled:cursor-not-allowed disabled:opacity-55 dark:bg-slate-950/60 dark:hover:border-white/10 dark:hover:bg-white/6 dark:hover:shadow-[0_2px_8px_rgb(2_8_23/0.2)]"
-              disabled={isReplying}
+              disabled={isInteractionDisabled}
               key={prompt}
               onMouseDown={preventButtonFocusSteal}
               onClick={() => onSelectPrompt(prompt)}
@@ -108,10 +111,11 @@ export function ChatComposer({
         <div className="flex flex-row items-start gap-1 sm:gap-2">
           <textarea
             className="min-h-20 w-full grow resize-none rounded-none border-none! bg-transparent p-2 pr-10 text-sm text-(--mst-color-text-primary) shadow-none ring-0 outline-hidden [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-(--mst-color-text-muted) focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none dark:bg-transparent [&::-webkit-scrollbar]:hidden"
+            disabled={disabled}
             name="message"
             onChange={handleDraftChange}
             onKeyDown={handleTextareaKeyDown}
-            placeholder="发消息..."
+            placeholder={placeholder}
             ref={textareaRef}
             value={draft}
           />
@@ -120,13 +124,13 @@ export function ChatComposer({
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <ComposerModelSelect
-              disabled={isReplying}
+              disabled={isInteractionDisabled}
               onChange={onModelChange}
               options={modelOptions}
               value={selectedModelId}
             />
             <p className="hidden pl-1 text-xs text-(--mst-color-text-muted) sm:block">
-              Enter 发送，Shift + Enter 换行
+              {disabledReason || 'Enter 发送，Shift + Enter 换行'}
             </p>
           </div>
 
@@ -144,7 +148,7 @@ export function ChatComposer({
             <button
               aria-label="发送消息"
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded-full bg-(--mst-color-primary) text-white transition-colors duration-200 hover:brightness-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
-              disabled={!draft.trim() || isReplying}
+              disabled={disabled || !draft.trim() || isReplying}
               onMouseDown={preventButtonFocusSteal}
               type="submit"
             >

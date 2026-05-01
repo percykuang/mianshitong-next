@@ -1,16 +1,11 @@
-import {
-  type ChatModelId,
-  getChatModelOptions,
-  getDefaultChatModelId,
-} from '@mianshitong/llm'
-
-import type { ChatModelOption, ChatSessionPreview } from '@/app/chat/domain'
+import type { ChatSessionPreview } from '@/app/chat/domain'
+import type { ChatModelCatalogState } from '@/chat/shared/model-catalog'
 
 import { loadCurrentActorChatSessions } from './manage-chat-session'
+import { getResolvedChatModelCatalogState } from './model-catalog'
 
 export interface ChatPageBootstrapData {
-  initialModelOptions: readonly ChatModelOption[]
-  initialSelectedModelId: ChatModelId
+  initialModelCatalog: ChatModelCatalogState
   initialSelectedSessionId: string | null
   initialSessions: ChatSessionPreview[]
   persistenceEnabled: boolean
@@ -23,12 +18,11 @@ export async function getChatPageBootstrapData(
   const { actor, sessions } = await loadCurrentActorChatSessions({
     createGuest: false,
   })
-  const initialModelOptions = getChatModelOptions()
+  const initialModelCatalog = await getResolvedChatModelCatalogState()
 
   return {
     initialSessions: sessions,
-    initialModelOptions,
-    initialSelectedModelId: getDefaultChatModelId(),
+    initialModelCatalog,
     initialSelectedSessionId,
     persistenceEnabled: true,
     userEmail: actor?.authUserId ? actor.displayName : null,

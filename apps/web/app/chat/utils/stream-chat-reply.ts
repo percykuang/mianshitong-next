@@ -6,12 +6,11 @@ import type {
   EditMessageBody,
   StreamMessageBody,
 } from '@/app/chat/contracts'
-import type { ChatModelId } from '@/app/chat/domain'
 
 interface StreamChatReplyOptions {
   history: ChatRequestMessage[]
   message: string
-  modelId: ChatModelId
+  modelId: string
   sessionId?: string
   onChunk?: (content: string) => void
   signal: AbortSignal

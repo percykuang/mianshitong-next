@@ -10,13 +10,13 @@ import {
   Sparkles,
 } from '@mianshitong/ui'
 
-import type { ChatModelId, ChatModelOption } from '../types'
+import type { ChatModelOption } from '../types'
 
 interface ComposerModelSelectProps {
   disabled?: boolean
-  onChange: (value: ChatModelId) => void
+  onChange: (value: string) => void
   options: readonly ChatModelOption[]
-  value: ChatModelId
+  value: string
 }
 
 export function ComposerModelSelect({
@@ -34,7 +34,7 @@ export function ComposerModelSelect({
     return <div className="h-8 w-28" />
   }
 
-  const handleSelect = (nextValue: ChatModelId) => {
+  const handleSelect = (nextValue: string) => {
     onChange(nextValue)
     setOpen(false)
   }

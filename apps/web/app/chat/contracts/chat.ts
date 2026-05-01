@@ -1,9 +1,3 @@
-import {
-  type ChatModelId,
-  getDefaultChatModelId,
-  isChatModelId,
-  normalizeChatModelId,
-} from '@mianshitong/llm'
 import { z } from 'zod'
 
 function getOptionalTrimmedString(value: unknown) {
@@ -32,13 +26,7 @@ function createRequiredTrimmedStringSchema(message: string) {
 function createNormalizedOptionalModelIdSchema() {
   return z
     .preprocess(getOptionalTrimmedString, z.string().optional())
-    .transform((value) =>
-      value && value.length > 0 ? value : getDefaultChatModelId()
-    )
-    .refine(isChatModelId, {
-      message: '不支持的模型类型',
-    })
-    .transform((value) => normalizeChatModelId(value))
+    .transform((value) => (value && value.length > 0 ? value : ''))
 }
 
 const optionalSessionIdSchema = z
@@ -161,4 +149,4 @@ export type ParsedInterruptMessageBody = z.output<
 >
 export type StreamMessageBody = z.input<typeof streamMessageBodySchema>
 export type ParsedStreamMessageBody = z.output<typeof streamMessageBodySchema>
-export type ChatContractModelId = ChatModelId
+export type ChatContractModelId = string
