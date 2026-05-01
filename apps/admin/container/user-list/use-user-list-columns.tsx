@@ -1,6 +1,6 @@
 'use client'
 
-import { type TableColumnsType, Tag, TypographyText } from '@mianshitong/ui'
+import { type TableColumnsType, Tag } from '@mianshitong/ui'
 
 import type { AdminUserListResult } from '@/server/user'
 
@@ -25,9 +25,9 @@ export function useUserListColumns({
         dataIndex: 'id',
         key: 'id',
         render: (value: string) => (
-          <TypographyText code className="text-xs">
+          <code className="rounded-md bg-slate-900/6 px-1.5 py-0.5 font-mono text-xs text-[#374151]">
             {value}
-          </TypographyText>
+          </code>
         ),
         title: 'ID',
         width: 260,
