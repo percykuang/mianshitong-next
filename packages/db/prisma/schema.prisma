@@ -78,6 +78,12 @@ enum UserActorType {
   registered
 }
 
+enum ChatModelProvider {
+  deepseek
+  ollama
+  openaiCompatible
+}
+
 model UserActor {
   id              String           @id @default(cuid())
   type            UserActorType
@@ -149,4 +155,25 @@ model ChatReplyUsage {
   actor              UserActor @relation(fields: [actorId], references: [id], onDelete: Cascade)
 
   @@index([actorId, createdAt(sort: Desc)])
+}
+
+model ChatModelConfig {
+  id                 String            @id
+  label              String
+  description        String?
+  provider           ChatModelProvider
+  baseUrl            String
+  apiKeyCiphertext   String
+  apiKeyPreview      String            @default("")
+  model              String
+  enabled            Boolean           @default(true)
+  isDefault          Boolean           @default(false)
+  sortOrder          Int               @default(0)
+  supportsJsonOutput Boolean           @default(false)
+  modelKwargs        Json?
+  jsonModelKwargs    Json?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([enabled, isDefault, sortOrder, updatedAt(sort: Desc)])
 }
