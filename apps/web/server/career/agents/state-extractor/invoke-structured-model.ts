@@ -21,11 +21,12 @@ interface InvokedModelMessage {
 export async function invokeCareerStructuredModel<T extends ZodTypeAny>(input: {
   jsonFallbackPrompt: string
   label: string
+  modelId: string
   schema: T
   systemPrompt: string
   userPayload: unknown
 }) {
-  const model = await getJsonChatModel()
+  const model = await getJsonChatModel(input.modelId)
   const userPayloadJson = safeJsonStringify(input.userPayload, 2)
 
   if (userPayloadJson.error) {

@@ -64,6 +64,7 @@ export async function prepareEditedChatReply(input: {
         resolveWorkflowContext: async () =>
           buildSafeCareerWorkflowContext({
             actorId: input.actor.id,
+            chatModelId: result.chatModelId,
             chatSessionId: result.sessionId,
             conversation: result.conversation,
             resetThreadState: true,

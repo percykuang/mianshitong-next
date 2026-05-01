@@ -17,11 +17,13 @@ export async function extractCareerStateAfterReply(input: {
   assistantReply: string
   chatSessionId: string
   messages: CareerMessage[]
+  modelId: string
   previousState: CareerThreadState
   userInput: string
 }): Promise<CareerStateCommit | undefined> {
   const extraction = await invokeCareerStructuredModel({
     label: 'state extractor',
+    modelId: input.modelId,
     schema: stateExtractorSchema,
     systemPrompt: [
       CAREER_CHAT_POLICY_INSTRUCTION,

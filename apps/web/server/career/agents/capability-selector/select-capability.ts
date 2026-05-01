@@ -19,12 +19,14 @@ function buildCapabilityCatalog() {
 }
 
 export async function selectCareerCapability(input: {
+  modelId: string
   messages: CareerMessage[]
   userInput: string
 }): Promise<CapabilitySelectorResult> {
   return invokeCareerStructuredModel({
     jsonFallbackPrompt: CAPABILITY_SELECTOR_JSON_FALLBACK_PROMPT,
     label: 'capability selector',
+    modelId: input.modelId,
     schema: capabilitySelectorSchema,
     systemPrompt: [
       CAREER_CHAT_POLICY_INSTRUCTION,

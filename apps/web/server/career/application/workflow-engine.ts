@@ -6,6 +6,7 @@ import { loadCareerThreadState, resetCareerThreadState } from '../state'
 
 export interface BuildCareerWorkflowContextInput {
   actorId: string
+  chatModelId: string
   chatSessionId: string
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
   resetThreadState?: boolean
@@ -63,6 +64,7 @@ export async function buildCareerWorkflowContext(
   const capabilitySelection =
     threadState.activeFlowId === null
       ? await selectCareerCapability({
+          modelId: input.chatModelId,
           messages,
           userInput: input.userInput,
         })
@@ -81,6 +83,7 @@ export async function buildCareerWorkflowContext(
         assistantReply,
         chatSessionId: input.chatSessionId,
         messages,
+        modelId: input.chatModelId,
         previousState: threadState,
         userInput: input.userInput,
       }),

@@ -37,6 +37,7 @@ export type PreparedChatReplyResult =
 
 export async function buildSafeCareerWorkflowContext(input: {
   actorId: string
+  chatModelId: string
   chatSessionId: string
   conversation: Array<{ content: string; role: 'assistant' | 'user' }>
   resetThreadState?: boolean
@@ -80,6 +81,7 @@ export async function buildPreparedChatReply(input: {
     resolveWorkflowContext: async () =>
       buildSafeCareerWorkflowContext({
         actorId: input.actorId,
+        chatModelId: input.chatModelId,
         chatSessionId: input.sessionId,
         conversation,
         resetThreadState: input.resetThreadState,
