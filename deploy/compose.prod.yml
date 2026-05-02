@@ -49,6 +49,11 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    networks:
+      default:
+      edge:
+        aliases:
+          - mianshitong-web
 
   admin:
     image: ${IMAGE_NAMESPACE}/mianshitong-next-admin:${IMAGE_TAG:-main-latest}
@@ -74,6 +79,11 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+    networks:
+      default:
+      edge:
+        aliases:
+          - mianshitong-admin
 
   caddy:
     image: caddy:2-alpine

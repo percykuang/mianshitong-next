@@ -20,6 +20,10 @@
 - `deploy/scripts/rollback.sh`
   - 通过指定镜像 tag 回滚
 
+如果服务器同时运行多个项目，并共享同一个公网 `80/443` 入口，请额外阅读：
+
+- `docs/shared-server-deployment.md`
+
 ## GitHub Secrets
 
 在 GitHub 仓库 `Settings → Secrets and variables → Actions` 中配置：
