@@ -10,13 +10,11 @@
   - 构建 `web`、`admin`、`migrate` 三类镜像
   - `builder` 阶段使用构建期占位 `DATABASE_URL`，运行时由 `.env.prod` 覆盖
 - `deploy/compose.prod.yml`
-  - 编排 `db`、`migrate`、`web`、`admin`、`caddy`
-- `deploy/Caddyfile`
-  - 将公网域名反向代理到 Docker 内部的 `web:3000` 与 `admin:3000`
+  - 编排 `db`、`migrate`、`web`、`admin`
 - `.github/workflows/deploy.yml`
   - push 到 `main` 后构建镜像、推送镜像仓库，并通过 SSH 触发服务器部署
 - `deploy/scripts/deploy.sh`
-  - 在服务器上拉取镜像、启动数据库、执行 migration、启动应用与 Caddy
+  - 在服务器上拉取镜像、启动数据库、执行 migration、启动应用
 - `deploy/scripts/rollback.sh`
   - 通过指定镜像 tag 回滚
 
@@ -88,14 +86,7 @@ MODEL_CONFIG_SECRET=<stable-random-secret>
 <admin-domain>  A 记录 -> 服务器 IP
 ```
 
-Caddy 会监听 `80/443` 并自动处理 HTTPS 证书。
-
-如果服务器上已有旧项目或 Nginx/Caddy 占用 `80/443`，新 Caddy 会启动失败。正式切换前先检查：
-
-```bash
-docker ps
-ss -lntp | grep -E ':80|:443'
-```
+生产环境的公网 `80/443` 入口由独立 `edge-proxy` 负责；本项目不再直接监听公网端口。
 
 ## 首次发布
 
@@ -143,11 +134,6 @@ docker compose \
   -f compose.prod.yml \
   logs -f --tail=200 admin
 
-docker compose \
-  --project-name mianshitong-next-prod \
-  --env-file .env.prod \
-  -f compose.prod.yml \
-  logs -f --tail=200 caddy
 ```
 
 ## 常见失败
@@ -223,7 +209,15 @@ docker compose \
 
 - `db` 是否 healthy
 - `web` / `admin` 是否 healthy
-- `caddy` 是否启动失败或端口冲突
+- `edge` 网络是否存在
+- `web` / `admin` 是否带有 `mianshitong-web` / `mianshitong-admin` 别名
+
+可额外检查：
+
+```bash
+docker inspect mianshitong-next-prod-web-1 --format '{{json .NetworkSettings.Networks.edge.Aliases}}'
+docker inspect mianshitong-next-prod-admin-1 --format '{{json .NetworkSettings.Networks.edge.Aliases}}'
+```
 
 ## 回滚
 

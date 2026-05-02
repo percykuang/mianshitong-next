@@ -9,6 +9,18 @@
 
 它们共享同一台服务器，并统一通过 Caddy 处理公网 `80/443` 入口。
 
+## 当前结论
+
+当前仓库已经不再负责生产公网入口 Caddy 的部署与配置同步。
+
+也就是说：
+
+- `mianshitong-next` 只负责部署自己的 `db`、`migrate`、`web`、`admin`
+- 生产环境的公网 `80/443` 入口由独立的 `edge-proxy` 目录或独立 infra 仓库负责
+- 本仓库只需要保证 `web` / `admin` 挂到共享 `edge` 网络，并暴露稳定别名：
+  - `mianshitong-web`
+  - `mianshitong-admin`
+
 ## 背景
 
 当服务器上只部署单个项目时，让项目自己的 `caddy` 容器直接监听：
@@ -117,25 +129,10 @@ admin.mianshitong.chat {
 如果本项目运行在“同服多项目”场景下，应遵守以下边界：
 
 1. `web` 与 `admin` 只通过 `expose: 3000` 提供内部访问能力。
-2. `caddy` 可以存在，但它应被视为“统一入口 Caddy”，而不是只服务本项目的私有代理。
-3. 如果继续复用本仓库中的 `deploy/Caddyfile`，那它必须同时维护服务器上全部已接管域名，而不只是 `mianshitong.chat`。
-4. `caddy` 必须加入共享 `edge` 网络，才能代理其他项目容器。
-
-当前仓库中，`deploy/compose.prod.yml` 已经为 `caddy` 增加：
-
-```yml
-networks:
-  - default
-  - edge
-```
-
-并在底部声明：
-
-```yml
-networks:
-  edge:
-    external: true
-```
+2. `web` 与 `admin` 都必须加入共享 `edge` 网络。
+3. `web` 在 `edge` 网络上暴露稳定别名 `mianshitong-web`。
+4. `admin` 在 `edge` 网络上暴露稳定别名 `mianshitong-admin`。
+5. 本仓库不再负责公网 `80/443` 的 Caddy 配置。
 
 ## 容器命名与反代目标
 
@@ -178,36 +175,14 @@ percy-site-prod-admin-1
 
 ## 推荐的共享别名方案
 
-如果 `mianshitong-next` 继续承担统一入口代理角色，建议：
+建议：
 
 - `mianshitong-next` 的 `web` 在 `edge` 网络上暴露别名 `mianshitong-web`
 - `mianshitong-next` 的 `admin` 在 `edge` 网络上暴露别名 `mianshitong-admin`
 - `percy-site` 的 `web` 在 `edge` 网络上暴露别名 `percy-web`
 - `percy-site` 的 `admin` 在 `edge` 网络上暴露别名 `percy-admin`
 
-这样 `deploy/Caddyfile` 可收敛为：
-
-```caddyfile
-percy.ren {
-  encode zstd gzip
-  reverse_proxy percy-web:3000
-}
-
-admin.percy.ren {
-  encode zstd gzip
-  reverse_proxy percy-admin:3000
-}
-
-{$WEB_DOMAIN} {
-  encode zstd gzip
-  reverse_proxy mianshitong-web:3000
-}
-
-{$ADMIN_DOMAIN} {
-  encode zstd gzip
-  reverse_proxy mianshitong-admin:3000
-}
-```
+而域名到 upstream 的映射统一收敛到独立 `edge-proxy` 的 `Caddyfile` 中。
 
 ## 发布约定
 
@@ -224,13 +199,7 @@ ss -lntp | grep -E ':80|:443'
 2. 新部署是否会替换掉正在服务其他域名的入口代理
 3. 新的 `Caddyfile` 是否包含服务器上全部仍需对外服务的域名
 
-如果发布动作会重建入口 Caddy，发布前至少执行一次：
-
-```bash
-caddy validate --config /etc/caddy/Caddyfile
-```
-
-并在发布后验证：
+发布后验证：
 
 ```bash
 curl -I https://percy.ren
@@ -243,30 +212,28 @@ curl -I https://admin.mianshitong.chat
 
 如果某个站点突然无法访问，建议按以下顺序排查：
 
-1. 看 `80/443` 当前被哪个容器占用。
-2. 看当前入口 Caddy 的配置里是否包含故障域名。
-3. 看入口 Caddy 是否接入共享 `edge` 网络。
-4. 看被代理的目标容器本身是否 healthy。
-5. 看 Caddy 日志里是否出现域名、TLS、ACME、challenge 相关报错。
+1. 看 `80/443` 当前被哪个入口代理容器占用。
+2. 看独立 `edge-proxy` 的配置里是否包含故障域名。
+3. 看被代理的目标容器本身是否 healthy。
+4. 看 `web` / `admin` 是否仍然挂在 `edge` 网络并保留稳定别名。
+5. 看入口 Caddy 日志里是否出现域名、TLS、ACME、challenge 相关报错。
 
 推荐命令：
 
 ```bash
 docker ps --format 'table {{.Names}}\t{{.Ports}}'
 ss -lntp | grep -E ':80|:443'
-docker logs --tail=200 <caddy-container>
-docker inspect <caddy-container> --format '{{json .NetworkSettings.Networks}}'
+docker logs --tail=200 <edge-proxy-caddy>
+docker inspect mianshitong-next-prod-web-1 --format '{{json .NetworkSettings.Networks.edge.Aliases}}'
+docker inspect mianshitong-next-prod-admin-1 --format '{{json .NetworkSettings.Networks.edge.Aliases}}'
 curl -I http://<domain>
 curl -I https://<domain>
 ```
 
-## 当前结论
+对同服多项目场景，最终推荐结论是：
 
-对同服多项目场景，当前推荐结论是：
-
-- 服务器上只能有一个真正接管公网 `80/443` 的 Caddy
+- 服务器上只能有一个真正接管公网 `80/443` 的独立 Caddy
 - 入口 Caddy 必须统一管理全部对外域名
 - 所有业务项目容器通过共享 `edge` 网络暴露给入口代理
 - 长期优先使用稳定网络别名，不依赖容器实例名
-
-如果后续继续在同一台服务器上新增站点，应先更新入口代理配置，再上线新项目，避免再次出现“新项目可访问，旧域名丢失”的问题。
+- 业务仓库不再同时承担“项目代码仓库 + 全站公网入口配置仓库”两种职责

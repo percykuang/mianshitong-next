@@ -50,7 +50,7 @@
 - **数据层**：PostgreSQL、Prisma
 - **AI 能力**：DeepSeek、Ollama、LangChain OpenAI-compatible client
 - **工程化**：pnpm workspace、ESLint、Prettier、Stylelint、CSpell、Husky
-- **部署**：Docker、Docker Compose、Caddy、GitHub Actions、阿里云容器镜像服务
+- **部署**：Docker、Docker Compose、edge-proxy（Caddy）、GitHub Actions、阿里云容器镜像服务
 
 ## 技术文档 📚
 
@@ -60,6 +60,8 @@
 - `docs/deployment-runbook.md`
 - `docs/admin-operations.md`
 - `docs/llm-configuration.md`
+
+当前生产环境中，本项目只负责自身应用、数据库和后台服务容器；公网域名入口统一由独立 `edge-proxy` 接管，再通过共享 Docker `edge` 网络转发到 `mianshitong-web` 和 `mianshitong-admin`。
 
 ## 项目愿景 🌱
 

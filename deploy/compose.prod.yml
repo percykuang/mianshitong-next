@@ -85,31 +85,8 @@ services:
         aliases:
           - mianshitong-admin
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    env_file:
-      - .env.prod
-    depends_on:
-      web:
-        condition: service_healthy
-      admin:
-        condition: service_healthy
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - default
-      - edge
-
 volumes:
   postgres_data:
-  caddy_data:
-  caddy_config:
 
 networks:
   edge:

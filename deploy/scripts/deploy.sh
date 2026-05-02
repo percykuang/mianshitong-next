@@ -36,7 +36,7 @@ compose() {
 echo "[deploy] 拉取镜像..."
 images_to_pull=(web admin migrate)
 if [[ "$PULL_INFRA_IMAGES_VALUE" == "1" ]]; then
-  images_to_pull+=(caddy db)
+  images_to_pull+=(db)
 fi
 compose pull "${images_to_pull[@]}"
 
@@ -46,8 +46,8 @@ compose up -d --wait db
 echo "[deploy] 执行 Prisma migrate deploy..."
 compose run --rm migrate
 
-echo "[deploy] 启动应用与代理..."
-compose up -d --remove-orphans --wait web admin caddy
+echo "[deploy] 启动应用..."
+compose up -d --remove-orphans --wait web admin
 
 echo "[deploy] 当前状态："
 compose ps
