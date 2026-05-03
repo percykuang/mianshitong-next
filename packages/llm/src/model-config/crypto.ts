@@ -5,7 +5,7 @@ import {
   randomBytes,
 } from 'node:crypto'
 
-import { readEnvString } from '../env'
+import { readEnvString } from '../server/env'
 
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm'
 const ENCRYPTION_IV_BYTES = 12

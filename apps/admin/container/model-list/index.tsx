@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 
+import { getDefaultSupportsJsonOutput } from '@mianshitong/llm/provider'
 import { Button, Plus, Table, useAppInstance } from '@mianshitong/ui'
 import { useRouter } from 'next/navigation'
 
@@ -18,19 +19,21 @@ import { useModelListColumns } from './use-model-list-columns'
 
 type AdminChatModelItem = AdminChatModelListResult['items'][number]
 
+const DEFAULT_CREATE_PROVIDER: ModelEditorValues['provider'] = 'deepseek'
+
 function createEmptyEditorValues(): ModelEditorValues {
   return {
     id: '',
     label: '',
     description: '',
-    provider: 'deepseek',
+    provider: DEFAULT_CREATE_PROVIDER,
     baseUrl: '',
     apiKey: '',
     model: '',
     enabled: true,
     isDefault: false,
     sortOrder: '0',
-    supportsJsonOutput: true,
+    supportsJsonOutput: getDefaultSupportsJsonOutput(DEFAULT_CREATE_PROVIDER),
     modelKwargsJson: '',
     jsonModelKwargsJson: '',
   }
@@ -71,6 +74,33 @@ function buildRequestBody(
     supportsJsonOutput: values.supportsJsonOutput,
     modelKwargsJson: values.modelKwargsJson,
     jsonModelKwargsJson: values.jsonModelKwargsJson,
+  }
+}
+
+function buildNextEditorValues<K extends keyof ModelEditorValues>(input: {
+  currentValues: ModelEditorValues
+  key: K
+  value: ModelEditorValues[K]
+}) {
+  if (input.key !== 'provider') {
+    return {
+      ...input.currentValues,
+      [input.key]: input.value,
+    }
+  }
+
+  const currentProvider = input.currentValues.provider
+  const nextProvider = input.value as ModelEditorValues['provider']
+  const followsProviderDefault =
+    input.currentValues.supportsJsonOutput ===
+    getDefaultSupportsJsonOutput(currentProvider)
+
+  return {
+    ...input.currentValues,
+    provider: nextProvider,
+    supportsJsonOutput: followsProviderDefault
+      ? getDefaultSupportsJsonOutput(nextProvider)
+      : input.currentValues.supportsJsonOutput,
   }
 }
 
@@ -115,8 +145,11 @@ export function ModelList({ models }: { models: AdminChatModelListResult }) {
             ...currentValue,
             error: '',
             values: {
-              ...currentValue.values,
-              [key]: value,
+              ...buildNextEditorValues({
+                currentValues: currentValue.values,
+                key,
+                value,
+              }),
             },
           }
         : currentValue

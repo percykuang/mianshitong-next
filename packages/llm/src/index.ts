@@ -9,7 +9,7 @@ export {
   deleteStoredChatModelConfig,
   listStoredChatModelConfigSummaries,
   updateStoredChatModelConfig,
-} from './model-config-store'
+} from './model-config'
 export {
   extractJsonObjectFromModelText,
   normalizeModelChunkText,

@@ -6,34 +6,27 @@ export interface ChatModelOption {
   description?: string
 }
 
-export interface ChatModelCatalogItem extends ChatModelOption {
-  apiKey?: string
-  baseUrl?: string
-  enabled?: boolean
-  isDefault?: boolean
+export interface StoredChatModelConfigSummary extends ChatModelOption {
+  apiKeyPreview: string
+  baseUrl: string
+  createdAt: Date
+  enabled: boolean
+  isDefault: boolean
   jsonModelKwargs?: Record<string, unknown>
   model: string
   modelKwargs?: Record<string, unknown>
   provider: ModelProvider
-  sortOrder?: number
-  supportsJsonOutput?: boolean
-}
-
-export interface StoredChatModelConfigSummary extends ChatModelCatalogItem {
-  apiKeyPreview: string
-  createdAt: Date
+  sortOrder: number
+  supportsJsonOutput: boolean
   updatedAt: Date
 }
 
-export interface StoredChatModelConfigInput {
+export interface StoredChatModelConfigInput extends ChatModelOption {
   apiKey: string
   baseUrl: string
-  description?: string
   enabled: boolean
-  id: string
   isDefault: boolean
   jsonModelKwargs?: Record<string, unknown>
-  label: string
   model: string
   modelKwargs?: Record<string, unknown>
   provider: ModelProvider

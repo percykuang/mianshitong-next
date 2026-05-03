@@ -8,26 +8,58 @@
 llm/
 ├── README.md
 └── src/
-    ├── index.ts
-    ├── types.ts
-    ├── catalog.ts
-    ├── model-config-store.ts
-    ├── env.ts
-    ├── output.ts
-    └── client.ts
+├── index.ts
+├── types.ts
+├── catalog.ts
+├── client/
+│   ├── index.ts
+│   ├── plan.ts
+│   └── cache.ts
+├── model-config/
+│   ├── index.ts
+│   ├── commands.ts
+│   ├── queries.ts
+│   ├── mapper.ts
+│   ├── provider.ts
+│   ├── crypto.ts
+│   └── types.ts
+├── output/
+│   └── index.ts
+├── provider/
+│   └── index.ts
+├── server/
+│   └── env.ts
+└── shared/
+    └── openai-compatible.ts
 ```
 
 ## 职责划分
 
 - `src/catalog.ts`
   - 用户可选模型、默认模型、模型 ID 规范化等目录查询能力
-- `src/model-config-store.ts`
-  - 数据库模型配置读取、API Key 加解密和目录选择
-- `src/env.ts`
-  - `.env` 加载与环境变量读取
-- `src/client.ts`
-  - 根据模型目录解析连接配置，并创建/缓存普通或 JSON Output `ChatOpenAI` 客户端
-- `src/output.ts`
+- `src/model-config/commands.ts`
+  - 模型配置新增、更新、删除等写操作与规则校验
+- `src/model-config/queries.ts`
+  - 模型配置读取、运行时目录构建与默认模型解析
+- `src/model-config/mapper.ts`
+  - 数据库行、运行时配置、管理端摘要之间的映射
+- `src/model-config/provider.ts`
+  - provider 默认能力、Base URL 规范化与 DB provider 适配
+- `src/model-config/crypto.ts`
+  - 模型 API Key 的加解密与脱敏
+- `src/provider/index.ts`
+  - 对外暴露可安全复用的 provider 默认值辅助函数
+- `src/server/env.ts`
+  - llm 的服务端 env 初始化与密钥读取入口
+- `src/shared/openai-compatible.ts`
+  - OpenAI Compatible Base URL 的纯字符串规范化
+- `src/client/plan.ts`
+  - 聊天模型运行时解析与连接配置组装
+- `src/client/cache.ts`
+  - ChatOpenAI 缓存、cache key 与实例化
+- `src/client/index.ts`
+  - 对外公开的聊天模型客户端入口
+- `src/output/index.ts`
   - 模型输出文本、流式 chunk、JSON 片段的规范化
 - `src/index.ts`
   - 对外稳定公开 API
@@ -45,8 +77,8 @@ llm/
 
 1. 业务层先传入 `modelId`
 2. 从数据库 `ChatModelConfig` 中读取启用模型并解析当前 `modelId`
-3. `client.ts` 根据当前 `modelId` 对应的 provider 和连接配置解析最终连接配置
-4. `client.ts` 基于完整连接配置创建并缓存 `ChatOpenAI` 客户端
+3. `client/plan.ts` 根据当前 `modelId` 对应的 provider 和连接配置解析最终连接配置
+4. `client/index.ts` 基于完整连接配置创建并缓存 `ChatOpenAI` 客户端
 5. 普通聊天使用默认模型客户端；结构化输出可通过 provider 能力判断启用 JSON Output
 
 ## 环境变量分层
@@ -63,3 +95,4 @@ llm/
 5. `temperature`、`maxTokens` 等生成参数默认交给模型提供方处理，项目内不维护额外环境变量开关。
 6. 当前仅对 `deepseek` provider 启用 JSON Output；DeepSeek V4 的结构化输出会使用 JSON 专用参数关闭 thinking，`ollama` 默认继续使用提示词 JSON 和安全解析，避免依赖本地 Ollama 版本差异。
 7. 不再维护旧模型 ID alias；外部传入未知模型 ID 时统一回退到当前启用默认模型。
+8. `supportsJsonOutput` 在模型配置中表示“最终开关值”；provider 注册表只提供默认建议值，不直接覆盖已保存的模型配置。

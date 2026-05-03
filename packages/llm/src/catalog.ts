@@ -3,7 +3,7 @@ import {
   getRuntimeChatModelOptions,
   getRuntimeDefaultChatModelId,
   normalizeRuntimeChatModelId,
-} from './model-config-store'
+} from './model-config'
 
 export async function getChatModelOptions() {
   return getRuntimeChatModelOptions()
