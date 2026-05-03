@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./provider": "./src/provider/index.ts"
   },
   "scripts": {
     "lint": "pnpm --dir ../.. exec eslint packages/llm"
@@ -18,7 +19,6 @@
     "@langchain/openai": "^1.4.4",
     "@prisma/client": "7.6.0",
     "@mianshitong/db": "workspace:*",
-    "@mianshitong/shared": "workspace:*",
-    "dotenv": "^16.6.1"
+    "@mianshitong/shared": "workspace:*"
   }
 }
