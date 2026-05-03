@@ -56,6 +56,7 @@
 
 如果你想了解项目结构、本地开发、环境变量、部署流程、管理员初始化和回滚方式，请阅读：
 
+- `docs/database-access-layer.md`
 - `docs/project.md`
 - `docs/deployment-runbook.md`
 - `docs/admin-operations.md`

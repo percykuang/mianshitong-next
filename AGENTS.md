@@ -16,6 +16,15 @@
 - 对同一语义的资源、配置或常量，优先保持单一数据源，避免在 `app`、`public`、`packages` 中出现多份内容长期并存。
 - 修改共享包时，默认兼顾 `web` 与 `admin` 两端的使用场景，不要只为单个页面临时定制公共 API。
 
+## 数据库访问层约定
+
+- `packages/db` 的目标职责是 Prisma Client、事务 helper、领域化 repository 与数据库强相关类型；新增数据库读写优先沉淀到 `packages/db`。
+- `apps/web`、`apps/admin`、`packages/llm` 负责业务编排、权限判断、参数校验和 presenter，不要继续在业务层扩散复杂 Prisma 查询。
+- `packages/db` 只负责“怎么查、怎么写”，不负责页面 DTO、中文文案、路由参数解析或完整业务流程控制。
+- `packages/db` 内部按领域模块拆目录，优先使用 `repository.ts`、`query.ts`、`types.ts` 的结构；复杂 `select`、`include`、`orderBy`、`where` 片段优先收敛到 `query.ts`。
+- 业务层默认从 `@mianshitong/db` 导入稳定接口，不直接依赖 `@prisma/client`；若是历史模块尚未完成迁移，优先沿着该方向逐步收敛，而不是继续扩大直接依赖面。
+- 更完整的数据库访问层设计、目录树和迁移顺序见 `docs/database-access-layer.md`。
+
 ## Next.js 与资源约定
 
 - 优先遵守 Next.js App Router 的文件约定与 Metadata 机制，不绕开框架默认能力实现页面、图标、元信息和静态资源。

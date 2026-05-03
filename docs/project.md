@@ -128,6 +128,10 @@ docker compose \
   run --rm migrate
 ```
 
+数据库访问层分层设计、目标目录树和迁移顺序见：
+
+- `docs/database-access-layer.md`
+
 ## 生产部署
 
 生产部署使用 Docker、Caddy 和 GitHub Actions。详细发布、服务器配置、常见失败排查与回滚流程见：
