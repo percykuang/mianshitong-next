@@ -1,9 +1,9 @@
+import { db } from '@mianshitong/db'
 import 'server-only'
 
 import { verifyPassword } from './password'
 import { deleteCurrentSession, getCurrentUser } from './session'
 import { scheduleExpiredAdminSessionCleanup } from './session-cleanup'
-import { createAuthSession, findUserByEmail } from './user-repository'
 import { validateCredentials } from './validation'
 
 export interface AuthUserSummary {
@@ -78,7 +78,7 @@ export async function loginAdminWithCredentials(
     }
   }
 
-  const user = await findUserByEmail(parsed.data.email)
+  const user = await db.adminUser.findByEmail(parsed.data.email)
 
   if (!user) {
     return {
@@ -101,7 +101,7 @@ export async function loginAdminWithCredentials(
     }
   }
 
-  const session = await createAuthSession(user.id)
+  const session = await db.adminUser.createSession(user.id)
 
   return {
     error: null,

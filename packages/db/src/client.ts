@@ -1,3 +1,4 @@
+import { isDevelopmentEnv, isProductionEnv } from '@mianshitong/shared/runtime'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { createRequire } from 'node:module'
 
@@ -21,13 +22,13 @@ function createPrismaClient() {
     adapter: new PrismaPg({
       connectionString: getRequiredDatabaseUrl(),
     }),
-    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    log: isDevelopmentEnv() ? ['error', 'warn'] : ['error'],
   })
 }
 
 // 开发环境复用单例，避免热更新时创建过多数据库连接。
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
-if (process.env.NODE_ENV !== 'production') {
+if (!isProductionEnv()) {
   globalForPrisma.prisma = prisma
 }

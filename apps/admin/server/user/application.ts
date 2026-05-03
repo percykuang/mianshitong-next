@@ -1,4 +1,4 @@
-import { prisma, resolveUserActorDailyModelQuota } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
 import 'server-only'
 
 import {
@@ -14,9 +14,6 @@ import {
 
 type AdminUserSortBy = 'createdAt' | 'email' | 'sessionCount'
 const MAX_DAILY_MODEL_QUOTA = 100_000
-type PrismaTransactionClient = Parameters<
-  Parameters<typeof prisma.$transaction>[0]
->[0]
 
 export interface AdminUserListItem {
   createdAtLabel: string
@@ -53,20 +50,6 @@ function createTodayRange() {
   }
 }
 
-function createUserSortOrderBy(input: AdminUserListQuery) {
-  if (input.sortBy === 'sessionCount') {
-    return {
-      chatSessions: {
-        _count: input.sortOrder,
-      },
-    }
-  }
-
-  return {
-    [input.sortBy]: input.sortOrder,
-  }
-}
-
 export function parseAdminUserListQuery(
   searchParams: Record<string, string | string[] | undefined>
 ): AdminUserListQuery {
@@ -87,67 +70,34 @@ export function parseAdminUserListQuery(
 export async function listAdminUsers(
   query: AdminUserListQuery
 ): Promise<AdminUserListResult> {
-  const [users, total] = await Promise.all([
-    prisma.authUser.findMany({
-      orderBy: createUserSortOrderBy(query),
-      ...createPaginatedQuery(query),
-      select: {
-        id: true,
-        email: true,
-        createdAt: true,
-        actor: {
-          select: {
-            id: true,
-            dailyModelQuota: true,
-          },
-        },
-        _count: {
-          select: {
-            chatSessions: true,
-          },
-        },
-      },
-    }),
-    prisma.authUser.count(),
-  ])
+  const { items: users, total } = await db.authUser.listForAdmin({
+    ...createPaginatedQuery(query),
+    sortBy: query.sortBy,
+    sortOrder: query.sortOrder,
+  })
   const todayRange = createTodayRange()
   const actorIds = users
     .map((user) => user.actor?.id ?? null)
     .filter((actorId): actorId is string => Boolean(actorId))
-  const todayUsageByActorId = new Map<string, number>()
-
-  if (actorIds.length > 0) {
-    const usageRows = await prisma.chatReplyUsage.groupBy({
-      by: ['actorId'],
-      where: {
-        actorId: {
-          in: actorIds,
-        },
-        createdAt: {
-          gte: todayRange.start,
-          lt: todayRange.end,
-        },
-      },
-      _count: {
-        id: true,
-      },
-    })
-
-    for (const usageRow of usageRows) {
-      todayUsageByActorId.set(usageRow.actorId, usageRow._count.id)
-    }
-  }
+  const usageRows = await db.userActor.listReplyUsageCountsInRange({
+    actorIds,
+    start: todayRange.start,
+    end: todayRange.end,
+  })
+  const todayUsageByActorId = new Map(
+    usageRows.map((usageRow) => [usageRow.actorId, usageRow.count])
+  )
 
   return {
     items: users.map((user) => ({
       id: user.id,
       email: user.email,
-      dailyModelQuota: resolveUserActorDailyModelQuota({
+      dailyModelQuota: db.userActor.resolveDailyModelQuota({
         type: 'registered',
         dailyModelQuota: user.actor?.dailyModelQuota,
       }),
       createdAtLabel: formatDateTime(user.createdAt),
-      sessionCount: user._count.chatSessions,
+      sessionCount: user.sessionCount,
       todayUsedQuota: user.actor
         ? (todayUsageByActorId.get(user.actor.id) ?? 0)
         : 0,
@@ -177,15 +127,7 @@ export async function updateRegisteredUserDailyModelQuota(input: {
     }
   }
 
-  const targetUser = await prisma.authUser.findUnique({
-    where: {
-      id: input.userId,
-    },
-    select: {
-      id: true,
-      email: true,
-    },
-  })
+  const targetUser = await db.authUser.findById(input.userId)
 
   if (!targetUser) {
     return {
@@ -193,45 +135,23 @@ export async function updateRegisteredUserDailyModelQuota(input: {
     }
   }
 
-  const actor = await prisma.userActor.upsert({
-    where: {
-      authUserId: targetUser.id,
-    },
-    create: {
-      id: targetUser.id,
-      type: 'registered',
-      displayName: targetUser.email,
-      authUserId: targetUser.id,
-      dailyModelQuota: input.dailyModelQuota,
-    },
-    update: {
-      type: 'registered',
-      displayName: targetUser.email,
-      dailyModelQuota: input.dailyModelQuota,
-    },
-    select: {
-      dailyModelQuota: true,
-    },
+  const dailyModelQuota = await db.userActor.upsertRegisteredQuota({
+    authUserId: targetUser.id,
+    displayName: targetUser.email,
+    dailyModelQuota: input.dailyModelQuota,
   })
 
   return {
     error: null,
-    dailyModelQuota: resolveUserActorDailyModelQuota({
+    dailyModelQuota: db.userActor.resolveDailyModelQuota({
       type: 'registered',
-      dailyModelQuota: actor.dailyModelQuota,
+      dailyModelQuota,
     }),
   }
 }
 
 export async function deleteRegisteredUser(input: { userId: string }) {
-  const targetUser = await prisma.authUser.findUnique({
-    where: {
-      id: input.userId,
-    },
-    select: {
-      id: true,
-    },
-  })
+  const targetUser = await db.authUser.findById(input.userId)
 
   if (!targetUser) {
     return {
@@ -239,19 +159,7 @@ export async function deleteRegisteredUser(input: { userId: string }) {
     }
   }
 
-  await prisma.$transaction(async (tx: PrismaTransactionClient) => {
-    await tx.userActor.deleteMany({
-      where: {
-        authUserId: input.userId,
-      },
-    })
-
-    await tx.authUser.delete({
-      where: {
-        id: input.userId,
-      },
-    })
-  })
+  await db.authUser.deleteWithActorById(input.userId)
 
   return {
     error: null,

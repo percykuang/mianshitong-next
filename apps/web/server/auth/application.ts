@@ -1,12 +1,9 @@
+import { db } from '@mianshitong/db'
+
 import type { AuthFieldError } from '@/utils/auth'
 
 import { hashPassword, verifyPassword } from './password'
 import { deleteCurrentSession, getCurrentUser } from './session'
-import {
-  createAuthSession,
-  createUser,
-  findUserByEmail,
-} from './user-repository'
 import {
   validateLoginCredentials,
   validateRegistrationCredentials,
@@ -96,7 +93,7 @@ export async function loginWithCredentials(
     }
   }
 
-  const user = await findUserByEmail(parsed.data.email)
+  const user = await db.authUser.findByEmail(parsed.data.email)
 
   if (!user) {
     return {
@@ -119,7 +116,7 @@ export async function loginWithCredentials(
     }
   }
 
-  const session = await createAuthSession(user.id)
+  const session = await db.authUser.createSession(user.id)
 
   return {
     error: null,
@@ -143,7 +140,7 @@ export async function registerWithCredentials(
     }
   }
 
-  const existingUser = await findUserByEmail(parsed.data.email)
+  const existingUser = await db.authUser.findByEmail(parsed.data.email)
 
   if (existingUser) {
     return {
@@ -157,16 +154,18 @@ export async function registerWithCredentials(
   }
 
   const passwordHash = await hashPassword(parsed.data.password)
-  const user = await createUser({
-    email: parsed.data.email,
-    passwordHash,
-  }).catch((error: unknown) => {
-    if (isUniqueEmailConstraintError(error)) {
-      return null
-    }
+  const user = await db.authUser
+    .create({
+      email: parsed.data.email,
+      passwordHash,
+    })
+    .catch((error: unknown) => {
+      if (isUniqueEmailConstraintError(error)) {
+        return null
+      }
 
-    throw error
-  })
+      throw error
+    })
 
   if (!user) {
     return {
@@ -179,7 +178,7 @@ export async function registerWithCredentials(
     }
   }
 
-  const session = await createAuthSession(user.id)
+  const session = await db.authUser.createSession(user.id)
 
   return {
     error: null,

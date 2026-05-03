@@ -5,9 +5,9 @@ import {
   findInterruptedSessionRecord,
 } from './query'
 import {
+  type ChatDbTransaction,
   type ChatMessageCompletionStatus,
-  type ChatPrismaTransactionClient,
-  chatPrisma,
+  chatDb,
   isSameAssistantReply,
   shouldRetryAssistantReplyWithoutCompletionStatus,
 } from './shared'
@@ -31,34 +31,22 @@ export async function persistAssistantReply(input: {
   const completionStatus = input.completionStatus ?? 'completed'
 
   try {
-    await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
-      const assistantMessage = await tx.chatMessage.create({
-        data: {
-          sessionId: input.sessionId,
-          role: 'assistant',
-          content: input.content,
-          completionStatus,
-        },
-        select: {
-          id: true,
-        },
+    await chatDb.transaction(async (tx: ChatDbTransaction) => {
+      const assistantMessage = await tx.chatMessage.createAssistant({
+        sessionId: input.sessionId,
+        content: input.content,
+        completionStatus,
       })
 
-      await tx.chatSession.update({
-        where: {
-          id: input.sessionId,
-        },
-        data: {
-          preview: input.content,
-        },
+      await tx.chatSession.updateById({
+        sessionId: input.sessionId,
+        preview: input.content,
       })
 
       if (shouldConsumeChatReplyQuota()) {
-        await tx.chatReplyUsage.create({
-          data: {
-            actorId: input.actorId,
-            assistantMessageId: assistantMessage.id,
-          },
+        await tx.userActor.createReplyUsage({
+          actorId: input.actorId,
+          assistantMessageId: assistantMessage.id,
         })
       }
     })
@@ -69,33 +57,21 @@ export async function persistAssistantReply(input: {
 
     logger.warn('persist assistant reply without completionStatus fallback')
 
-    await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
-      const assistantMessage = await tx.chatMessage.create({
-        data: {
-          sessionId: input.sessionId,
-          role: 'assistant',
-          content: input.content,
-        },
-        select: {
-          id: true,
-        },
+    await chatDb.transaction(async (tx: ChatDbTransaction) => {
+      const assistantMessage = await tx.chatMessage.createAssistant({
+        sessionId: input.sessionId,
+        content: input.content,
       })
 
-      await tx.chatSession.update({
-        where: {
-          id: input.sessionId,
-        },
-        data: {
-          preview: input.content,
-        },
+      await tx.chatSession.updateById({
+        sessionId: input.sessionId,
+        preview: input.content,
       })
 
       if (shouldConsumeChatReplyQuota()) {
-        await tx.chatReplyUsage.create({
-          data: {
-            actorId: input.actorId,
-            assistantMessageId: assistantMessage.id,
-          },
+        await tx.userActor.createReplyUsage({
+          actorId: input.actorId,
+          assistantMessageId: assistantMessage.id,
         })
       }
     })

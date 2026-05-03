@@ -1,4 +1,4 @@
-import { prisma } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
 
 import {
   type ChatSessionPreview,
@@ -7,14 +7,9 @@ import {
 
 import { toChatSessionPreview } from './presenter'
 import {
-  CHAT_MESSAGE_ID_SELECT,
-  CHAT_SESSION_SUMMARY_SELECT,
   type ChatMessageIdRecord,
   type ChatSessionSummary,
   type PersistedChatSessionWithMessages,
-  SESSIONS_ORDER_BY,
-  SESSION_MESSAGES_INCLUDE,
-  SESSION_MESSAGES_ORDER_BY,
 } from './query'
 
 type ChatMessageFeedbackValue = 'dislike' | 'like' | null
@@ -26,46 +21,10 @@ function normalizeSessionTitle(title: string | undefined) {
     : DEFAULT_CHAT_SESSION_TITLE
 }
 
-function getActorSessionWhere(actorId: string, sessionId: string) {
-  return {
-    id: sessionId,
-    actorId,
-  }
-}
-
-function getActorNonEmptySessionWhere(actorId: string, sessionId: string) {
-  return {
-    ...getActorSessionWhere(actorId, sessionId),
-    messages: {
-      some: {},
-    },
-  }
-}
-
 function toChatSessionPreviews(
   sessions: PersistedChatSessionWithMessages[]
 ): ChatSessionPreview[] {
   return sessions.map(toChatSessionPreview)
-}
-
-async function findPersistedChatSessionByActor(
-  actorId: string,
-  sessionId: string
-): Promise<PersistedChatSessionWithMessages | null> {
-  return prisma.chatSession.findFirst({
-    where: getActorNonEmptySessionWhere(actorId, sessionId),
-    include: SESSION_MESSAGES_INCLUDE,
-  })
-}
-
-async function findChatSessionSummaryByActor(
-  actorId: string,
-  sessionId: string
-): Promise<ChatSessionSummary | null> {
-  return prisma.chatSession.findFirst({
-    where: getActorSessionWhere(actorId, sessionId),
-    select: CHAT_SESSION_SUMMARY_SELECT,
-  })
 }
 
 function buildChatSessionUpdateData(
@@ -92,16 +51,7 @@ function buildChatSessionUpdateData(
 }
 
 export async function listChatSessionsByActor(actorId: string) {
-  const sessions = await prisma.chatSession.findMany({
-    where: {
-      actorId,
-      messages: {
-        some: {},
-      },
-    },
-    include: SESSION_MESSAGES_INCLUDE,
-    orderBy: SESSIONS_ORDER_BY,
-  })
+  const sessions = await db.chatSession.listByActor(actorId)
 
   return toChatSessionPreviews(sessions)
 }
@@ -110,7 +60,7 @@ export async function findChatSessionByActor(
   actorId: string,
   sessionId: string
 ): Promise<ChatSessionPreview | null> {
-  const session = await findPersistedChatSessionByActor(actorId, sessionId)
+  const session = await db.chatSession.findByActor(actorId, sessionId)
 
   if (!session) {
     return null
@@ -129,16 +79,13 @@ interface CreateChatSessionInput {
 export async function createChatSession(input: CreateChatSessionInput) {
   const hasManualTitle =
     typeof input.title === 'string' && input.title.trim().length > 0
-  const session = await prisma.chatSession.create({
-    data: {
-      actorId: input.actorId,
-      modelId: input.modelId,
-      title: normalizeSessionTitle(input.title),
-      titleSource: hasManualTitle ? 'manual' : 'fallback',
-      preview: '',
-      ...(input.userId ? { userId: input.userId } : {}),
-    },
-    include: SESSION_MESSAGES_INCLUDE,
+  const session = await db.chatSession.create({
+    actorId: input.actorId,
+    modelId: input.modelId,
+    preview: '',
+    title: normalizeSessionTitle(input.title),
+    titleSource: hasManualTitle ? 'manual' : 'fallback',
+    userId: input.userId,
   })
 
   return toChatSessionPreview(session)
@@ -154,40 +101,34 @@ export async function updateChatSessionByActor(
   sessionId: string,
   input: UpdateChatSessionInput
 ): Promise<ChatSessionPreview | null> {
-  const currentSession = await findChatSessionSummaryByActor(actorId, sessionId)
+  const currentSession = await db.chatSession.findSummaryByActor(
+    actorId,
+    sessionId
+  )
 
   if (!currentSession) {
     return null
   }
 
-  const updatedSession = await prisma.chatSession.update({
-    where: {
-      id: currentSession.id,
-    },
-    data: buildChatSessionUpdateData(currentSession, input),
-    include: SESSION_MESSAGES_INCLUDE,
+  await db.chatSession.updateById({
+    sessionId: currentSession.id,
+    ...buildChatSessionUpdateData(currentSession, input),
   })
 
-  return toChatSessionPreview(updatedSession)
+  return findChatSessionByActor(actorId, sessionId)
 }
 
 export async function deleteChatSessionByActor(
   actorId: string,
   sessionId: string
 ) {
-  const result = await prisma.chatSession.deleteMany({
-    where: getActorSessionWhere(actorId, sessionId),
-  })
+  const result = await db.chatSession.deleteByActor(actorId, sessionId)
 
   return result.count > 0
 }
 
 export async function deleteAllChatSessionsByActor(actorId: string) {
-  const result = await prisma.chatSession.deleteMany({
-    where: {
-      actorId,
-    },
-  })
+  const result = await db.chatSession.deleteAllByActor(actorId)
 
   return result.count
 }
@@ -199,28 +140,19 @@ export async function updateChatMessageFeedbackByActor(
   feedback: ChatMessageFeedbackValue
 ): Promise<ChatSessionPreview | null> {
   const targetMessage: ChatMessageIdRecord | null =
-    await prisma.chatMessage.findFirst({
-      where: {
-        id: messageId,
-        sessionId,
-        session: {
-          actorId,
-        },
-      },
-      select: CHAT_MESSAGE_ID_SELECT,
+    await db.chatMessage.findIdByActorSession({
+      actorId,
+      messageId,
+      sessionId,
     })
 
   if (!targetMessage) {
     return null
   }
 
-  await prisma.chatMessage.update({
-    where: {
-      id: targetMessage.id,
-    },
-    data: {
-      feedback,
-    },
+  await db.chatMessage.updateFeedback({
+    messageId: targetMessage.id,
+    feedback,
   })
 
   return findChatSessionByActor(actorId, sessionId)
@@ -230,31 +162,10 @@ export async function getChatSessionTitleGenerationContextByActor(
   actorId: string,
   sessionId: string
 ) {
-  return prisma.chatSession.findFirst({
-    where: {
-      ...getActorSessionWhere(actorId, sessionId),
-      title: DEFAULT_CHAT_SESSION_TITLE,
-      titleSource: 'fallback',
-      messages: {
-        some: {
-          role: 'assistant',
-          completionStatus: 'completed',
-        },
-      },
-    },
-    select: {
-      id: true,
-      modelId: true,
-      messages: {
-        orderBy: SESSION_MESSAGES_ORDER_BY,
-        select: {
-          role: true,
-          content: true,
-          completionStatus: true,
-        },
-        take: 6,
-      },
-    },
+  return db.chatSession.findTitleGenerationContextByActor({
+    actorId,
+    fallbackTitle: DEFAULT_CHAT_SESSION_TITLE,
+    sessionId,
   })
 }
 
@@ -263,16 +174,11 @@ export async function updateGeneratedChatSessionTitleByActor(input: {
   sessionId: string
   title: string
 }) {
-  const result = await prisma.chatSession.updateMany({
-    where: {
-      ...getActorSessionWhere(input.actorId, input.sessionId),
-      title: DEFAULT_CHAT_SESSION_TITLE,
-      titleSource: 'fallback',
-    },
-    data: {
-      title: normalizeSessionTitle(input.title),
-      titleSource: 'ai',
-    },
+  const result = await db.chatSession.updateGeneratedTitleByActor({
+    actorId: input.actorId,
+    fallbackTitle: DEFAULT_CHAT_SESSION_TITLE,
+    sessionId: input.sessionId,
+    title: normalizeSessionTitle(input.title),
   })
 
   if (result.count === 0) {

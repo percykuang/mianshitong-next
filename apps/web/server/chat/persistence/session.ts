@@ -1,9 +1,8 @@
 import type { ChatActor } from '@/server/chat/actor'
 
-import { CHAT_MESSAGE_ORDER_BY } from './query'
 import {
-  type ChatPrismaTransactionClient,
-  chatPrisma,
+  type ChatDbTransaction,
+  chatDb,
   createChatSessionTitle,
 } from './shared'
 
@@ -26,15 +25,9 @@ export async function findOrCreateChatSession(input: {
   normalizedSessionId: string | null
 }): Promise<FindOrCreateChatSessionResult> {
   if (input.normalizedSessionId !== null) {
-    const existingSession = await chatPrisma.chatSession.findUnique({
-      where: {
-        id: input.normalizedSessionId,
-      },
-      select: {
-        actorId: true,
-        id: true,
-      },
-    })
+    const existingSession = await chatDb.chatSession.findIdentityById(
+      input.normalizedSessionId
+    )
 
     if (existingSession) {
       return existingSession.actorId === input.actor.id
@@ -51,18 +44,14 @@ export async function findOrCreateChatSession(input: {
     }
   }
 
-  const session = await chatPrisma.chatSession.create({
-    data: {
-      actorId: input.actor.id,
-      ...(input.actor.authUserId ? { userId: input.actor.authUserId } : {}),
-      ...(input.normalizedSessionId ? { id: input.normalizedSessionId } : {}),
-      modelId: input.chatModelId,
-      title: createChatSessionTitle(),
-      preview: input.message,
-    },
-    select: {
-      id: true,
-    },
+  const session = await chatDb.chatSession.create({
+    actorId: input.actor.id,
+    id: input.normalizedSessionId ?? undefined,
+    modelId: input.chatModelId,
+    preview: input.message,
+    title: createChatSessionTitle(),
+    titleSource: 'fallback',
+    userId: input.actor.authUserId,
   })
 
   return {
@@ -76,34 +65,18 @@ export async function persistUserMessageAndLoadConversation(input: {
   chatModelId: string
   sessionId: string
 }) {
-  return chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
-    await tx.chatMessage.create({
-      data: {
-        sessionId: input.sessionId,
-        role: 'user',
-        content: input.message,
-      },
+  return chatDb.transaction(async (tx: ChatDbTransaction) => {
+    await tx.chatMessage.createUser({
+      sessionId: input.sessionId,
+      content: input.message,
     })
 
-    await tx.chatSession.update({
-      where: {
-        id: input.sessionId,
-      },
-      data: {
-        modelId: input.chatModelId,
-        preview: input.message,
-      },
+    await tx.chatSession.updateById({
+      sessionId: input.sessionId,
+      modelId: input.chatModelId,
+      preview: input.message,
     })
 
-    return tx.chatMessage.findMany({
-      where: {
-        sessionId: input.sessionId,
-      },
-      orderBy: CHAT_MESSAGE_ORDER_BY,
-      select: {
-        role: true,
-        content: true,
-      },
-    })
+    return tx.chatMessage.listConversationBySessionId(input.sessionId)
   })
 }

@@ -3,7 +3,7 @@ import {
   type EditableChatSessionRecord,
   findEditableSessionRecord,
 } from './query'
-import { type ChatPrismaTransactionClient, chatPrisma } from './shared'
+import { type ChatDbTransaction, chatDb } from './shared'
 
 export async function editUserMessageAndLoadConversation(input: {
   actorId: string
@@ -55,33 +55,17 @@ export async function editUserMessageAndLoadConversation(input: {
       })
     )
 
-  await chatPrisma.$transaction(async (tx: ChatPrismaTransactionClient) => {
-    await tx.chatMessage.update({
-      where: {
-        id: input.messageId,
-      },
-      data: {
-        content: input.message,
-      },
+  await chatDb.transaction(async (tx: ChatDbTransaction) => {
+    await tx.chatMessage.updateContent({
+      messageId: input.messageId,
+      content: input.message,
     })
 
-    if (trailingMessageIds.length > 0) {
-      await tx.chatMessage.deleteMany({
-        where: {
-          id: {
-            in: trailingMessageIds,
-          },
-        },
-      })
-    }
+    await tx.chatMessage.deleteManyByIds(trailingMessageIds)
 
-    await tx.chatSession.update({
-      where: {
-        id: session.id,
-      },
-      data: {
-        preview: input.message,
-      },
+    await tx.chatSession.updateById({
+      sessionId: session.id,
+      preview: input.message,
     })
   })
 

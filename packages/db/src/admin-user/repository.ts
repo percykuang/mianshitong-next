@@ -1,5 +1,7 @@
-import { prisma } from '@mianshitong/db'
 import { createHash, randomBytes } from 'node:crypto'
+
+import type { DbClient } from '../client-types'
+import type { DbAdminSessionResult } from './types'
 
 const SESSION_TOKEN_BYTE_LENGTH = 32
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7
@@ -27,17 +29,20 @@ function getSessionExpiryDate() {
   return new Date(Date.now() + SESSION_MAX_AGE_MS)
 }
 
-export async function findUserByEmail(email: string) {
-  return prisma.adminUser.findUnique({
+function findAdminUserByEmail(client: DbClient, email: string) {
+  return client.adminUser.findUnique({
     where: { email },
   })
 }
 
-export async function createAuthSession(adminUserId: string) {
+async function createAdminUserSession(
+  client: DbClient,
+  adminUserId: string
+): Promise<DbAdminSessionResult> {
   const sessionToken = createRawSessionToken()
   const expiresAt = getSessionExpiryDate()
 
-  await prisma.adminSession.create({
+  await client.adminSession.create({
     data: {
       adminUserId,
       expiresAt,
@@ -52,8 +57,11 @@ export async function createAuthSession(adminUserId: string) {
   }
 }
 
-export async function findUserBySessionToken(sessionToken: string) {
-  const session = await prisma.adminSession.findUnique({
+async function findAdminUserBySessionToken(
+  client: DbClient,
+  sessionToken: string
+) {
+  const session = await client.adminSession.findUnique({
     where: getSessionTokenHashWhere(sessionToken),
     include: {
       adminUser: true,
@@ -65,7 +73,7 @@ export async function findUserBySessionToken(sessionToken: string) {
   }
 
   if (isSessionExpired(session.expiresAt)) {
-    await prisma.adminSession.delete({
+    await client.adminSession.delete({
       where: {
         id: session.id,
       },
@@ -77,14 +85,17 @@ export async function findUserBySessionToken(sessionToken: string) {
   return session.adminUser
 }
 
-export async function deleteSessionByToken(sessionToken: string) {
-  await prisma.adminSession.deleteMany({
+async function deleteAdminUserSessionByToken(
+  client: DbClient,
+  sessionToken: string
+) {
+  await client.adminSession.deleteMany({
     where: getSessionTokenHashWhere(sessionToken),
   })
 }
 
-export async function deleteExpiredSessions() {
-  await prisma.adminSession.deleteMany({
+async function deleteExpiredAdminUserSessions(client: DbClient) {
+  await client.adminSession.deleteMany({
     where: {
       expiresAt: {
         lte: new Date(),
@@ -92,3 +103,25 @@ export async function deleteExpiredSessions() {
     },
   })
 }
+
+export function createAdminUserDb(client: DbClient) {
+  return {
+    findByEmail(email: string) {
+      return findAdminUserByEmail(client, email)
+    },
+    createSession(adminUserId: string) {
+      return createAdminUserSession(client, adminUserId)
+    },
+    findBySessionToken(sessionToken: string) {
+      return findAdminUserBySessionToken(client, sessionToken)
+    },
+    deleteSessionByToken(sessionToken: string) {
+      return deleteAdminUserSessionByToken(client, sessionToken)
+    },
+    deleteExpiredSessions() {
+      return deleteExpiredAdminUserSessions(client)
+    },
+  }
+}
+
+export type AdminUserDb = ReturnType<typeof createAdminUserDb>

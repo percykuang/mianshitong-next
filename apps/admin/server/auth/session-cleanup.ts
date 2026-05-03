@@ -1,7 +1,6 @@
+import { db } from '@mianshitong/db'
 import { createLogger } from '@mianshitong/shared/runtime'
 import 'server-only'
-
-import { deleteExpiredSessions } from './user-repository'
 
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 60
 const logger = createLogger('admin.auth.cleanup')
@@ -21,7 +20,8 @@ export function scheduleExpiredAdminSessionCleanup() {
   }
 
   nextCleanupAt = now + CLEANUP_INTERVAL_MS
-  activeCleanupPromise = deleteExpiredSessions()
+  activeCleanupPromise = db.adminUser
+    .deleteExpiredSessions()
     .catch((error) => {
       logger.warn('cleanup expired sessions failed', error)
       nextCleanupAt = 0

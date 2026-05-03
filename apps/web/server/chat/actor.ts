@@ -1,4 +1,5 @@
-import { prisma } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
+import { isProductionEnv } from '@mianshitong/shared/runtime'
 import { cookies } from 'next/headers'
 import { createHash, randomBytes } from 'node:crypto'
 
@@ -18,24 +19,8 @@ export interface ChatActor {
   type: ChatActorType
 }
 
-function findActorByAuthUserId(userId: string) {
-  return prisma.userActor.findUnique({
-    where: {
-      authUserId: userId,
-    },
-  })
-}
-
-function findActorByGuestTokenHash(tokenHash: string) {
-  return prisma.userActor.findUnique({
-    where: {
-      guestTokenHash: tokenHash,
-    },
-  })
-}
-
 type UserActorRecord = NonNullable<
-  Awaited<ReturnType<typeof findActorByAuthUserId>>
+  Awaited<ReturnType<typeof db.userActor.findByAuthUserId>>
 >
 
 function hashGuestToken(token: string) {
@@ -62,16 +47,16 @@ function buildGuestCookieOptions() {
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProductionEnv(),
     path: GUEST_COOKIE_PATH,
     maxAge: GUEST_COOKIE_MAX_AGE_SECONDS,
   }
 }
 
 async function touchActorLastSeen(actorId: string) {
-  await prisma.userActor.update({
-    where: { id: actorId },
-    data: { lastSeenAt: createActorLastSeenAt() },
+  await db.userActor.updateLastSeen({
+    actorId,
+    lastSeenAt: createActorLastSeenAt(),
   })
 }
 
@@ -81,7 +66,7 @@ async function getGuestTokenFromCookies() {
 }
 
 async function ensureRegisteredActor(input: { email: string; userId: string }) {
-  const existing = await findActorByAuthUserId(input.userId)
+  const existing = await db.userActor.findByAuthUserId(input.userId)
 
   if (existing) {
     const needsRefresh =
@@ -93,31 +78,23 @@ async function ensureRegisteredActor(input: { email: string; userId: string }) {
       return existing
     }
 
-    return prisma.userActor.update({
-      where: {
-        id: existing.id,
-      },
-      data: {
-        type: 'registered',
-        displayName: input.email,
-        lastSeenAt: createActorLastSeenAt(),
-      },
+    return db.userActor.updateRegistered({
+      id: existing.id,
+      displayName: input.email,
+      lastSeenAt: createActorLastSeenAt(),
     })
   }
 
-  return prisma.userActor.create({
-    data: {
-      id: input.userId,
-      type: 'registered',
-      displayName: input.email,
-      authUserId: input.userId,
-      lastSeenAt: createActorLastSeenAt(),
-    },
+  return db.userActor.createRegistered({
+    id: input.userId,
+    authUserId: input.userId,
+    displayName: input.email,
+    lastSeenAt: createActorLastSeenAt(),
   })
 }
 
 async function findGuestActorByToken(token: string) {
-  const actor = await findActorByGuestTokenHash(hashGuestToken(token))
+  const actor = await db.userActor.findByGuestTokenHash(hashGuestToken(token))
 
   if (!actor || actor.type !== 'guest') {
     return null
@@ -133,13 +110,10 @@ async function findGuestActorByToken(token: string) {
 async function createGuestActorWithCookie() {
   const token = createGuestToken()
   const tokenHash = hashGuestToken(token)
-  const actor = await prisma.userActor.create({
-    data: {
-      type: 'guest',
-      displayName: createGuestDisplayName(tokenHash),
-      guestTokenHash: tokenHash,
-      lastSeenAt: createActorLastSeenAt(),
-    },
+  const actor = await db.userActor.createGuest({
+    displayName: createGuestDisplayName(tokenHash),
+    guestTokenHash: tokenHash,
+    lastSeenAt: createActorLastSeenAt(),
   })
 
   const cookieStore = await cookies()

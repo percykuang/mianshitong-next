@@ -1,4 +1,4 @@
-import { prisma } from '@mianshitong/db'
+import { type DbTransaction, db } from '@mianshitong/db'
 
 import {
   type ChatMessageCompletionStatus,
@@ -8,10 +8,8 @@ import {
 export { createChatSessionTitle }
 export type { ChatMessageCompletionStatus }
 
-export const chatPrisma = prisma
-export type ChatPrismaTransactionClient = Parameters<
-  Parameters<typeof chatPrisma.$transaction>[0]
->[0]
+export const chatDb = db
+export type ChatDbTransaction = DbTransaction
 
 function normalizeComparableMessageContent(content: string) {
   return content.trim()

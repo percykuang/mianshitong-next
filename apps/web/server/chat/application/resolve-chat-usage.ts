@@ -1,4 +1,4 @@
-import { prisma, resolveUserActorDailyModelQuota } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
 import 'server-only'
 
 import type { ChatUsageSummary } from '@/app/chat/domain'
@@ -23,26 +23,14 @@ export async function getChatUsageSummary(
 ): Promise<ChatUsageSummary> {
   const todayRange = createTodayRange()
   const [actorRecord, used] = await Promise.all([
-    prisma.userActor.findUnique({
-      where: {
-        id: actor.id,
-      },
-      select: {
-        dailyModelQuota: true,
-        type: true,
-      },
-    }),
-    prisma.chatReplyUsage.count({
-      where: {
-        createdAt: {
-          gte: todayRange.start,
-          lt: todayRange.end,
-        },
-        actorId: actor.id,
-      },
+    db.userActor.findQuotaById(actor.id),
+    db.userActor.countReplyUsageInRange({
+      actorId: actor.id,
+      start: todayRange.start,
+      end: todayRange.end,
     }),
   ])
-  const max = resolveUserActorDailyModelQuota({
+  const max = db.userActor.resolveDailyModelQuota({
     type: actorRecord?.type ?? actor.type,
     dailyModelQuota: actorRecord?.dailyModelQuota,
   })

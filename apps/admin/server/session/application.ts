@@ -1,10 +1,9 @@
-import { prisma } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
 import 'server-only'
 
 import {
   type Pagination,
   type SortOrder,
-  buildDateRangeWhere,
   createPaginatedQuery,
   createPagination,
   formatDateTime,
@@ -91,76 +90,7 @@ function getSessionStatus(input: {
   return 'completed'
 }
 
-function createSessionSortOrderBy(input: AdminSessionFilters) {
-  if (input.sortBy === 'messageCount') {
-    return {
-      messages: {
-        _count: input.sortOrder,
-      },
-    }
-  }
-
-  return {
-    [input.sortBy]: input.sortOrder,
-  }
-}
-
-function buildAdminSessionWhere(filters: AdminSessionFilters) {
-  const createdAtWhere = buildDateRangeWhere({
-    from: filters.createdFrom,
-    to: filters.createdTo,
-  })
-  const updatedAtWhere = buildDateRangeWhere({
-    from: filters.updatedFrom,
-    to: filters.updatedTo,
-  })
-
-  return {
-    ...(filters.query
-      ? {
-          title: {
-            contains: filters.query,
-            mode: 'insensitive' as const,
-          },
-        }
-      : {}),
-    ...(filters.userId
-      ? {
-          actorId: {
-            contains: filters.userId,
-          },
-        }
-      : {}),
-    ...(filters.userType !== 'all' || filters.userEmail
-      ? {
-          actor: {
-            ...(filters.userType !== 'all'
-              ? {
-                  type: filters.userType,
-                }
-              : {}),
-            ...(filters.userEmail
-              ? {
-                  authUser: {
-                    is: {
-                      email: {
-                        contains: filters.userEmail,
-                        mode: 'insensitive' as const,
-                      },
-                    },
-                  },
-                }
-              : {}),
-          },
-        }
-      : {}),
-    ...(createdAtWhere ? { createdAt: createdAtWhere } : {}),
-    ...(updatedAtWhere ? { updatedAt: updatedAtWhere } : {}),
-  }
-}
-
 function toAdminSessionListItem(session: {
-  _count: { messages: number }
   actor: {
     authUser: {
       email: string
@@ -171,6 +101,7 @@ function toAdminSessionListItem(session: {
   actorId: string
   createdAt: Date
   id: string
+  messageCount: number
   messages: Array<{
     completionStatus: 'completed' | 'interrupted' | null
     role: ChatMessageRole
@@ -187,7 +118,7 @@ function toAdminSessionListItem(session: {
     userLabel: session.actor.displayName,
     userType: session.actor.type,
     title: session.title,
-    messageCount: session._count.messages,
+    messageCount: session.messageCount,
     status: getSessionStatus({
       role: latestMessage?.role ?? null,
       completionStatus: latestMessage?.completionStatus ?? null,
@@ -230,54 +161,19 @@ export function parseAdminSessionFilters(
 export async function listAdminSessions(
   filters: AdminSessionFilters
 ): Promise<AdminSessionListResult> {
-  const where = buildAdminSessionWhere(filters)
-
-  const [sessions, total] = await Promise.all([
-    prisma.chatSession.findMany({
-      where,
-      orderBy: createSessionSortOrderBy(filters),
-      ...createPaginatedQuery(filters),
-      select: {
-        id: true,
-        actorId: true,
-        title: true,
-        createdAt: true,
-        updatedAt: true,
-        actor: {
-          select: {
-            displayName: true,
-            type: true,
-            authUser: {
-              select: {
-                email: true,
-              },
-            },
-          },
-        },
-        messages: {
-          orderBy: [
-            {
-              createdAt: 'desc',
-            },
-            {
-              id: 'desc',
-            },
-          ],
-          take: 1,
-          select: {
-            role: true,
-            completionStatus: true,
-          },
-        },
-        _count: {
-          select: {
-            messages: true,
-          },
-        },
-      },
-    }),
-    prisma.chatSession.count({ where }),
-  ])
+  const { items: sessions, total } = await db.chatSession.listForAdmin({
+    ...createPaginatedQuery(filters),
+    createdFrom: filters.createdFrom,
+    createdTo: filters.createdTo,
+    query: filters.query,
+    sortBy: filters.sortBy,
+    sortOrder: filters.sortOrder,
+    updatedFrom: filters.updatedFrom,
+    updatedTo: filters.updatedTo,
+    userEmail: filters.userEmail,
+    userId: filters.userId,
+    userType: filters.userType,
+  })
 
   return {
     items: sessions.map(toAdminSessionListItem),
@@ -293,51 +189,7 @@ export async function listAdminSessions(
 export async function getAdminSessionDetail(
   sessionId: string
 ): Promise<AdminSessionDetail | null> {
-  const session = await prisma.chatSession.findUnique({
-    where: {
-      id: sessionId,
-    },
-    select: {
-      id: true,
-      actorId: true,
-      title: true,
-      createdAt: true,
-      updatedAt: true,
-      actor: {
-        select: {
-          type: true,
-          authUser: {
-            select: {
-              email: true,
-            },
-          },
-        },
-      },
-      messages: {
-        orderBy: [
-          {
-            createdAt: 'asc',
-          },
-          {
-            id: 'asc',
-          },
-        ],
-        select: {
-          id: true,
-          role: true,
-          content: true,
-          feedback: true,
-          completionStatus: true,
-          createdAt: true,
-        },
-      },
-      _count: {
-        select: {
-          messages: true,
-        },
-      },
-    },
-  })
+  const session = await db.chatSession.findAdminDetailById(sessionId)
 
   if (!session) {
     return null
@@ -351,7 +203,7 @@ export async function getAdminSessionDetail(
     userEmail: session.actor.authUser?.email ?? null,
     userType: session.actor.type,
     title: session.title,
-    messageCount: session._count.messages,
+    messageCount: session.messageCount,
     status: getSessionStatus({
       role: latestMessage?.role ?? null,
       completionStatus: latestMessage?.completionStatus ?? null,
@@ -370,24 +222,13 @@ export async function getAdminSessionDetail(
 }
 
 export async function deleteAdminSession(sessionId: string) {
-  const existingSession = await prisma.chatSession.findUnique({
-    where: {
-      id: sessionId,
-    },
-    select: {
-      id: true,
-    },
-  })
+  const existingSession = await db.chatSession.findIdentityById(sessionId)
 
   if (!existingSession) {
     return false
   }
 
-  await prisma.chatSession.delete({
-    where: {
-      id: sessionId,
-    },
-  })
+  await db.chatSession.deleteById(sessionId)
 
   return true
 }

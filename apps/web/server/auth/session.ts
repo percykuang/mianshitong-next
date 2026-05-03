@@ -1,7 +1,7 @@
+import { db } from '@mianshitong/db'
+import { isProductionEnv } from '@mianshitong/shared/runtime'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-
-import { deleteSessionByToken, findUserBySessionToken } from './user-repository'
 
 export const AUTH_SESSION_COOKIE_NAME = 'mst_session'
 const AUTH_SESSION_COOKIE_PATH = '/'
@@ -11,7 +11,7 @@ function createCookieOptions(maxAge?: number) {
     // 只让服务端读写 cookie，浏览器脚本拿不到 session token。
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProductionEnv(),
     path: AUTH_SESSION_COOKIE_PATH,
     ...(typeof maxAge === 'number' ? { maxAge } : {}),
   }
@@ -54,7 +54,7 @@ export async function getCurrentUser() {
     return null
   }
 
-  return findUserBySessionToken(sessionToken)
+  return db.authUser.findBySessionToken(sessionToken)
 }
 
 export async function deleteCurrentSession() {
@@ -64,5 +64,5 @@ export async function deleteCurrentSession() {
     return
   }
 
-  await deleteSessionByToken(sessionToken)
+  await db.authUser.deleteSessionByToken(sessionToken)
 }

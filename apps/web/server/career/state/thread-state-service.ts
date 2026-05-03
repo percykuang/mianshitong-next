@@ -1,27 +1,9 @@
-import { prisma } from '@mianshitong/db'
+import { db } from '@mianshitong/db'
 import { createLogger } from '@mianshitong/shared/runtime'
 
 import type { CareerThreadState } from '../shared'
 import { createEmptyCareerThreadState } from './thread-state'
 
-interface CareerThreadDelegate {
-  deleteMany(input: { where: { chatSessionId: string } }): Promise<unknown>
-  findUnique(input: {
-    select: { state?: boolean; version: boolean }
-    where: { chatSessionId: string }
-  }): Promise<{ state?: unknown; version: number } | null>
-  upsert(input: {
-    create: { chatSessionId: string; state: unknown; version: number }
-    update: { state: unknown; version: number }
-    where: { chatSessionId: string }
-  }): Promise<unknown>
-}
-
-const careerThreadClient = (
-  prisma as unknown as {
-    careerThread: CareerThreadDelegate
-  }
-).careerThread
 const logger = createLogger('web.career.thread-state')
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -40,15 +22,7 @@ function isCareerThreadState(value: unknown): value is CareerThreadState {
 }
 
 export async function loadCareerThreadState(chatSessionId: string) {
-  const record = await careerThreadClient.findUnique({
-    where: {
-      chatSessionId,
-    },
-    select: {
-      state: true,
-      version: true,
-    },
-  })
+  const record = await db.careerThread.findState(chatSessionId)
 
   if (!record || !isCareerThreadState(record.state)) {
     return createEmptyCareerThreadState()
@@ -65,14 +39,7 @@ export async function commitCareerThreadState(input: {
   expectedVersion: number
   pendingState: CareerThreadState
 }) {
-  const existing = await careerThreadClient.findUnique({
-    where: {
-      chatSessionId: input.chatSessionId,
-    },
-    select: {
-      version: true,
-    },
-  })
+  const existing = await db.careerThread.findState(input.chatSessionId)
 
   const nextVersion = (existing?.version ?? 0) + 1
   const nextState = {
@@ -93,19 +60,10 @@ export async function commitCareerThreadState(input: {
     }
   }
 
-  await careerThreadClient.upsert({
-    where: {
-      chatSessionId: input.chatSessionId,
-    },
-    create: {
-      chatSessionId: input.chatSessionId,
-      state: nextState as never,
-      version: nextVersion,
-    },
-    update: {
-      state: nextState as never,
-      version: nextVersion,
-    },
+  await db.careerThread.upsertState({
+    chatSessionId: input.chatSessionId,
+    state: nextState as never,
+    version: nextVersion,
   })
 
   return {
@@ -115,9 +73,5 @@ export async function commitCareerThreadState(input: {
 }
 
 export async function resetCareerThreadState(chatSessionId: string) {
-  await careerThreadClient.deleteMany({
-    where: {
-      chatSessionId,
-    },
-  })
+  await db.careerThread.deleteState(chatSessionId)
 }

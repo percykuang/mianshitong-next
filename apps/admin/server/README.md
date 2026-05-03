@@ -24,7 +24,6 @@ server/
 │   ├── password.ts
 │   ├── session.ts
 │   ├── session-cleanup.ts
-│   ├── user-repository.ts
 │   └── validation.ts
 ├── session/
 │   ├── index.ts
@@ -50,8 +49,6 @@ server/
   - session cookie 的读写与当前用户解析
 - `session-cleanup.ts`
   - 过期 session 的兜底清理
-- `user-repository.ts`
-  - 与认证相关的用户和 session 持久化访问
 - `password.ts`
   - 密码校验
 - `validation.ts`
@@ -84,3 +81,4 @@ server/
 3. `auth/session.ts` 属于认证基础设施，只有 cookie 和当前登录态解析相关逻辑应放在这里。
 4. 新增后台能力时，优先判断是放入 `auth/`、`session/`、`user/` 现有子模块，还是再新增独立子模块，不要继续堆进已有 `application.ts`。
 5. 大模块优先逐步拆成按用例命名的文件；当前较小模块可继续保留 `application.ts`，但不要从 UI 层直接导入它。
+6. 管理员认证相关的数据库访问已经收敛到 `packages/db/src/admin-user/`，不要在 `apps/admin/server/auth` 内重新引入 Prisma 直连查询。
