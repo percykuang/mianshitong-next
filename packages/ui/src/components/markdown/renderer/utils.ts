@@ -5,9 +5,8 @@ import {
   isValidElement,
 } from 'react'
 
-import { createLogger } from '@mianshitong/shared/runtime'
+import { createLogger, isDevelopmentEnv } from '@mianshitong/shared/runtime'
 
-import { isDevelopmentEnv } from '../../../utils/env'
 import { CodeBlock } from '../code-block'
 
 const logger = createLogger('ui.markdown.renderer')

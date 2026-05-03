@@ -4,13 +4,22 @@ export {
   THEME_STORAGE_KEY,
 } from './constants'
 export {
+  createWorkspaceEnvLoader,
+  findWorkspaceRoot,
+  readEnvString,
+} from './server'
+export {
   buildPathWithSearchParams,
   createSearchParams,
   InFlightTaskCache,
   KeyedCache,
   LruCache,
   createLogger,
+  getNodeEnv,
+  isDevelopmentEnv,
   isFetchTypeError,
+  isProductionEnv,
+  isTestEnv,
   parseJsonSafely,
   safeJsonParse,
   safeJsonStringify,

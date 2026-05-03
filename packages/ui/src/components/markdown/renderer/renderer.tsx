@@ -1,10 +1,9 @@
 'use client'
 
-import { createLogger } from '@mianshitong/shared/runtime'
+import { createLogger, isDevelopmentEnv } from '@mianshitong/shared/runtime'
 import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-import { isDevelopmentEnv } from '../../../utils/env'
 import { markdownElements } from './elements'
 import { remarkNormalizeListCodeIndent } from './remark-list-code-indent'
 import { normalizeMarkdownContent } from './utils'

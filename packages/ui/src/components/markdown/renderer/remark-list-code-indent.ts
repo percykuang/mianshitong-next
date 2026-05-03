@@ -1,7 +1,5 @@
 // remark 插件，只处理“已经在列表项里的代码块”缩进，不负责修复错误的 Markdown 结构。
-import { createLogger } from '@mianshitong/shared/runtime'
-
-import { isDevelopmentEnv } from '../../../utils/env'
+import { createLogger, isDevelopmentEnv } from '@mianshitong/shared/runtime'
 
 const logger = createLogger('ui.markdown.renderer')
 
